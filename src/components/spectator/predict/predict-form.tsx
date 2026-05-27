@@ -4,7 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
-import { races, formatCurrency, formatDate } from '@/data/mock-data';
+import { races, formatCurrency, formatDate } from '@/mock-data';
 
 const predictableRaces = races.filter(r => r.status !== 'completed');
 

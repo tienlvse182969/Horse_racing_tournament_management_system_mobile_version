@@ -7,7 +7,8 @@ import { router } from 'expo-router';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
-import { races, formatCurrency, formatDate } from '@/data/mock-data';
+import { AvatarTabButton } from '@/components/avatar-tab-button';
+import { races, formatCurrency, formatDate } from '@/mock-data';
 
 const liveRace      = races.find(r => r.status === 'live');
 const upcomingRaces = races.filter(r => r.status === 'upcoming');
@@ -19,7 +20,7 @@ export function SpectatorHome() {
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <LargeHeaderScrollView title="RaceTrack VN" bangers contentContainerStyle={styles.scroll}>
+        <LargeHeaderScrollView title="RaceTrack VN" bangers contentContainerStyle={styles.scroll} rightAction={<AvatarTabButton />}>
 
           {/* Tournament Hero */}
           <Animated.View entering={FadeIn.duration(400)}>

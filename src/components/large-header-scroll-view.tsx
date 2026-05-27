@@ -18,10 +18,12 @@ type Props = {
   title: string;
   bangers?: boolean;
   contentContainerStyle?: ViewStyle;
+  leftAction?: React.ReactNode;
+  rightAction?: React.ReactNode;
   children: React.ReactNode;
 };
 
-export function LargeHeaderScrollView({ title, bangers = false, contentContainerStyle, children }: Props) {
+export function LargeHeaderScrollView({ title, bangers = false, contentContainerStyle, leftAction, rightAction, children }: Props) {
   const scrollY = useSharedValue(0);
 
   const handler = useAnimatedScrollHandler(e => {
@@ -46,12 +48,22 @@ export function LargeHeaderScrollView({ title, bangers = false, contentContainer
 
   return (
     <View style={styles.root}>
-      {/* Compact header — overlays at top, invisible when title visible */}
+      {/* Compact header — fades in on scroll, title only (non-interactive) */}
       <Animated.View style={[styles.compactHeader, compactAnim]} pointerEvents="none">
         <Text style={bangers ? styles.compactBangers : styles.compactTitle} numberOfLines={1}>
           {title}
         </Text>
       </Animated.View>
+
+      {/* Persistent left overlay (e.g. back button) — always visible */}
+      {leftAction != null && (
+        <View style={styles.overlayLeft}>{leftAction}</View>
+      )}
+
+      {/* Persistent right overlay (e.g. avatar) — always visible */}
+      {rightAction != null && (
+        <View style={styles.overlayRight}>{rightAction}</View>
+      )}
 
       {/* Scrollable area — large title is its first child */}
       <Animated.ScrollView
@@ -88,6 +100,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
+  },
+
+  // Persistent action overlays — always above scroll content
+  overlayLeft: {
+    position: 'absolute',
+    top: 9,
+    left: Spacing.three,
+    zIndex: 20,
+  },
+  overlayRight: {
+    position: 'absolute',
+    top: 9,
+    right: Spacing.three,
+    zIndex: 20,
   },
   compactTitle: {
     color: C.onSurface,

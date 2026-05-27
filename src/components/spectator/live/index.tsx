@@ -1,11 +1,12 @@
 import { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
-import { AppBar } from '@/components/app-bar';
-import { races } from '@/data/mock-data';
-import type { Race, RaceStatus } from '@/data/mock-data';
+import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
+import { AvatarTabButton } from '@/components/avatar-tab-button';
+import { races } from '@/mock-data';
+import type { Race, RaceStatus } from '@/mock-data';
 import { RaceCard } from './race-card';
 import { RaceDetail } from './race-detail';
 import { Leaderboard } from './leaderboard';
@@ -41,42 +42,41 @@ export function SpectatorLive() {
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <AppBar title="Trực tiếp" />
+        <LargeHeaderScrollView title="Trực tiếp" contentContainerStyle={styles.scroll} rightAction={<AvatarTabButton />}>
 
-        {/* Tab switcher */}
-        <View style={styles.tabSwitcher}>
-          <TouchableOpacity
-            style={[styles.tabBtn, tab === 'races' && styles.tabBtnActive]}
-            onPress={() => setTab('races')}
-            activeOpacity={0.8}>
-            <Text style={[styles.tabBtnText, tab === 'races' && styles.tabBtnTextActive]}>Trận đấu</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tabBtn, tab === 'leaderboard' && styles.tabBtnActive]}
-            onPress={() => setTab('leaderboard')}
-            activeOpacity={0.8}>
-            <Text style={[styles.tabBtnText, tab === 'leaderboard' && styles.tabBtnTextActive]}>Bảng XH</Text>
-          </TouchableOpacity>
-        </View>
+          {/* Tab switcher */}
+          <View style={styles.tabSwitcher}>
+            <TouchableOpacity
+              style={[styles.tabBtn, tab === 'races' && styles.tabBtnActive]}
+              onPress={() => setTab('races')}
+              activeOpacity={0.8}>
+              <Text style={[styles.tabBtnText, tab === 'races' && styles.tabBtnTextActive]}>Trận đấu</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tabBtn, tab === 'leaderboard' && styles.tabBtnActive]}
+              onPress={() => setTab('leaderboard')}
+              activeOpacity={0.8}>
+              <Text style={[styles.tabBtnText, tab === 'leaderboard' && styles.tabBtnTextActive]}>Bảng XH</Text>
+            </TouchableOpacity>
+          </View>
 
-        {tab === 'races' && (
-          <>
-            {/* Filter chips */}
-            <View style={styles.filterRow}>
-              {(['all', 'live', 'upcoming', 'completed'] as FilterStatus[]).map(f => (
-                <TouchableOpacity
-                  key={f}
-                  style={[styles.filterChip, filter === f && styles.filterChipActive]}
-                  onPress={() => setFilter(f)}
-                  activeOpacity={0.75}>
-                  <Text style={[styles.filterChipText, filter === f && styles.filterChipTextActive]}>
-                    {f === 'all' ? 'Tất cả' : STATUS_LABELS[f as RaceStatus]}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+          {tab === 'races' && (
+            <>
+              {/* Filter chips */}
+              <View style={styles.filterRow}>
+                {(['all', 'live', 'upcoming', 'completed'] as FilterStatus[]).map(f => (
+                  <TouchableOpacity
+                    key={f}
+                    style={[styles.filterChip, filter === f && styles.filterChipActive]}
+                    onPress={() => setFilter(f)}
+                    activeOpacity={0.75}>
+                    <Text style={[styles.filterChipText, filter === f && styles.filterChipTextActive]}>
+                      {f === 'all' ? 'Tất cả' : STATUS_LABELS[f as RaceStatus]}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
 
-            <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
               {STATUS_ORDER.map(status => {
                 const group = grouped[status];
                 if (group.length === 0) return null;
@@ -91,11 +91,12 @@ export function SpectatorLive() {
                   </Animated.View>
                 );
               })}
-            </ScrollView>
-          </>
-        )}
+            </>
+          )}
 
-        {tab === 'leaderboard' && <Leaderboard />}
+          {tab === 'leaderboard' && <Leaderboard standalone={false} />}
+
+        </LargeHeaderScrollView>
       </SafeAreaView>
     </View>
   );
@@ -104,22 +105,21 @@ export function SpectatorLive() {
 const styles = StyleSheet.create({
   root:    { flex: 1, backgroundColor: SC.lowest },
   safeArea:{ flex: 1 },
-  scroll:  { padding: Spacing.three, paddingBottom: Spacing.five },
+  scroll:  { paddingHorizontal: Spacing.three, paddingBottom: Spacing.five },
 
   tabSwitcher: {
     flexDirection: 'row',
     backgroundColor: SC.base,
-    margin: Spacing.three,
+    marginBottom: Spacing.three,
     borderRadius: Shape.full,
     padding: 4,
-    gap: 0,
   },
   tabBtn:          { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: Shape.full },
   tabBtnActive:    { backgroundColor: C.tertiary },
   tabBtnText:      { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 14 },
   tabBtnTextActive:{ color: C.onTertiary },
 
-  filterRow:            { flexDirection: 'row', paddingHorizontal: Spacing.three, gap: Spacing.one, marginBottom: Spacing.two, flexWrap: 'wrap' },
+  filterRow:            { flexDirection: 'row', gap: Spacing.one, marginBottom: Spacing.two, flexWrap: 'wrap' },
   filterChip:           { backgroundColor: SC.high, borderRadius: Shape.full, paddingHorizontal: 12, paddingVertical: 6 },
   filterChipActive:     { backgroundColor: C.tertiaryContainer },
   filterChipText:       { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 12 },

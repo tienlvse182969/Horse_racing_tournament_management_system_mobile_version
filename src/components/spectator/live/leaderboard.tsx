@@ -3,17 +3,17 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
-import { jockeyLeaderboard, formatCurrency } from '@/data/mock-data';
+import { jockeyLeaderboard, formatCurrency } from '@/mock-data';
 
 const PODIUM_COLORS = [C.secondary, C.onSurfaceVariant, C.primary];
 const PODIUM_BG     = [C.secondaryContainer, `${C.onSurfaceVariant}25`, C.primaryContainer];
 
-export function Leaderboard() {
+export function Leaderboard({ standalone = true }: { standalone?: boolean }) {
   const top3 = jockeyLeaderboard.slice(0, 3);
   const rest  = jockeyLeaderboard.slice(3);
 
-  return (
-    <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+  const content = (
+    <>
       {/* Podium */}
       <Animated.View entering={FadeInDown.duration(340)} style={styles.podiumRow}>
         {[1, 0, 2].map(i => (
@@ -58,12 +58,23 @@ export function Leaderboard() {
           </View>
         </Animated.View>
       ))}
-    </ScrollView>
+    </>
   );
+
+  if (standalone) {
+    return (
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        {content}
+      </ScrollView>
+    );
+  }
+
+  return <View style={styles.inlineContent}>{content}</View>;
 }
 
 const styles = StyleSheet.create({
-  scroll: { padding: Spacing.three, gap: Spacing.two, paddingBottom: Spacing.five },
+  scroll:         { padding: Spacing.three, gap: Spacing.two, paddingBottom: Spacing.five },
+  inlineContent:  { gap: Spacing.two },
 
   podiumRow:   { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: Spacing.two, marginBottom: Spacing.three },
   podiumItem:  { flex: 1, alignItems: 'center', gap: Spacing.one },

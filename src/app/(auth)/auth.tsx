@@ -77,7 +77,7 @@ export default function AuthScreen() {
               <Animated.View entering={FadeIn.delay(140).duration(380)}>
                 <TouchableOpacity
                   style={[styles.submitBtn, { backgroundColor: roleColor }]}
-                  onPress={() => router.replace('/home' as never)}
+                  onPress={() => router.replace((isJockey ? '/jockey/home' : '/home') as never)}
                   activeOpacity={0.85}>
                   <Text style={[styles.submitText, { color: onRoleColor }]}>
                     {activeTab === 'login'
@@ -88,11 +88,20 @@ export default function AuthScreen() {
               </Animated.View>
             )}
 
-            <TouchableOpacity
-              style={styles.skipBtn}
-              onPress={() => router.replace('/home' as never)}>
-              <Text style={styles.skipText}>Bỏ qua (Demo) →</Text>
-            </TouchableOpacity>
+            <View style={styles.demoRow}>
+              <TouchableOpacity
+                style={styles.demoBtn}
+                onPress={() => router.replace('/home' as never)}
+                activeOpacity={0.8}>
+                <Text style={styles.demoText}>👥 Demo Khán giả</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.demoBtn, styles.demoBtnJockey]}
+                onPress={() => router.replace('/jockey/home' as never)}
+                activeOpacity={0.8}>
+                <Text style={[styles.demoText, styles.demoTextJockey]}>🏇 Demo Kỵ sĩ</Text>
+              </TouchableOpacity>
+            </View>
 
           </ScrollView>
         </KeyboardAvoidingView>
@@ -111,4 +120,10 @@ const styles = StyleSheet.create({
   submitText:  { fontFamily: FontFamily.bold, fontSize: 16, letterSpacing: 0.5 },
   skipBtn:     { alignItems: 'center', paddingVertical: Spacing.two },
   skipText:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 14 },
+
+  demoRow:          { flexDirection: 'row', gap: Spacing.two, paddingVertical: Spacing.two },
+  demoBtn:          { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: Shape.full, borderWidth: 1, borderColor: C.outlineVariant },
+  demoBtnJockey:    { borderColor: `${C.primary}60`, backgroundColor: `${C.primary}15` },
+  demoText:         { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 13 },
+  demoTextJockey:   { color: C.primary },
 });

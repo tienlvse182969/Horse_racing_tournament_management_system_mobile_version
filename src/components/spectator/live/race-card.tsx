@@ -3,8 +3,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
-import type { Race } from '@/data/mock-data';
-import { formatCurrency, formatDate } from '@/data/mock-data';
+import type { Race } from '@/mock-data';
+import { formatCurrency, formatDate } from '@/mock-data';
 
 type Props = { race: Race; onPress: () => void };
 

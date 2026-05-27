@@ -7,8 +7,9 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
-import type { Notification, NotificationType } from '@/data/mock-data';
-import { notifications as initialNotifications, formatCurrency } from '@/data/mock-data';
+import { AvatarTabButton } from '@/components/avatar-tab-button';
+import type { Notification, NotificationType } from '@/mock-data';
+import { notifications as initialNotifications, formatCurrency } from '@/mock-data';
 
 const TYPE_CONFIG: Record<NotificationType, { icon: string; color: string; bg: string }> = {
   reward:     { icon: 'gift',           color: C.primary,    bg: C.primaryContainer },
@@ -38,7 +39,7 @@ export function SpectatorNotifications() {
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <LargeHeaderScrollView title="Thông báo" contentContainerStyle={styles.scroll}>
+        <LargeHeaderScrollView title="Thông báo" contentContainerStyle={styles.scroll} rightAction={<AvatarTabButton />}>
 
           {/* Rewards banner */}
           <LinearGradient

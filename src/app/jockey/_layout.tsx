@@ -2,10 +2,10 @@ import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { ColorValue } from 'react-native';
 
-import { notifications } from '@/mock-data';
+import { invitations } from '@/mock-data';
 import { M3TabBar } from '@/components/m3-tab-bar';
 
-const unreadCount = notifications.filter(n => !n.read).length;
+const pendingCount = invitations.filter(i => i.status === 'pending').length;
 
 function tabIcon(active: string, inactive: string) {
   return ({ color, size, focused }: { color: ColorValue; size: number; focused: boolean }) => (
@@ -17,7 +17,7 @@ function tabIcon(active: string, inactive: string) {
   );
 }
 
-export default function AppLayout() {
+export default function JockeyLayout() {
   return (
     <Tabs
       tabBar={props => <M3TabBar {...(props as any)} />}
@@ -27,20 +27,20 @@ export default function AppLayout() {
         options={{ title: 'Trang chủ', tabBarIcon: tabIcon('home', 'home-outline') }}
       />
       <Tabs.Screen
-        name="live"
-        options={{ title: 'Trực tiếp', tabBarIcon: tabIcon('broadcast', 'broadcast') }}
-      />
-      <Tabs.Screen
-        name="predict"
-        options={{ title: 'Dự đoán', tabBarIcon: tabIcon('target', 'target') }}
-      />
-      <Tabs.Screen
-        name="notifications"
+        name="invitations"
         options={{
-          title: 'Thông báo',
-          tabBarIcon: tabIcon('bell', 'bell-outline'),
-          tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
+          title: 'Lời mời',
+          tabBarIcon: tabIcon('email', 'email-outline'),
+          tabBarBadge: pendingCount > 0 ? pendingCount : undefined,
         }}
+      />
+      <Tabs.Screen
+        name="schedule"
+        options={{ title: 'Lịch đua', tabBarIcon: tabIcon('calendar-month', 'calendar-month-outline') }}
+      />
+      <Tabs.Screen
+        name="results"
+        options={{ title: 'Kết quả', tabBarIcon: tabIcon('trophy', 'trophy-outline') }}
       />
     </Tabs>
   );

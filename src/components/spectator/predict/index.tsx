@@ -5,7 +5,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
-import { predictions } from '@/data/mock-data';
+import { AvatarTabButton } from '@/components/avatar-tab-button';
+import { predictions } from '@/mock-data';
 import { PredictForm } from './predict-form';
 import { PredictionHistory } from './history';
 
@@ -22,7 +23,7 @@ export function SpectatorPredict() {
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <LargeHeaderScrollView title="Dự đoán" contentContainerStyle={styles.scroll}>
+        <LargeHeaderScrollView title="Dự đoán" contentContainerStyle={styles.scroll} rightAction={<AvatarTabButton />}>
 
           {/* Points banner */}
           <View style={styles.pointsBanner}>

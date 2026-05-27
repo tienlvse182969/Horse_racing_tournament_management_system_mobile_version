@@ -73,12 +73,12 @@ function TabItem({ isFocused, label, options, onPress }: TabItemProps) {
         <Animated.View style={[styles.pill, pillStyle]} />
         <View style={styles.iconLayer}>
           {options.tabBarIcon?.({ focused: isFocused, color: iconColor, size: 22 })}
+          {badge != null && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{badge}</Text>
+            </View>
+          )}
         </View>
-        {badge != null && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{badge}</Text>
-          </View>
-        )}
       </View>
 
       {/* Label */}
@@ -157,14 +157,16 @@ const styles = StyleSheet.create({
     backgroundColor: C.tertiaryContainer,
   },
   iconLayer: {
+    width: 22,
+    height: 22,
     zIndex: 1,
   },
 
-  // Badge (notification dot)
+  // Badge (notification dot) — positioned relative to the 22×22 icon
   badge: {
     position: 'absolute',
-    top: -2,
-    right: -2,
+    top: -5,
+    right: -7,
     minWidth: 16,
     height: 16,
     borderRadius: Shape.full,

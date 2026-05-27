@@ -1,56 +1,88 @@
-# Welcome to your Expo app 👋
+# RaceTrack VN — Mobile App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Ứng dụng di động quản lý giải đua ngựa, hỗ trợ hai vai trò: **Khán giả** và **Kỵ sĩ**.
 
-## Get started
+---
 
-1. Install dependencies
+## Tính năng
 
-   ```bash
-   npm install
-   ```
+### Khán giả
+| Màn hình | Mô tả |
+|---|---|
+| Trang chủ | Thông tin giải đấu, cuộc đua trực tiếp, kết quả mới nhất |
+| Trực tiếp | Danh sách cuộc đua theo trạng thái, chi tiết trận đấu, bảng xếp hạng jockey |
+| Dự đoán | Chọn ngựa để dự đoán kết quả, xem lịch sử và điểm thưởng |
+| Thông báo | Nhận thông báo kết quả, phần thưởng, thông tin giải đấu |
+| Hồ sơ | Thống kê dự đoán, tỷ lệ đoán trúng/sai, cài đặt tài khoản |
 
-2. Start the app
+### Kỵ sĩ
+| Màn hình | Mô tả |
+|---|---|
+| Trang chủ | Thống kê sự nghiệp, lời mời chờ phản hồi, lịch đua sắp tới, thu nhập tháng |
+| Lời mời | Xem và phản hồi lời mời từ chủ ngựa (chấp nhận / từ chối) |
+| Lịch đua | Lịch thi đấu dạng calendar, danh sách cuộc đua theo ngày |
+| Kết quả | Kết quả cá nhân và bảng xếp hạng jockey toàn giải |
+| Hồ sơ | Thành tích sự nghiệp, danh hiệu, cài đặt tài khoản |
 
-   ```bash
-   npx expo start
-   ```
+---
 
-In the output, you'll find options to open the app in a
+## Tech Stack
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- **Framework**: [Expo](https://expo.dev) SDK 56 + Expo Router v3 (file-based routing)
+- **Language**: TypeScript 6
+- **UI**: React Native 0.85 + React Native Reanimated 4 + React Native Paper v5
+- **Icons**: `@expo/vector-icons` (MaterialCommunityIcons)
+- **Gradient**: `expo-linear-gradient`
+- **Theme**: Material Design 3 — seed color amber `#FFB86C` (dark theme)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+---
 
-## Get a fresh project
-
-When you're ready, run:
+## Cài đặt & chạy
 
 ```bash
-npm run reset-project
+# Cài dependencies
+npm install
+
+# Chạy trên Android emulator
+npm run android
+
+# Chạy trên iOS simulator
+npm run ios
+
+# Chạy trên web
+npm run web
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+> Yêu cầu: Android emulator tên `Resizable_Experimental` hoặc thay đổi `ANDROID_EMULATOR` trong `package.json`.
 
-### Other setup steps
+---
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Cấu trúc thư mục
 
-## Learn more
+```
+src/
+├── app/
+│   ├── (auth)/          # Màn hình đăng nhập / đăng ký
+│   ├── (app)/           # Tab navigator khán giả (home, live, predict, notifications)
+│   ├── jockey/          # Tab navigator kỵ sĩ (home, invitations, schedule, results)
+│   ├── profile.tsx      # Hồ sơ khán giả (stack screen)
+│   └── jockey-profile.tsx  # Hồ sơ kỵ sĩ (stack screen)
+├── components/
+│   ├── auth/            # Form đăng nhập, đăng ký, chọn vai trò
+│   ├── spectator/       # Tất cả màn hình của khán giả
+│   ├── jockey/          # Tất cả màn hình của kỵ sĩ
+│   ├── large-header-scroll-view.tsx  # Collapsible large title header
+│   └── m3-tab-bar.tsx   # Material 3 Expressive tab bar
+├── mock-data/           # Mock data và types (races, jockey, user, predictions...)
+└── constants/
+    └── theme.ts         # Bảng màu HorseRacingDark + spacing + typography
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+---
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Demo nhanh
 
-## Join the community
+Tại màn hình đăng nhập, nhấn một trong hai nút demo ở cuối trang để bỏ qua xác thực:
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- **Demo Khán giả** — vào app với tài khoản khán giả mẫu
+- **Demo Kỵ sĩ** — vào app với tài khoản kỵ sĩ mẫu

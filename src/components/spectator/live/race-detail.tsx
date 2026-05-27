@@ -5,8 +5,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
-import type { Race } from '@/data/mock-data';
-import { formatCurrency, formatDate } from '@/data/mock-data';
+import type { Race } from '@/mock-data';
+import { formatCurrency, formatDate } from '@/mock-data';
 
 const MEDAL = ['🥇', '🥈', '🥉'];
 

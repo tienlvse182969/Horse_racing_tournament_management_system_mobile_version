@@ -3,7 +3,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
-import { predictions, formatCurrency, formatDate } from '@/data/mock-data';
+import { predictions, formatCurrency, formatDate } from '@/mock-data';
 
 const won     = predictions.filter(p => p.status === 'won').length;
 const lost    = predictions.filter(p => p.status === 'lost').length;
