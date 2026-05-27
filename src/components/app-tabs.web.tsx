@@ -7,13 +7,13 @@ import {
   TabListProps,
 } from 'expo-router/ui';
 import { SymbolView } from 'expo-symbols';
-import { Pressable, useColorScheme, View, StyleSheet } from 'react-native';
+import { Pressable, View, StyleSheet } from 'react-native';
 
 import { ExternalLink } from './external-link';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
-import { Colors, MaxContentWidth, Spacing } from '@/constants/theme';
+import { HorseRacingDark, MaxContentWidth, Spacing } from '@/constants/theme';
 
 export default function AppTabs() {
   return (
@@ -21,11 +21,20 @@ export default function AppTabs() {
       <TabSlot style={{ height: '100%' }} />
       <TabList asChild>
         <CustomTabList>
-          <TabTrigger name="home" href="/" asChild>
-            <TabButton>Home</TabButton>
+          <TabTrigger name="home" href="/(app)/home" asChild>
+            <TabButton>Trang chủ</TabButton>
           </TabTrigger>
-          <TabTrigger name="explore" href="/explore" asChild>
-            <TabButton>Explore</TabButton>
+          <TabTrigger name="live" href="/(app)/live" asChild>
+            <TabButton>Trực tiếp</TabButton>
+          </TabTrigger>
+          <TabTrigger name="predict" href="/(app)/predict" asChild>
+            <TabButton>Dự đoán</TabButton>
+          </TabTrigger>
+          <TabTrigger name="notifications" href="/(app)/notifications" asChild>
+            <TabButton>Thông báo</TabButton>
+          </TabTrigger>
+          <TabTrigger name="profile" href="/(app)/profile" asChild>
+            <TabButton>Hồ sơ</TabButton>
           </TabTrigger>
         </CustomTabList>
       </TabList>
@@ -37,9 +46,9 @@ export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps
   return (
     <Pressable {...props} style={({ pressed }) => pressed && styles.pressed}>
       <ThemedView
-        type={isFocused ? 'backgroundSelected' : 'backgroundElement'}
+        type={isFocused ? 'secondaryContainer' : 'surfaceVariant'}
         style={styles.tabButtonView}>
-        <ThemedText type="small" themeColor={isFocused ? 'text' : 'textSecondary'}>
+        <ThemedText type="small" themeColor={isFocused ? 'onSurface' : 'onSurfaceVariant'}>
           {children}
         </ThemedText>
       </ThemedView>
@@ -48,14 +57,11 @@ export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps
 }
 
 export function CustomTabList(props: TabListProps) {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
-
   return (
     <View {...props} style={styles.tabListContainer}>
-      <ThemedView type="backgroundElement" style={styles.innerContainer}>
+      <ThemedView type="surfaceVariant" style={styles.innerContainer}>
         <ThemedText type="smallBold" style={styles.brandText}>
-          Expo Starter
+          Giải Đua Ngựa
         </ThemedText>
 
         {props.children}
@@ -64,7 +70,7 @@ export function CustomTabList(props: TabListProps) {
           <Pressable style={styles.externalPressable}>
             <ThemedText type="link">Docs</ThemedText>
             <SymbolView
-              tintColor={colors.text}
+              tintColor={HorseRacingDark.onSurface}
               name={{ ios: 'arrow.up.right.square', web: 'link' }}
               size={12}
             />

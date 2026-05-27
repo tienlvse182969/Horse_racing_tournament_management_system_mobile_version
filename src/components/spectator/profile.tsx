@@ -1,0 +1,208 @@
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { router } from 'expo-router';
+
+import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
+import { currentSpectator, predictions, formatCurrency, formatDate } from '@/data/mock-data';
+
+const won     = predictions.filter(p => p.status === 'won').length;
+const lost    = predictions.filter(p => p.status === 'lost').length;
+const pending = predictions.filter(p => p.status === 'pending').length;
+const total   = predictions.length;
+const winPct  = total > 0 ? won / total : 0;
+
+const STATS = [
+  { label: 'Dự đoán',     value: currentSpectator.stats.totalPredictions, emoji: '🎯' },
+  { label: 'Chính xác',   value: currentSpectator.stats.correctPredictions, emoji: '✅' },
+  { label: 'Điểm',        value: `${(currentSpectator.stats.totalPoints / 1000).toFixed(0)}k`, emoji: '⭐' },
+  { label: 'Thưởng',      value: formatCurrency(currentSpectator.stats.totalRewards), emoji: '🎁' },
+  { label: 'Tỷ lệ thắng', value: `${currentSpectator.stats.winRate}%`, emoji: '📊' },
+  { label: 'Hạng xếp',   value: `#${currentSpectator.stats.rank}`, emoji: '🏅' },
+];
+
+const SETTINGS = [
+  { icon: 'bell-outline',        label: 'Cài đặt thông báo' },
+  { icon: 'lock-outline',        label: 'Đổi mật khẩu' },
+  { icon: 'help-circle-outline', label: 'Trợ giúp & Hỗ trợ' },
+  { icon: 'information-outline', label: 'Về ứng dụng' },
+];
+
+const recentPreds = predictions.slice(0, 4);
+
+const STATUS_CONFIG = {
+  won:     { color: C.tertiary,  bg: C.tertiaryContainer,  label: 'Đúng' },
+  lost:    { color: C.error,     bg: C.errorContainer,     label: 'Sai' },
+  pending: { color: C.secondary, bg: C.secondaryContainer, label: 'Chờ' },
+};
+
+export function SpectatorProfile() {
+  const handleLogout = () =>
+    Alert.alert('Đăng xuất', 'Bạn có chắc muốn đăng xuất?', [
+      { text: 'Hủy', style: 'cancel' },
+      { text: 'Đăng xuất', style: 'destructive', onPress: () => router.replace('/(auth)/auth' as never) },
+    ]);
+
+  return (
+    <View style={styles.root}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <LargeHeaderScrollView title="Hồ sơ" contentContainerStyle={styles.scroll}>
+
+          {/* Hero */}
+          <Animated.View entering={FadeIn.duration(350)}>
+            <LinearGradient
+              colors={['#003520', '#1A5C3A']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.hero}>
+              <View style={styles.heroAvatar}>
+                <Text style={styles.heroInitials}>{currentSpectator.initials}</Text>
+              </View>
+              <Text style={styles.heroName}>{currentSpectator.name}</Text>
+              <Text style={styles.heroPhone}>{currentSpectator.phone}</Text>
+              <View style={styles.heroChip}>
+                <MaterialCommunityIcons name="calendar-outline" size={12} color={C.tertiary} />
+                <Text style={styles.heroChipText}>Tham gia {formatDate(currentSpectator.joinedAt)}/2026</Text>
+              </View>
+            </LinearGradient>
+          </Animated.View>
+
+          {/* Stats grid */}
+          <Animated.View entering={FadeInDown.delay(80).duration(320)}>
+            <View style={styles.statsGrid}>
+              {STATS.map(s => (
+                <View key={s.label} style={styles.statCard}>
+                  <Text style={styles.statEmoji}>{s.emoji}</Text>
+                  <Text style={styles.statValue}>{s.value}</Text>
+                  <Text style={styles.statLabel}>{s.label}</Text>
+                </View>
+              ))}
+            </View>
+          </Animated.View>
+
+          {/* Win rate bar */}
+          <Animated.View entering={FadeInDown.delay(140).duration(320)} style={styles.section}>
+            <Text style={styles.sectionTitle}>Tỷ lệ dự đoán</Text>
+            <View style={styles.barRow}>
+              {won > 0 && (
+                <View style={[styles.barSeg, { flex: won, backgroundColor: C.tertiary }]} />
+              )}
+              {pending > 0 && (
+                <View style={[styles.barSeg, { flex: pending, backgroundColor: C.secondary }]} />
+              )}
+              {lost > 0 && (
+                <View style={[styles.barSeg, { flex: lost, backgroundColor: C.error }]} />
+              )}
+            </View>
+            <View style={styles.barLegend}>
+              <LegendItem color={C.tertiary}  label={`Đúng (${won})`} />
+              <LegendItem color={C.secondary} label={`Chờ (${pending})`} />
+              <LegendItem color={C.error}     label={`Sai (${lost})`} />
+            </View>
+          </Animated.View>
+
+          {/* Recent predictions */}
+          <Animated.View entering={FadeInDown.delay(200).duration(320)} style={styles.section}>
+            <Text style={styles.sectionTitle}>Dự đoán gần đây</Text>
+            {recentPreds.map(p => {
+              const cfg = STATUS_CONFIG[p.status];
+              return (
+                <View key={p.id} style={styles.predRow}>
+                  <View style={styles.predInfo}>
+                    <Text style={styles.predRace} numberOfLines={1}>{p.raceName}</Text>
+                    <Text style={styles.predHorse}>#{p.predictedHorseNumber} {p.predictedHorseName}</Text>
+                  </View>
+                  <View style={[styles.predBadge, { backgroundColor: cfg.bg }]}>
+                    <Text style={[styles.predBadgeText, { color: cfg.color }]}>{cfg.label}</Text>
+                  </View>
+                </View>
+              );
+            })}
+          </Animated.View>
+
+          {/* Settings */}
+          <Animated.View entering={FadeInDown.delay(260).duration(320)} style={styles.section}>
+            <Text style={styles.sectionTitle}>Cài đặt</Text>
+            {SETTINGS.map(s => (
+              <TouchableOpacity key={s.label} style={styles.settingRow} activeOpacity={0.75}>
+                <View style={styles.settingIconWrap}>
+                  <MaterialCommunityIcons name={s.icon as any} size={20} color={C.onSurfaceVariant} />
+                </View>
+                <Text style={styles.settingLabel}>{s.label}</Text>
+                <MaterialCommunityIcons name="chevron-right" size={18} color={C.onSurfaceVariant} />
+              </TouchableOpacity>
+            ))}
+          </Animated.View>
+
+          {/* Logout */}
+          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.85}>
+            <MaterialCommunityIcons name="logout" size={18} color={C.error} />
+            <Text style={styles.logoutText}>Đăng xuất</Text>
+          </TouchableOpacity>
+
+        </LargeHeaderScrollView>
+      </SafeAreaView>
+    </View>
+  );
+}
+
+function LegendItem({ color, label }: { color: string; label: string }) {
+  return (
+    <View style={styles.legendItem}>
+      <View style={[styles.legendDot, { backgroundColor: color }]} />
+      <Text style={styles.legendText}>{label}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  root:    { flex: 1, backgroundColor: SC.lowest },
+  safeArea:{ flex: 1 },
+  scroll:  { paddingHorizontal: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.five },
+
+  // Hero
+  hero:        { borderRadius: Shape.large, padding: Spacing.three, alignItems: 'center', gap: Spacing.two },
+  heroAvatar:  { width: 72, height: 72, borderRadius: Shape.full, backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center', marginBottom: Spacing.one },
+  heroInitials:{ color: C.tertiary, fontFamily: FontFamily.bold, fontSize: 28 },
+  heroName:    { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 22 },
+  heroPhone:   { color: 'rgba(255,255,255,0.65)', fontFamily: FontFamily.regular, fontSize: 13 },
+  heroChip:    { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(0,0,0,0.25)', borderRadius: Shape.full, paddingHorizontal: 12, paddingVertical: 5 },
+  heroChipText:{ color: C.tertiary, fontFamily: FontFamily.medium, fontSize: 11 },
+
+  // Stats
+  statsGrid:  { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
+  statCard:   { width: '30.5%', backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, alignItems: 'center', gap: 3 },
+  statEmoji:  { fontSize: 20 },
+  statValue:  { color: C.primary, fontFamily: FontFamily.bold, fontSize: 16 },
+  statLabel:  { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 10, textAlign: 'center' },
+
+  // Win rate bar
+  section:     { gap: Spacing.two },
+  sectionTitle:{ color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15 },
+  barRow:      { flexDirection: 'row', height: 10, borderRadius: Shape.full, overflow: 'hidden', gap: 1 },
+  barSeg:      { borderRadius: Shape.full },
+  barLegend:   { flexDirection: 'row', gap: Spacing.three },
+  legendItem:  { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  legendDot:   { width: 8, height: 8, borderRadius: 4 },
+  legendText:  { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
+
+  // Predictions
+  predRow:      { flexDirection: 'row', alignItems: 'center', backgroundColor: SC.high, borderRadius: Shape.medium, padding: Spacing.two, gap: Spacing.two, marginBottom: Spacing.one },
+  predInfo:     { flex: 1 },
+  predRace:     { color: C.onSurface, fontFamily: FontFamily.medium, fontSize: 13 },
+  predHorse:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11, marginTop: 2 },
+  predBadge:    { borderRadius: Shape.full, paddingHorizontal: 10, paddingVertical: 4 },
+  predBadgeText:{ fontFamily: FontFamily.bold, fontSize: 11 },
+
+  // Settings
+  settingRow:    { flexDirection: 'row', alignItems: 'center', backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, gap: Spacing.two, marginBottom: Spacing.one },
+  settingIconWrap:{ width: 36, height: 36, borderRadius: Shape.medium, backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center' },
+  settingLabel:  { color: C.onSurface, fontFamily: FontFamily.regular, fontSize: 14, flex: 1 },
+
+  // Logout
+  logoutBtn:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two, borderRadius: Shape.full, paddingVertical: 14, borderWidth: 1, borderColor: C.error, marginTop: Spacing.one },
+  logoutText: { color: C.error, fontFamily: FontFamily.bold, fontSize: 15 },
+});
