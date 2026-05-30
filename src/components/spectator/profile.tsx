@@ -7,22 +7,9 @@ import { router } from 'expo-router';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
-import { currentSpectator, predictions, formatCurrency, formatDate } from '@/mock-data';
-
-const won     = predictions.filter(p => p.status === 'won').length;
-const lost    = predictions.filter(p => p.status === 'lost').length;
-const pending = predictions.filter(p => p.status === 'pending').length;
-const total   = predictions.length;
-const winPct  = total > 0 ? won / total : 0;
-
-const STATS = [
-  { label: 'Dự đoán',     value: currentSpectator.stats.totalPredictions, emoji: '🎯' },
-  { label: 'Đoán đúng',   value: currentSpectator.stats.correctPredictions, emoji: '✅' },
-  { label: 'Đoán sai',    value: currentSpectator.stats.totalPredictions - currentSpectator.stats.correctPredictions, emoji: '❌' },
-  { label: 'Điểm thưởng', value: `${(currentSpectator.stats.totalPoints / 1000).toFixed(0)}k`, emoji: '⭐' },
-  { label: 'Tỷ lệ đúng',  value: `${currentSpectator.stats.winRate}%`, emoji: '📊' },
-  { label: 'Hạng xếp',   value: `#${currentSpectator.stats.rank}`, emoji: '🏅' },
-];
+import { useAuth } from '@/context/AuthContext';
+import { useSpectatorPoints, useSpectatorPredictions } from '@/hooks/useSpectatorData';
+import { formatCurrency, formatDate } from '@/mock-data';
 
 const SETTINGS = [
   { icon: 'bell-outline',        label: 'Cài đặt thông báo' },
@@ -31,8 +18,6 @@ const SETTINGS = [
   { icon: 'information-outline', label: 'Về ứng dụng' },
 ];
 
-const recentPreds = predictions.slice(0, 4);
-
 const STATUS_CONFIG = {
   won:     { color: C.tertiary,  bg: C.tertiaryContainer,  label: 'Đúng' },
   lost:    { color: C.error,     bg: C.errorContainer,     label: 'Sai' },
@@ -40,10 +25,30 @@ const STATUS_CONFIG = {
 };
 
 export function SpectatorProfile() {
+  const { user, logout } = useAuth();
+  const { balance } = useSpectatorPoints();
+  const { predictions } = useSpectatorPredictions();
+  const won = predictions.filter(p => p.status === 'won').length;
+  const lost = predictions.filter(p => p.status === 'lost').length;
+  const pending = predictions.filter(p => p.status === 'pending').length;
+  const total = predictions.length;
+  const winPct = total > 0 ? Math.round((won / total) * 100) : 0;
+  const STATS = [
+    { label: 'Dự đoán', value: total, emoji: '🎯' },
+    { label: 'Đoán đúng', value: won, emoji: '✅' },
+    { label: 'Đoán sai', value: lost, emoji: '❌' },
+    { label: 'Điểm thưởng', value: `${(balance / 1000).toFixed(0)}k`, emoji: '⭐' },
+    { label: 'Tỷ lệ đúng', value: `${winPct}%`, emoji: '📊' },
+    { label: 'Đang chờ', value: pending, emoji: '🏅' },
+  ];
+  const recentPreds = predictions.slice(0, 4);
+  const displayName = user?.fullName ?? 'Khán giả';
+  const initials = displayName.split(' ').map(w => w[0]).join('').slice(-2).toUpperCase();
+
   const handleLogout = () =>
     Alert.alert('Đăng xuất', 'Bạn có chắc muốn đăng xuất?', [
       { text: 'Hủy', style: 'cancel' },
-      { text: 'Đăng xuất', style: 'destructive', onPress: () => router.replace('/(auth)/auth' as never) },
+      { text: 'Đăng xuất', style: 'destructive', onPress: async () => { await logout(); router.replace('/(auth)/auth' as never); } },
     ]);
 
   return (
@@ -66,13 +71,13 @@ export function SpectatorProfile() {
               end={{ x: 1, y: 1 }}
               style={styles.hero}>
               <View style={styles.heroAvatar}>
-                <Text style={styles.heroInitials}>{currentSpectator.initials}</Text>
+                <Text style={styles.heroInitials}>{initials}</Text>
               </View>
-              <Text style={styles.heroName}>{currentSpectator.name}</Text>
-              <Text style={styles.heroPhone}>{currentSpectator.phone}</Text>
+              <Text style={styles.heroName}>{displayName}</Text>
+              <Text style={styles.heroPhone}>{user?.email ?? ''}</Text>
               <View style={styles.heroChip}>
                 <MaterialCommunityIcons name="calendar-outline" size={12} color={C.tertiary} />
-                <Text style={styles.heroChipText}>Tham gia {formatDate(currentSpectator.joinedAt)}/2026</Text>
+                <Text style={styles.heroChipText}>{balance.toLocaleString()} điểm</Text>
               </View>
             </LinearGradient>
           </Animated.View>

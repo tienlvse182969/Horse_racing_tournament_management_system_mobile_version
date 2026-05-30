@@ -1,11 +1,12 @@
-import { Tabs } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { Redirect, Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { ColorValue } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 
-import { invitations } from '@/mock-data';
 import { M3TabBar } from '@/components/m3-tab-bar';
-
-const pendingCount = invitations.filter(i => i.status === 'pending').length;
+import { useAuth } from '@/context/AuthContext';
+import { jockeyApi } from '@/api/jockey.api';
 
 function tabIcon(active: string, inactive: string) {
   return ({ color, size, focused }: { color: ColorValue; size: number; focused: boolean }) => (
@@ -18,6 +19,29 @@ function tabIcon(active: string, inactive: string) {
 }
 
 export default function JockeyLayout() {
+  const { user, loading } = useAuth();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    if (user?.role === 'jockey') {
+      jockeyApi.listInvitations('pending').then((res) => {
+        setPendingCount(res.invitations.length);
+      }).catch(() => {});
+    }
+  }, [user]);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
+  if (!user || user.role !== 'jockey') {
+    return <Redirect href={'/(auth)/auth' as never} />;
+  }
+
   return (
     <Tabs
       tabBar={props => <M3TabBar {...(props as any)} />}

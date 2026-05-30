@@ -5,25 +5,31 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, Spacing, FontFamily } from '@/constants/theme';
 
-export function LoginForm() {
-  const [phone, setPhone]       = useState('');
-  const [password, setPassword] = useState('');
+type Props = {
+  email: string;
+  password: string;
+  onEmailChange: (v: string) => void;
+  onPasswordChange: (v: string) => void;
+};
+
+export function LoginForm({ email, password, onEmailChange, onPasswordChange }: Props) {
   const [pwVisible, setPwVisible] = useState(false);
 
   return (
     <Animated.View entering={FadeIn.duration(220)} style={styles.form}>
       <TextInput
-        label="Số điện thoại"
-        value={phone}
-        onChangeText={setPhone}
+        label="Email"
+        value={email}
+        onChangeText={onEmailChange}
         mode="outlined"
-        keyboardType="phone-pad"
-        left={<TextInput.Icon icon="phone-outline" />}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        left={<TextInput.Icon icon="email-outline" />}
       />
       <TextInput
         label="Mật khẩu"
         value={password}
-        onChangeText={setPassword}
+        onChangeText={onPasswordChange}
         mode="outlined"
         secureTextEntry={!pwVisible}
         left={<TextInput.Icon icon="lock-outline" />}

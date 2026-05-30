@@ -1,19 +1,22 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
-import { races, formatCurrency, formatDate } from '@/mock-data';
-
-const predictableRaces = races.filter(r => r.status !== 'completed');
+import { formatCurrency, formatDate } from '@/mock-data';
+import { useSpectatorRaces } from '@/hooks/useSpectatorData';
+import { spectatorApi } from '@/api/spectator.api';
 
 type Props = { onSubmitted: () => void };
 
 export function PredictForm({ onSubmitted }: Props) {
+  const { races, loading } = useSpectatorRaces();
+  const predictableRaces = races.filter(r => r.status !== 'completed');
   const [selectedRaceId, setSelectedRaceId]   = useState<string | null>(null);
   const [selectedHorseId, setSelectedHorseId] = useState<string | null>(null);
   const [submitted, setSubmitted]             = useState(false);
+  const [submitting, setSubmitting]           = useState(false);
 
   const selectedRace  = predictableRaces.find(r => r.id === selectedRaceId);
   const selectedHorse = selectedRace?.entries.find(e => e.horse.id === selectedHorseId);
@@ -23,10 +26,21 @@ export function PredictForm({ onSubmitted }: Props) {
     setSelectedHorseId(null);
   };
 
-  const handleSubmit = () => {
-    setSubmitted(true);
-    setTimeout(onSubmitted, 1800);
+  const handleSubmit = async () => {
+    if (!selectedRaceId || !selectedHorseId) return;
+    setSubmitting(true);
+    try {
+      await spectatorApi.createPrediction(selectedRaceId, [{ rank: 1, horseId: selectedHorseId }]);
+      setSubmitted(true);
+      setTimeout(onSubmitted, 1800);
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  if (loading) {
+    return <ActivityIndicator color={C.primary} style={{ marginTop: Spacing.three }} />;
+  }
 
   if (submitted) {
     return (

@@ -8,13 +8,22 @@ import { router } from 'expo-router';
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { JockeyAvatarButton } from '@/components/jockey-avatar-button';
-import { currentJockey, invitations, jockeyRaces, formatCurrency, formatDate } from '@/mock-data';
-
-const pendingCount   = invitations.filter(i => i.status === 'pending').length;
-const liveRace       = jockeyRaces.find(r => r.status === 'live');
-const upcomingRaces  = jockeyRaces.filter(r => r.status === 'upcoming').slice(0, 3);
+import { useAuth } from '@/context/AuthContext';
+import { useJockeyDashboard, useJockeyInvitations, useJockeyRaces } from '@/hooks/useJockeyData';
+import { formatCurrency, formatDate } from '@/mock-data';
 
 export function JockeyHome() {
+  const { user } = useAuth();
+  const stats = useJockeyDashboard();
+  const { invitations } = useJockeyInvitations();
+  const { races: jockeyRaces } = useJockeyRaces();
+  const pendingCount = stats.pendingInvitations || invitations.filter(i => i.status === 'pending').length;
+  const liveRace = jockeyRaces.find(r => r.status === 'live');
+  const upcomingRaces = jockeyRaces.filter(r => r.status === 'upcoming').slice(0, 3);
+  const displayName = user?.fullName ?? 'Kỵ sĩ';
+  const initials = displayName.split(' ').map(w => w[0]).join('').slice(-2).toUpperCase();
+  const winRate = stats.completedRaces > 0 ? Math.round((stats.completedRaces / (stats.completedRaces + stats.upcomingRaces || 1)) * 100) : 0;
+
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -35,20 +44,20 @@ export function JockeyHome() {
                 <View>
                   <Text style={styles.heroGreeting}>Xin chào 👋</Text>
                   <Text style={styles.heroName}>
-                    {currentJockey.name.split(' ').slice(-2).join(' ')}
+                    {displayName.split(' ').slice(-2).join(' ')}
                   </Text>
-                  <Text style={styles.heroLicense}>#{currentJockey.licenseNumber}</Text>
+                  <Text style={styles.heroLicense}>#{user?.id.slice(-6) ?? '------'}</Text>
                 </View>
                 <View style={styles.heroAvatar}>
-                  <Text style={styles.heroInitials}>{currentJockey.initials}</Text>
+                  <Text style={styles.heroInitials}>{initials}</Text>
                 </View>
               </View>
 
               <View style={styles.statsRow}>
                 {[
-                  { label: 'Tổng đua',     value: currentJockey.stats.totalRaces, icon: '🏇' },
-                  { label: 'Chiến thắng',  value: currentJockey.stats.wins,       icon: '🏆' },
-                  { label: 'Tỷ lệ thắng', value: `${currentJockey.stats.winRate}%`, icon: '📊' },
+                  { label: 'Tổng đua',     value: stats.completedRaces + stats.upcomingRaces, icon: '🏇' },
+                  { label: 'Chiến thắng',  value: stats.completedRaces, icon: '🏆' },
+                  { label: 'Tỷ lệ thắng', value: `${winRate}%`, icon: '📊' },
                 ].map(s => (
                   <View key={s.label} style={styles.statBox}>
                     <Text style={styles.statIcon}>{s.icon}</Text>

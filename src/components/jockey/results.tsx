@@ -8,7 +8,8 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { JockeyAvatarButton } from '@/components/jockey-avatar-button';
-import { personalResults, jockeyRankings, currentJockey, formatCurrency } from '@/mock-data';
+import { useJockeyRaces } from '@/hooks/useJockeyData';
+import { jockeyRankings, formatCurrency } from '@/mock-data';
 
 type Tab = 'personal' | 'leaderboard';
 
@@ -49,6 +50,18 @@ export function JockeyResults() {
 }
 
 function PersonalContent() {
+  const { races } = useJockeyRaces();
+  const personalResults = races
+    .filter(r => r.status === 'completed' && r.myEntry.position)
+    .map(r => ({
+      raceId: r.id,
+      raceName: r.name,
+      date: r.date,
+      horse: r.myEntry.horse.name,
+      position: r.myEntry.position ?? 0,
+      time: r.myEntry.finishTime ?? '-',
+      earnings: r.purse,
+    }));
   const totalEarnings = personalResults.reduce((s, r) => s + r.earnings, 0);
   const wins    = personalResults.filter(r => r.position === 1).length;
   const podiums = personalResults.filter(r => r.position <= 3).length;

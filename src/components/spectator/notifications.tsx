@@ -9,7 +9,8 @@ import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFami
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { AvatarTabButton } from '@/components/avatar-tab-button';
 import type { Notification, NotificationType } from '@/mock-data';
-import { notifications as initialNotifications, formatCurrency } from '@/mock-data';
+import { formatCurrency } from '@/mock-data';
+import { useSpectatorNotifications } from '@/hooks/useSpectatorData';
 
 const TYPE_CONFIG: Record<NotificationType, { icon: string; color: string; bg: string }> = {
   reward:     { icon: 'gift',           color: C.primary,    bg: C.primaryContainer },
@@ -29,12 +30,12 @@ function timeAgo(dateStr: string): string {
 }
 
 export function SpectatorNotifications() {
-  const [items, setItems] = useState<Notification[]>(initialNotifications);
+  const { notifications: items, setNotifications } = useSpectatorNotifications();
   const unread = items.filter(n => !n.read).length;
   const totalRewards = items.reduce((s, n) => s + (n.reward ?? 0), 0);
 
-  const markAllRead = () => setItems(prev => prev.map(n => ({ ...n, read: true })));
-  const markRead    = (id: string) => setItems(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const markRead    = (id: string) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
 
   return (
     <View style={styles.root}>
