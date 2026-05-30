@@ -1,7 +1,10 @@
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 
 const TOKEN_KEY = 'horse-racing-token';
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:3000';
+
+const isWeb = Platform.OS === 'web';
 
 export class ApiError extends Error {
   statusCode: number;
@@ -14,6 +17,9 @@ export class ApiError extends Error {
 
 export async function getStoredToken(): Promise<string | null> {
   try {
+    if (isWeb) {
+      return localStorage.getItem(TOKEN_KEY);
+    }
     return await SecureStore.getItemAsync(TOKEN_KEY);
   } catch {
     return null;
@@ -21,6 +27,11 @@ export async function getStoredToken(): Promise<string | null> {
 }
 
 export async function setStoredToken(token: string | null): Promise<void> {
+  if (isWeb) {
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+    return;
+  }
   if (token) await SecureStore.setItemAsync(TOKEN_KEY, token);
   else await SecureStore.deleteItemAsync(TOKEN_KEY);
 }
