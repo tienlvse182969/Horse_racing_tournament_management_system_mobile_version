@@ -6,19 +6,24 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { AvatarTabButton } from '@/components/avatar-tab-button';
-import { predictions } from '@/mock-data';
+import { useSpectatorPoints, useSpectatorPredictions } from '@/hooks/useSpectatorData';
 import { PredictForm } from './predict-form';
 import { PredictionHistory } from './history';
 
 type Tab = 'predict' | 'history';
 
-const totalPoints  = predictions.reduce((s, p) => s + (p.points ?? 0), 0);
-const totalRewards = predictions.reduce((s, p) => s + (p.reward ?? 0), 0);
-
 export function SpectatorPredict() {
   const [tab, setTab] = useState<Tab>('predict');
+  const { balance } = useSpectatorPoints();
+  const { predictions, reload } = useSpectatorPredictions();
 
-  const handleSubmitted = () => setTab('history');
+  const totalPoints  = balance;
+  const totalRewards = predictions.reduce((s, p) => s + (p.reward ?? 0), 0);
+
+  const handleSubmitted = () => {
+    reload();
+    setTab('history');
+  };
 
   return (
     <View style={styles.root}>
@@ -59,7 +64,7 @@ export function SpectatorPredict() {
           </View>
 
           {tab === 'predict' && <PredictForm onSubmitted={handleSubmitted} />}
-          {tab === 'history' && <PredictionHistory />}
+          {tab === 'history' && <PredictionHistory predictions={predictions} />}
 
         </LargeHeaderScrollView>
       </SafeAreaView>

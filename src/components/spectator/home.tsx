@@ -8,19 +8,23 @@ import { router } from 'expo-router';
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { AvatarTabButton } from '@/components/avatar-tab-button';
-import { races, formatCurrency, formatDate } from '@/mock-data';
-
-const liveRace      = races.find(r => r.status === 'live');
-const upcomingRaces = races.filter(r => r.status === 'upcoming');
-const completedRace = races.find(r => r.status === 'completed');
+import { formatCurrency, formatDate } from '@/mock-data';
+import { useSpectatorRaces } from '@/hooks/useSpectatorData';
+import { ActivityIndicator } from 'react-native';
 
 const MEDAL = ['🥇', '🥈', '🥉'];
 
 export function SpectatorHome() {
+  const { races, loading } = useSpectatorRaces();
+  const liveRace = races.find(r => r.status === 'live');
+  const upcomingRaces = races.filter(r => r.status === 'upcoming');
+  const completedRace = races.find(r => r.status === 'completed');
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <LargeHeaderScrollView title="RaceTrack VN" bangers contentContainerStyle={styles.scroll} rightAction={<AvatarTabButton />}>
+
+          {loading && <ActivityIndicator color={C.primary} style={{ marginVertical: Spacing.three }} />}
 
           {/* Tournament Hero */}
           <Animated.View entering={FadeIn.duration(400)}>

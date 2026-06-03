@@ -1,4 +1,5 @@
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -7,6 +8,7 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import type { Race } from '@/mock-data';
 import { formatCurrency, formatDate } from '@/mock-data';
+import { spectatorApi } from '@/api/spectator.api';
 
 const MEDAL = ['🥇', '🥈', '🥉'];
 
@@ -14,6 +16,7 @@ type Props = { race: Race; onBack: () => void };
 
 export function RaceDetail({ race, onBack }: Props) {
   const insets = useSafeAreaInsets();
+  const [purchasing, setPurchasing] = useState(false);
   const isCompleted = race.status === 'completed';
   const isLive = race.status === 'live';
   const sortedEntries = [...race.entries].sort((a, b) => {
@@ -90,6 +93,25 @@ export function RaceDetail({ race, onBack }: Props) {
             </View>
           ))}
         </Animated.View>
+
+        {!isCompleted && (
+          <TouchableOpacity
+            style={styles.ticketBtn}
+            disabled={purchasing}
+            onPress={async () => {
+              setPurchasing(true);
+              try {
+                await spectatorApi.purchaseViewingPass(race.id);
+                Alert.alert('Thành công', 'Đã mua vé xem cuộc đua');
+              } catch (e) {
+                Alert.alert('Lỗi', e instanceof Error ? e.message : 'Không thể mua vé');
+              } finally {
+                setPurchasing(false);
+              }
+            }}>
+            <Text style={styles.ticketBtnText}>{purchasing ? 'Đang xử lý...' : 'Mua vé xem (điểm)'}</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </Animated.View>
   );
@@ -141,4 +163,6 @@ const styles = StyleSheet.create({
   oddsBadge:    { backgroundColor: C.primaryContainer, borderRadius: Shape.full, paddingHorizontal: 8, paddingVertical: 3 },
   oddsText:     { color: C.onPrimaryContainer, fontFamily: FontFamily.bold, fontSize: 12 },
   finishTime:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
+  ticketBtn:    { backgroundColor: C.primary, borderRadius: Shape.full, paddingVertical: 14, alignItems: 'center' },
+  ticketBtnText:{ color: C.onPrimary, fontFamily: FontFamily.bold, fontSize: 14 },
 });

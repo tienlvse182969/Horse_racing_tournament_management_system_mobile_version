@@ -7,7 +7,8 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { JockeyAvatarButton } from '@/components/jockey-avatar-button';
-import { jockeyRaces, formatCurrency } from '@/mock-data';
+import { useJockeyRaces } from '@/hooks/useJockeyData';
+import { formatCurrency } from '@/mock-data';
 
 const DAYS   = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 const MONTHS = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
@@ -37,7 +38,8 @@ function buildWeeks(year: number, month: number) {
 }
 
 export function JockeySchedule() {
-  const today = new Date(2026, 4, 27); // May 27 2026
+  const { races: jockeyRaces } = useJockeyRaces();
+  const today = new Date();
   const [viewYear,    setViewYear]    = useState(today.getFullYear());
   const [viewMonth,   setViewMonth]   = useState(today.getMonth());
   const [selectedDay, setSelectedDay] = useState(today.getDate());

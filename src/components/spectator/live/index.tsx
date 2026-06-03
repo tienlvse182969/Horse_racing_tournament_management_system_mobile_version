@@ -5,7 +5,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { AvatarTabButton } from '@/components/avatar-tab-button';
-import { races } from '@/mock-data';
+import { useSpectatorRaces } from '@/hooks/useSpectatorData';
 import type { Race, RaceStatus } from '@/mock-data';
 import { RaceCard } from './race-card';
 import { RaceDetail } from './race-detail';
@@ -22,6 +22,7 @@ const STATUS_LABELS: Record<RaceStatus, string> = {
 };
 
 export function SpectatorLive() {
+  const { races } = useSpectatorRaces();
   const [tab, setTab]               = useState<MainTab>('races');
   const [filter, setFilter]         = useState<FilterStatus>('all');
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);

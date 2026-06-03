@@ -1,0 +1,54 @@
+import { apiGet, apiPatch } from './client';
+
+export const jockeyApi = {
+  dashboard: () =>
+    apiGet<{ pendingInvitations: number; upcomingRaces: number; completedRaces: number }>(
+      '/api/jockey/dashboard',
+    ),
+  listInvitations: (status?: string) =>
+    apiGet<{ invitations: InvitationDto[] }>(
+      `/api/jockey/invitations${status ? `?status=${status}` : ''}`,
+    ),
+  respondInvitation: (id: string, action: 'accept' | 'decline') =>
+    apiPatch(`/api/jockey/invitations/${id}`, { action }),
+  listRaces: () => apiGet<{ races: JockeyRaceDto[] }>('/api/jockey/races'),
+  getRace: (id: string) => apiGet<{ race: JockeyRaceDto }>(`/api/jockey/races/${id}`),
+  listNotifications: () => apiGet<{ notifications: NotificationDto[] }>('/api/jockey/notifications'),
+};
+
+export interface InvitationDto {
+  id: string;
+  status: 'pending' | 'accepted' | 'declined';
+  message?: string;
+  createdAt: string;
+  horse: { id: string; name: string };
+  race: { id: string; name: string; scheduledAt?: string; status: string };
+  owner: { id: string; fullName: string };
+}
+
+export interface JockeyRaceDto {
+  id: string;
+  name: string;
+  round: number;
+  scheduledAt: string;
+  status: string;
+  distance?: number;
+  tournament: { id: string; name: string };
+  participant: {
+    horse: { id: string; name: string };
+    owner: { id: string; fullName: string };
+    laneNumber: number;
+    confirmedAt?: string | null;
+  };
+  result?: {
+    rankings: Array<{ rank: number; horse: { name: string }; finishTime?: number; prize: number }>;
+  } | null;
+}
+
+export interface NotificationDto {
+  id: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+}

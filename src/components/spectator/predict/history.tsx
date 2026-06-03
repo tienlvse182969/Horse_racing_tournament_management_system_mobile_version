@@ -3,13 +3,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
-import { predictions, formatCurrency, formatDate } from '@/mock-data';
-
-const won     = predictions.filter(p => p.status === 'won').length;
-const lost    = predictions.filter(p => p.status === 'lost').length;
-const pending = predictions.filter(p => p.status === 'pending').length;
-const total   = predictions.length;
-const winRate = total > 0 ? Math.round((won / total) * 100) : 0;
+import { formatCurrency, formatDate } from '@/mock-data';
+import type { Prediction } from '@/mock-data/predictions';
 
 const STATUS_CONFIG = {
   won:     { label: 'Đúng',    color: C.tertiary,        bg: C.tertiaryContainer,   icon: 'check-circle' },
@@ -17,10 +12,17 @@ const STATUS_CONFIG = {
   pending: { label: 'Đang chờ',color: C.secondary,       bg: C.secondaryContainer,  icon: 'clock-outline' },
 };
 
-export function PredictionHistory() {
+type Props = { predictions: Prediction[] };
+
+export function PredictionHistory({ predictions }: Props) {
+  const won     = predictions.filter(p => p.status === 'won').length;
+  const lost    = predictions.filter(p => p.status === 'lost').length;
+  const pending = predictions.filter(p => p.status === 'pending').length;
+  const total   = predictions.length;
+  const winRate = total > 0 ? Math.round((won / total) * 100) : 0;
+
   return (
     <View style={styles.root}>
-      {/* Stats row */}
       <View style={styles.statsRow}>
         <StatCard label="Đúng"     value={won}     color={C.tertiary}  />
         <StatCard label="Sai"      value={lost}    color={C.error}     />
@@ -28,55 +30,38 @@ export function PredictionHistory() {
         <StatCard label="Tỷ lệ"    value={`${winRate}%`} color={C.primary} />
       </View>
 
-      {/* List */}
-      {predictions.map((p, i) => {
-        const cfg = STATUS_CONFIG[p.status];
-        return (
-          <Animated.View key={p.id} entering={FadeInDown.delay(i * 50).duration(280)}>
-            <View style={styles.card}>
-              <View style={styles.cardTop}>
-                <View style={styles.cardLeft}>
-                  <Text style={styles.raceName} numberOfLines={1}>{p.raceName}</Text>
-                  <Text style={styles.raceDate}>{formatDate(p.raceDate)}</Text>
-                </View>
+      {predictions.length === 0 ? (
+        <Text style={styles.empty}>Chưa có dự đoán nào</Text>
+      ) : (
+        predictions.map((pred, i) => {
+          const cfg = STATUS_CONFIG[pred.status];
+          return (
+            <Animated.View key={pred.id} entering={FadeInDown.delay(i * 40).duration(280)} style={styles.card}>
+              <View style={styles.cardHeader}>
                 <View style={[styles.statusBadge, { backgroundColor: cfg.bg }]}>
-                  <MaterialCommunityIcons name={cfg.icon as any} size={12} color={cfg.color} />
+                  <MaterialCommunityIcons name={cfg.icon as any} size={14} color={cfg.color} />
                   <Text style={[styles.statusText, { color: cfg.color }]}>{cfg.label}</Text>
                 </View>
+                <Text style={styles.cardDate}>{formatDate(pred.raceDate)}</Text>
               </View>
-
-              <View style={styles.horseRow}>
-                <Text style={styles.horseLabel}>Dự đoán:</Text>
-                <Text style={styles.horseName}>
-                  #{p.predictedHorseNumber} {p.predictedHorseName}
-                </Text>
-              </View>
-
-              {p.actualWinner && p.status !== 'won' && (
-                <View style={styles.horseRow}>
-                  <Text style={styles.horseLabel}>Thắng thực tế:</Text>
-                  <Text style={[styles.horseName, { color: C.tertiary }]}>{p.actualWinner}</Text>
-                </View>
-              )}
-
-              {p.reward && (
-                <View style={styles.rewardRow}>
-                  <MaterialCommunityIcons name="gift-outline" size={13} color={C.primary} />
-                  <Text style={styles.rewardText}>+{formatCurrency(p.reward)}</Text>
-                  {p.points && <Text style={styles.pointsText}>+{p.points.toLocaleString()} pts</Text>}
-                </View>
-              )}
-            </View>
-          </Animated.View>
-        );
-      })}
+              <Text style={styles.cardRace}>{pred.raceName}</Text>
+              <Text style={styles.cardPick}>
+                #{pred.predictedHorseNumber} {pred.predictedHorseName}
+              </Text>
+              {pred.reward ? (
+                <Text style={styles.cardReward}>+{formatCurrency(pred.reward)}</Text>
+              ) : null}
+            </Animated.View>
+          );
+        })
+      )}
     </View>
   );
 }
 
 function StatCard({ label, value, color }: { label: string; value: string | number; color: string }) {
   return (
-    <View style={styles.statCard}>
+    <View style={[styles.statCard, { borderColor: `${color}40` }]}>
       <Text style={[styles.statValue, { color }]}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
     </View>
@@ -84,26 +69,18 @@ function StatCard({ label, value, color }: { label: string; value: string | numb
 }
 
 const styles = StyleSheet.create({
-  root: { gap: Spacing.two },
-
-  statsRow: { flexDirection: 'row', gap: Spacing.two, marginBottom: Spacing.one },
-  statCard:  { flex: 1, backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, alignItems: 'center', gap: 3 },
-  statValue: { fontFamily: FontFamily.bold, fontSize: 18 },
-  statLabel: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 10, textAlign: 'center' },
-
-  card:       { backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.three, gap: Spacing.one, marginBottom: Spacing.two },
-  cardTop:    { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: Spacing.two },
-  cardLeft:   { flex: 1 },
-  raceName:   { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 14 },
-  raceDate:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11, marginTop: 2 },
-  statusBadge:{ flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: Shape.full, paddingHorizontal: 10, paddingVertical: 4 },
-  statusText: { fontFamily: FontFamily.bold, fontSize: 11 },
-
-  horseRow:   { flexDirection: 'row', alignItems: 'center', gap: Spacing.one, marginTop: 2 },
-  horseLabel: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
-  horseName:  { color: C.onSurface, fontFamily: FontFamily.medium, fontSize: 13 },
-
-  rewardRow:  { flexDirection: 'row', alignItems: 'center', gap: Spacing.one, marginTop: Spacing.one },
-  rewardText: { color: C.primary, fontFamily: FontFamily.bold, fontSize: 13 },
-  pointsText: { color: C.secondary, fontFamily: FontFamily.medium, fontSize: 12 },
+  root:        { gap: Spacing.two },
+  statsRow:    { flexDirection: 'row', gap: Spacing.one, marginBottom: Spacing.two },
+  statCard:    { flex: 1, alignItems: 'center', padding: Spacing.two, borderRadius: Shape.medium, borderWidth: 1, backgroundColor: SC.low },
+  statValue:   { fontFamily: FontFamily.bold, fontSize: 16 },
+  statLabel:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11, marginTop: 2 },
+  empty:       { color: C.onSurfaceVariant, textAlign: 'center', padding: Spacing.four },
+  card:        { backgroundColor: SC.low, borderRadius: Shape.large, padding: Spacing.two, gap: Spacing.one, marginBottom: Spacing.two },
+  cardHeader:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: Shape.full },
+  statusText:  { fontFamily: FontFamily.medium, fontSize: 11 },
+  cardDate:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
+  cardRace:    { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15 },
+  cardPick:    { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 13 },
+  cardReward:  { color: C.primary, fontFamily: FontFamily.bold, fontSize: 14 },
 });

@@ -7,6 +7,8 @@ import { PaperProvider } from 'react-native-paper';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { FONT_ASSETS, HorseRacingTheme, HorseRacingDark } from '@/constants/theme';
 
+import { AuthProvider } from '@/context/AuthContext';
+
 const navTheme = {
   ...DarkTheme,
   colors: {
@@ -24,11 +26,13 @@ export default function RootLayout() {
   useFonts(FONT_ASSETS);
 
   return (
-    <PaperProvider theme={HorseRacingTheme}>
-      <ThemeProvider value={navTheme}>
-        <AnimatedSplashOverlay />
-        <Stack screenOptions={{ headerShown: false }} />
-      </ThemeProvider>
-    </PaperProvider>
+    <AuthProvider>
+      <PaperProvider theme={HorseRacingTheme}>
+        <ThemeProvider value={navTheme}>
+          <AnimatedSplashOverlay />
+          <Stack screenOptions={{ headerShown: false }} />
+        </ThemeProvider>
+      </PaperProvider>
+    </AuthProvider>
   );
 }

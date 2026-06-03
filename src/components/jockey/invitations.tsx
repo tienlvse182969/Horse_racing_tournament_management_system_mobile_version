@@ -8,7 +8,9 @@ import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFami
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { JockeyAvatarButton } from '@/components/jockey-avatar-button';
 import type { Invitation, InvitationStatus } from '@/mock-data';
-import { invitations as initialInvitations, formatCurrency, formatDate } from '@/mock-data';
+import { formatCurrency, formatDate } from '@/mock-data';
+import { useJockeyInvitations } from '@/hooks/useJockeyData';
+import { ActivityIndicator } from 'react-native';
 
 type FilterType = 'all' | InvitationStatus;
 
@@ -26,14 +28,14 @@ const STATUS_CONFIG: Record<InvitationStatus, { label: string; color: string; bg
 };
 
 export function JockeyInvitations() {
-  const [items, setItems] = useState<Invitation[]>(initialInvitations);
+  const { invitations: items, loading, respond } = useJockeyInvitations();
   const [filter, setFilter] = useState<FilterType>('all');
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const filtered = filter === 'all' ? items : items.filter(i => i.status === filter);
 
-  const respond = (id: string, status: 'accepted' | 'declined') => {
-    setItems(prev => prev.map(inv => inv.id === id ? { ...inv, status } : inv));
+  const handleRespond = async (id: string, status: 'accepted' | 'declined') => {
+    await respond(id, status);
     setExpanded(null);
   };
 
@@ -41,6 +43,8 @@ export function JockeyInvitations() {
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <LargeHeaderScrollView title="Lời mời" contentContainerStyle={styles.scroll} rightAction={<JockeyAvatarButton />}>
+
+          {loading && <ActivityIndicator color={C.primary} style={{ marginBottom: Spacing.two }} />}
 
           {/* Filter chips */}
           <View style={styles.filterRow}>
@@ -75,8 +79,8 @@ export function JockeyInvitations() {
                   invitation={inv}
                   isExpanded={expanded === inv.id}
                   onToggle={() => setExpanded(expanded === inv.id ? null : inv.id)}
-                  onAccept={() => respond(inv.id, 'accepted')}
-                  onDecline={() => respond(inv.id, 'declined')}
+                  onAccept={() => handleRespond(inv.id, 'accepted')}
+                  onDecline={() => handleRespond(inv.id, 'declined')}
                 />
               </Animated.View>
             ))
