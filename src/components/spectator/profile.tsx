@@ -34,12 +34,12 @@ export function SpectatorProfile() {
   const total = predictions.length;
   const winPct = total > 0 ? Math.round((won / total) * 100) : 0;
   const STATS = [
-    { label: 'Dự đoán', value: total, emoji: '🎯' },
-    { label: 'Đoán đúng', value: won, emoji: '✅' },
-    { label: 'Đoán sai', value: lost, emoji: '❌' },
-    { label: 'Điểm thưởng', value: `${(balance / 1000).toFixed(0)}k`, emoji: '⭐' },
-    { label: 'Tỷ lệ đúng', value: `${winPct}%`, emoji: '📊' },
-    { label: 'Đang chờ', value: pending, emoji: '🏅' },
+    { label: 'Dự đoán', value: total, icon: 'target' },
+    { label: 'Đoán đúng', value: won, icon: 'check-circle-outline' },
+    { label: 'Đoán sai', value: lost, icon: 'close-circle-outline' },
+    { label: 'Điểm thưởng', value: `${(balance / 1000).toFixed(0)}k`, icon: 'star-outline' },
+    { label: 'Tỷ lệ đúng', value: `${winPct}%`, icon: 'chart-bar' },
+    { label: 'Đang chờ', value: pending, icon: 'clock-outline' },
   ];
   const recentPreds = predictions.slice(0, 4);
   const displayName = user?.fullName ?? 'Khán giả';
@@ -87,7 +87,7 @@ export function SpectatorProfile() {
             <View style={styles.statsGrid}>
               {STATS.map(s => (
                 <View key={s.label} style={styles.statCard}>
-                  <Text style={styles.statEmoji}>{s.emoji}</Text>
+                  <MaterialCommunityIcons name={s.icon as any} size={20} color={C.primary} />
                   <Text style={styles.statValue}>{s.value}</Text>
                   <Text style={styles.statLabel}>{s.label}</Text>
                 </View>
@@ -183,7 +183,6 @@ const styles = StyleSheet.create({
   // Stats
   statsGrid:  { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   statCard:   { width: '30.5%', backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, alignItems: 'center', gap: 3 },
-  statEmoji:  { fontSize: 20 },
   statValue:  { color: C.primary, fontFamily: FontFamily.bold, fontSize: 16 },
   statLabel:  { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 10, textAlign: 'center' },
 

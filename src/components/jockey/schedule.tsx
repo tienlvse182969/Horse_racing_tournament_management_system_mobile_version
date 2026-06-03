@@ -19,7 +19,7 @@ const STATUS_COLOR: Record<string, string> = {
   completed: C.onSurfaceVariant,
 };
 const STATUS_LABEL: Record<string, string> = {
-  live:      '🟢 Đang đua',
+  live:      'Đang đua',
   upcoming:  'Sắp diễn ra',
   completed: 'Đã kết thúc',
 };
@@ -133,7 +133,7 @@ export function JockeySchedule() {
 
             {selectedRaces.length === 0 ? (
               <View style={styles.empty}>
-                <Text style={{ fontSize: 36, opacity: 0.4 }}>📅</Text>
+                <MaterialCommunityIcons name="calendar-outline" size={36} color={C.onSurfaceVariant} style={{ opacity: 0.4 }} />
                 <Text style={styles.emptyText}>Không có cuộc đua nào</Text>
               </View>
             ) : (
@@ -165,7 +165,7 @@ export function JockeySchedule() {
 
                     {/* My horse entry */}
                     <View style={styles.myEntry}>
-                      <Text style={{ fontSize: 14 }}>🐎</Text>
+                      <MaterialCommunityIcons name="horse-variant" size={14} color={C.onPrimaryContainer} />
                       <View>
                         <Text style={styles.myHorse}>{race.myEntry.horse.name} · #{race.myEntry.horse.number}</Text>
                         <Text style={styles.myOdds}>Tỷ lệ cược: {race.myEntry.odds}x</Text>

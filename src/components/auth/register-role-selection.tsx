@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import type { RegisterRole } from './types';
@@ -17,7 +18,7 @@ export function RegisterRoleSelection({ onSelect }: Props) {
           onPress={() => onSelect('jockey')}
           activeOpacity={0.8}>
           <View style={[styles.cardIcon, { backgroundColor: C.primaryContainer }]}>
-            <Text style={styles.cardEmoji}>🏇</Text>
+            <MaterialCommunityIcons name="horse-variant" size={26} color={C.primary} />
           </View>
           <View style={styles.cardText}>
             <Text style={[styles.cardTitle, { color: C.primary }]}>Kỵ sĩ</Text>
@@ -33,7 +34,7 @@ export function RegisterRoleSelection({ onSelect }: Props) {
           onPress={() => onSelect('spectator')}
           activeOpacity={0.8}>
           <View style={[styles.cardIcon, { backgroundColor: C.tertiaryContainer }]}>
-            <Text style={styles.cardEmoji}>👥</Text>
+            <MaterialCommunityIcons name="account-group-outline" size={26} color={C.tertiary} />
           </View>
           <View style={styles.cardText}>
             <Text style={[styles.cardTitle, { color: C.tertiary }]}>Khán Giả</Text>
@@ -53,7 +54,6 @@ const styles = StyleSheet.create({
   hint:         { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 13, letterSpacing: 0.3, marginBottom: Spacing.one },
   card:         { flexDirection: 'row', backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.three, alignItems: 'center', gap: Spacing.two, borderWidth: 1 },
   cardIcon:     { width: 48, height: 48, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  cardEmoji:    { fontSize: 24 },
   cardText:     { flex: 1, gap: 3 },
   cardTitle:    { fontFamily: FontFamily.bold, fontSize: 16 },
   cardDesc:     { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12, lineHeight: 17 },

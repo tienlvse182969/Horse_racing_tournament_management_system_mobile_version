@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { AuthHeader } from '@/components/auth/auth-header';
 import { AuthTabSwitcher } from '@/components/auth/auth-tab-switcher';
@@ -157,12 +158,19 @@ export default function AuthScreen() {
                   activeOpacity={0.85}>
                   {loading ? (
                     <ActivityIndicator color={onRoleColor} />
+                  ) : activeTab === 'login' ? (
+                    <Text style={[styles.submitText, { color: onRoleColor }]}>Đăng nhập</Text>
                   ) : (
-                    <Text style={[styles.submitText, { color: onRoleColor }]}>
-                      {activeTab === 'login'
-                        ? 'Đăng nhập'
-                        : isJockey ? '🏇 Đăng ký Kỵ sĩ' : '👥 Đăng ký Khán Giả'}
-                    </Text>
+                    <View style={styles.submitInner}>
+                      <MaterialCommunityIcons
+                        name={isJockey ? 'horse-variant' : 'account-group-outline'}
+                        size={16}
+                        color={onRoleColor}
+                      />
+                      <Text style={[styles.submitText, { color: onRoleColor }]}>
+                        {isJockey ? 'Đăng ký Kỵ sĩ' : 'Đăng ký Khán Giả'}
+                      </Text>
+                    </View>
                   )}
                 </TouchableOpacity>
               </Animated.View>
@@ -174,14 +182,20 @@ export default function AuthScreen() {
                 onPress={() => handleDemoLogin('spectator@demo.local')}
                 disabled={loading}
                 activeOpacity={0.8}>
-                <Text style={styles.demoText}>👥 Demo Khán giả</Text>
+                <View style={styles.demoBtnInner}>
+                  <MaterialCommunityIcons name="account-group-outline" size={14} color={C.onSurfaceVariant} />
+                  <Text style={styles.demoText}>Demo Khán giả</Text>
+                </View>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.demoBtn, styles.demoBtnJockey]}
                 onPress={() => handleDemoLogin('jockey1@demo.local')}
                 disabled={loading}
                 activeOpacity={0.8}>
-                <Text style={[styles.demoText, styles.demoTextJockey]}>🏇 Demo Kỵ sĩ</Text>
+                <View style={styles.demoBtnInner}>
+                  <MaterialCommunityIcons name="horse-variant" size={14} color={C.primary} />
+                  <Text style={[styles.demoText, styles.demoTextJockey]}>Demo Kỵ sĩ</Text>
+                </View>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -198,10 +212,12 @@ const styles = StyleSheet.create({
   scroll:      { padding: Spacing.three, paddingBottom: Spacing.five },
   screenTitle: { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 28, marginBottom: Spacing.three, marginTop: Spacing.two },
   submitBtn:   { borderRadius: Shape.full, height: 52, justifyContent: 'center', alignItems: 'center', marginTop: Spacing.two, marginBottom: Spacing.two },
+  submitInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   submitText:  { fontFamily: FontFamily.bold, fontSize: 16, letterSpacing: 0.5 },
   errorText:   { color: C.error, fontFamily: FontFamily.medium, fontSize: 13, marginBottom: Spacing.two },
   demoRow:          { flexDirection: 'row', gap: Spacing.two, paddingVertical: Spacing.two },
   demoBtn:          { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: Shape.full, borderWidth: 1, borderColor: C.outlineVariant },
+  demoBtnInner:     { flexDirection: 'row', alignItems: 'center', gap: 5 },
   demoBtnJockey:    { borderColor: `${C.primary}60`, backgroundColor: `${C.primary}15` },
   demoText:         { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 13 },
   demoTextJockey:   { color: C.primary },

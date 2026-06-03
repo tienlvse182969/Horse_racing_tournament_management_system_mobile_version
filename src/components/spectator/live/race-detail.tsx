@@ -9,8 +9,7 @@ import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFami
 import type { Race } from '@/mock-data';
 import { formatCurrency, formatDate } from '@/mock-data';
 import { spectatorApi } from '@/api/spectator.api';
-
-const MEDAL = ['🥇', '🥈', '🥉'];
+import { MedalIcon } from '@/components/ui/medal-icon';
 
 type Props = { race: Race; onBack: () => void };
 
@@ -72,7 +71,7 @@ export function RaceDetail({ race, onBack }: Props) {
             <View key={entry.horse.id} style={styles.entryRow}>
               <View style={styles.entryRank}>
                 {entry.position && entry.position <= 3
-                  ? <Text style={styles.medal}>{MEDAL[entry.position - 1]}</Text>
+                  ? <MedalIcon position={entry.position} size={18} />
                   : <Text style={styles.rankNum}>{entry.position ?? idx + 1}</Text>}
               </View>
               <View style={[styles.horseColor, { backgroundColor: entry.horse.color }]} />
@@ -153,7 +152,6 @@ const styles = StyleSheet.create({
   sectionTitle: { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15, marginBottom: Spacing.two },
   entryRow:     { flexDirection: 'row', alignItems: 'center', backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, marginBottom: Spacing.two, gap: Spacing.two },
   entryRank:    { width: 32, alignItems: 'center' },
-  medal:        { fontSize: 18 },
   rankNum:      { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 16 },
   horseColor:   { width: 4, height: 40, borderRadius: 2 },
   entryInfo:    { flex: 1 },

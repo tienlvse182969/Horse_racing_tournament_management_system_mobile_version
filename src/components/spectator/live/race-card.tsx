@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import type { Race } from '@/mock-data';
 import { formatCurrency, formatDate } from '@/mock-data';
+import { MedalIcon } from '@/components/ui/medal-icon';
 
 type Props = { race: Race; onPress: () => void };
 
@@ -43,9 +44,10 @@ export function RaceCard({ race, onPress }: Props) {
             {leader && (
               <View style={[styles.infoItem, { flex: 2 }]}>
                 <Text style={styles.infoLabel}>Dẫn đầu</Text>
-                <Text style={styles.liveInfoValue} numberOfLines={1}>
-                  🏇 {leader.horse.name}
-                </Text>
+                <View style={styles.leaderNameRow}>
+                  <MaterialCommunityIcons name="horse-variant" size={13} color="#FFFFFF" />
+                  <Text style={styles.liveInfoValue} numberOfLines={1}>{leader.horse.name}</Text>
+                </View>
               </View>
             )}
           </View>
@@ -77,7 +79,6 @@ export function RaceCard({ race, onPress }: Props) {
 
   // completed
   const top3 = race.entries.filter(e => e.position && e.position <= 3).sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
-  const MEDAL = ['🥇', '🥈', '🥉'];
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={styles.completedCard}>
@@ -91,7 +92,7 @@ export function RaceCard({ race, onPress }: Props) {
       <Text style={styles.completedMeta}>{race.location} · {formatDate(race.date)}</Text>
       {top3.map((entry, i) => (
         <View key={entry.horse.id} style={styles.resultRow}>
-          <Text style={styles.medal}>{MEDAL[i]}</Text>
+          <View style={styles.medalWrap}><MedalIcon position={i + 1} size={16} /></View>
           <View style={[styles.horseDot, { backgroundColor: entry.horse.color }]} />
           <Text style={styles.horseName}>#{entry.horse.number} {entry.horse.name}</Text>
           <Text style={styles.finishTime}>{entry.finishTime}</Text>
@@ -132,7 +133,8 @@ const styles = StyleSheet.create({
   completedBadgeText: { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 10, letterSpacing: 0.8 },
   completedMeta:      { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
   resultRow:          { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  medal:              { fontSize: 16, width: 22 },
+  medalWrap:          { width: 22, alignItems: 'center' },
+  leaderNameRow:      { flexDirection: 'row', alignItems: 'center', gap: 4 },
   horseDot:           { width: 8, height: 8, borderRadius: 4 },
   horseName:          { color: C.onSurface, fontFamily: FontFamily.medium, fontSize: 13, flex: 1 },
   finishTime:         { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
