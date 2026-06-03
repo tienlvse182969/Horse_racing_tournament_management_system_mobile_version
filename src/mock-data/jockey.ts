@@ -101,12 +101,12 @@ export const currentJockey: JockeyUser = {
     earnings: 4_800_000_000,
   },
   achievements: [
-    { id: 'a1', title: 'Vô Địch Quốc Gia', description: '1st Place - Giải VĐQG 2025', type: 'gold', icon: '🏆', earnedAt: '2025-12-15' },
-    { id: 'a2', title: 'Hat-trick Chiến Thắng', description: '3 thắng liên tiếp', type: 'gold', icon: '🎯', earnedAt: '2025-10-08' },
-    { id: 'a3', title: 'Jockey Xuất Sắc', description: 'Tháng 11/2025', type: 'silver', icon: '⭐', earnedAt: '2025-11-30' },
-    { id: 'a4', title: 'Tốc Độ Thần Sầu', description: 'Thành tích 1:15.2 kỷ lục đường đua', type: 'special', icon: '⚡', earnedAt: '2025-09-14' },
-    { id: 'a5', title: 'Top 10 Jockey', description: 'Bảng xếp hạng Đông Nam Á', type: 'silver', icon: '🌟', earnedAt: '2025-08-20' },
-    { id: 'a6', title: 'Vô Địch Cúp Vàng', description: '1st Place - Cúp Vàng 2024', type: 'gold', icon: '🥇', earnedAt: '2024-12-20' },
+    { id: 'a1', title: 'Vô Địch Quốc Gia', description: '1st Place - Giải VĐQG 2025', type: 'gold', icon: 'trophy', earnedAt: '2025-12-15' },
+    { id: 'a2', title: 'Hat-trick Chiến Thắng', description: '3 thắng liên tiếp', type: 'gold', icon: 'target', earnedAt: '2025-10-08' },
+    { id: 'a3', title: 'Jockey Xuất Sắc', description: 'Tháng 11/2025', type: 'silver', icon: 'star', earnedAt: '2025-11-30' },
+    { id: 'a4', title: 'Tốc Độ Thần Sầu', description: 'Thành tích 1:15.2 kỷ lục đường đua', type: 'special', icon: 'lightning-bolt', earnedAt: '2025-09-14' },
+    { id: 'a5', title: 'Top 10 Jockey', description: 'Bảng xếp hạng Đông Nam Á', type: 'silver', icon: 'star-four-points', earnedAt: '2025-08-20' },
+    { id: 'a6', title: 'Vô Địch Cúp Vàng', description: '1st Place - Cúp Vàng 2024', type: 'gold', icon: 'trophy-variant', earnedAt: '2024-12-20' },
   ],
 };
 

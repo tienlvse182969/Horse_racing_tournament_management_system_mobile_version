@@ -69,7 +69,7 @@ export function JockeyInvitations() {
           {/* Cards */}
           {filtered.length === 0 ? (
             <View style={styles.empty}>
-              <Text style={{ fontSize: 40 }}>📭</Text>
+              <MaterialCommunityIcons name="email-off-outline" size={40} color={C.onSurfaceVariant} style={{ opacity: 0.4 }} />
               <Text style={styles.emptyText}>Không có lời mời nào</Text>
             </View>
           ) : (
@@ -112,7 +112,7 @@ function InvitationCard({
       {/* Header row */}
       <TouchableOpacity style={styles.cardHeader} onPress={onToggle} activeOpacity={0.85}>
         <View style={[styles.horseIcon, { backgroundColor: `${inv.horse.color}22`, borderColor: `${inv.horse.color}55` }]}>
-          <Text style={{ fontSize: 22 }}>🐎</Text>
+          <MaterialCommunityIcons name="horse-variant" size={22} color={inv.horse.color} />
         </View>
         <View style={styles.cardInfo}>
           <View style={styles.cardTitleRow}>
@@ -138,15 +138,15 @@ function InvitationCard({
         <View style={styles.detail}>
           <View style={styles.detailGrid}>
             {[
-              { icon: '🐴', label: 'Giống ngựa',   value: `${inv.horse.breed} · ${inv.horse.age} tuổi` },
-              { icon: '📍', label: 'Địa điểm',     value: inv.race.location },
-              { icon: '📏', label: 'Cự ly',         value: `${inv.race.distance}m · ${inv.race.surface}` },
-              { icon: '🏆', label: 'Giải thưởng',  value: formatCurrency(inv.race.purse) },
-              { icon: '🤝', label: 'Chủ ngựa',     value: inv.ownerName },
-              { icon: '📅', label: 'Lời mời gửi',  value: new Date(inv.sentAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) + ' ' + new Date(inv.sentAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) },
+              { icon: 'horse', label: 'Giống ngựa',   value: `${inv.horse.breed} · ${inv.horse.age} tuổi` },
+              { icon: 'map-marker-outline', label: 'Địa điểm', value: inv.race.location },
+              { icon: 'arrow-expand-horizontal', label: 'Cự ly', value: `${inv.race.distance}m · ${inv.race.surface}` },
+              { icon: 'trophy-outline', label: 'Giải thưởng', value: formatCurrency(inv.race.purse) },
+              { icon: 'handshake-outline', label: 'Chủ ngựa', value: inv.ownerName },
+              { icon: 'calendar-outline', label: 'Lời mời gửi', value: new Date(inv.sentAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) + ' ' + new Date(inv.sentAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) },
             ].map(row => (
               <View key={row.label} style={styles.detailRow}>
-                <Text style={{ fontSize: 14, width: 20 }}>{row.icon}</Text>
+                <MaterialCommunityIcons name={row.icon as any} size={14} color={C.onSurfaceVariant} style={{ width: 20 }} />
                 <Text style={styles.detailLabel}>{row.label}</Text>
                 <Text style={styles.detailValue}>{row.value}</Text>
               </View>
@@ -155,7 +155,7 @@ function InvitationCard({
 
           {inv.message && (
             <View style={styles.messageBox}>
-              <Text style={{ fontSize: 14 }}>💬</Text>
+              <MaterialCommunityIcons name="message-text-outline" size={14} color={C.onPrimaryContainer} />
               <Text style={styles.messageText}>{inv.message}</Text>
             </View>
           )}

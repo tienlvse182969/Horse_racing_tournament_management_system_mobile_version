@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { TextInput } from 'react-native-paper';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { HorseRacingDark as C, Shape, Spacing, FontFamily } from '@/constants/theme';
 import type { RegisterRole } from './types';
@@ -39,7 +40,11 @@ export function RegisterForm({
       <Animated.View entering={FadeInDown.duration(300)} style={styles.form}>
         <View style={styles.roleBadgeRow}>
           <View style={[styles.roleBadge, { backgroundColor: containerColor }]}>
-            <Text style={styles.roleBadgeEmoji}>{isJockey ? '🏇' : '👥'}</Text>
+            <MaterialCommunityIcons
+              name={isJockey ? 'horse-variant' : 'account-group-outline'}
+              size={16}
+              color={accentColor}
+            />
             <Text style={[styles.roleBadgeLabel, { color: accentColor }]}>
               {isJockey ? 'Kỵ sĩ' : 'Khán Giả'}
             </Text>
@@ -97,7 +102,6 @@ const styles = StyleSheet.create({
   form: { gap: Spacing.two, marginBottom: Spacing.two },
   roleBadgeRow:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.one },
   roleBadge:      { flexDirection: 'row', alignItems: 'center', gap: Spacing.one, paddingVertical: 6, paddingHorizontal: Spacing.two, borderRadius: Shape.full },
-  roleBadgeEmoji: { fontSize: 16 },
   roleBadgeLabel: { fontFamily: FontFamily.medium, fontSize: 13 },
   changeRoleBtn:  { paddingVertical: 6, paddingHorizontal: Spacing.one },
   changeRoleText: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 13, textDecorationLine: 'underline' },

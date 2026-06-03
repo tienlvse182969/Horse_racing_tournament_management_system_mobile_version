@@ -56,7 +56,10 @@ export function JockeyProfile() {
                   <Text style={styles.heroInitials}>{currentJockey.initials}</Text>
                 </View>
                 <View style={styles.heroInfo}>
-                  <Text style={styles.heroRole}>🏇 Jockey Chuyên Nghiệp</Text>
+                  <View style={styles.heroRoleRow}>
+                  <MaterialCommunityIcons name="horse-variant" size={11} color="rgba(255,217,180,0.7)" />
+                  <Text style={styles.heroRole}>Jockey Chuyên Nghiệp</Text>
+                </View>
                   <Text style={styles.heroName}>{currentJockey.name}</Text>
                   <Text style={styles.heroNationality}>
                     🇻🇳 {currentJockey.nationality} · {currentJockey.age} tuổi
@@ -72,15 +75,15 @@ export function JockeyProfile() {
             <Text style={styles.sectionTitle}>Thành tích sự nghiệp</Text>
             <View style={styles.statsGrid}>
               {[
-                { label: 'Tổng cuộc đua', value: currentJockey.stats.totalRaces, icon: '🏇', color: C.primary },
-                { label: 'Chiến thắng',   value: currentJockey.stats.wins,       icon: '🏆', color: C.secondary },
-                { label: 'Hạng Nhì',      value: currentJockey.stats.seconds,    icon: '🥈', color: C.onSurfaceVariant },
-                { label: 'Hạng Ba',       value: currentJockey.stats.thirds,     icon: '🥉', color: '#FFAB60' },
-                { label: 'Tỷ lệ thắng',  value: `${currentJockey.stats.winRate}%`, icon: '📊', color: C.tertiary },
-                { label: 'Tổng thu nhập', value: formatCurrency(currentJockey.stats.earnings), icon: '💰', color: C.secondary },
+                { label: 'Tổng cuộc đua', value: currentJockey.stats.totalRaces, icon: 'horse-variant', color: C.primary },
+                { label: 'Chiến thắng',   value: currentJockey.stats.wins,       icon: 'trophy', color: C.secondary },
+                { label: 'Hạng Nhì',      value: currentJockey.stats.seconds,    icon: 'trophy', color: '#9E9E9E' },
+                { label: 'Hạng Ba',       value: currentJockey.stats.thirds,     icon: 'trophy', color: '#CD7F32' },
+                { label: 'Tỷ lệ thắng',  value: `${currentJockey.stats.winRate}%`, icon: 'chart-bar', color: C.tertiary },
+                { label: 'Tổng thu nhập', value: formatCurrency(currentJockey.stats.earnings), icon: 'cash', color: C.secondary },
               ].map((s, i) => (
                 <Animated.View key={s.label} entering={FadeInDown.delay(100 + i * 40).duration(280)} style={styles.statCard}>
-                  <Text style={{ fontSize: 22 }}>{s.icon}</Text>
+                  <MaterialCommunityIcons name={s.icon as any} size={22} color={s.color} />
                   <Text style={[styles.statValue, { color: s.color }]}>{s.value}</Text>
                   <Text style={styles.statLabel}>{s.label}</Text>
                 </Animated.View>
@@ -97,7 +100,7 @@ export function JockeyProfile() {
                 <Animated.View key={ach.id} entering={FadeInDown.delay(240 + i * 50).duration(260)}>
                   <View style={[styles.achRow, { backgroundColor: ac.bg, borderColor: `${ac.border}44` }]}>
                     <View style={[styles.achIcon, { backgroundColor: `${ac.border}22` }]}>
-                      <Text style={{ fontSize: 24 }}>{ach.icon}</Text>
+                      <MaterialCommunityIcons name={ach.icon as any} size={24} color={ac.border} />
                     </View>
                     <View style={styles.achInfo}>
                       <Text style={styles.achTitle}>{ach.title}</Text>
@@ -157,6 +160,7 @@ const styles = StyleSheet.create({
   heroAvatar:  { width: 80, height: 80, borderRadius: Shape.medium, backgroundColor: 'rgba(255,217,180,0.15)', borderWidth: 2, borderColor: 'rgba(255,217,180,0.3)', justifyContent: 'center', alignItems: 'center' },
   heroInitials:{ color: '#FFD9B4', fontFamily: FontFamily.bold, fontSize: 32 },
   heroInfo:    { flex: 1, gap: 3 },
+  heroRoleRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   heroRole:    { color: 'rgba(255,217,180,0.7)', fontFamily: FontFamily.medium, fontSize: 11 },
   heroName:    { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 20, letterSpacing: -0.3 },
   heroNationality: { color: 'rgba(255,217,180,0.6)', fontFamily: FontFamily.regular, fontSize: 12 },

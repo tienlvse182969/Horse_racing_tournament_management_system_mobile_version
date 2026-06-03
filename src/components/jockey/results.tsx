@@ -10,13 +10,14 @@ import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { JockeyAvatarButton } from '@/components/jockey-avatar-button';
 import { useJockeyRaces } from '@/hooks/useJockeyData';
 import { jockeyRankings, formatCurrency } from '@/mock-data';
+import { MedalIcon } from '@/components/ui/medal-icon';
 
 type Tab = 'personal' | 'leaderboard';
 
-const POS_CONFIG: Record<number, { emoji: string; bg: string; color: string }> = {
-  1: { emoji: '🥇', bg: C.secondaryContainer, color: C.secondary },
-  2: { emoji: '🥈', bg: `${C.onSurfaceVariant}25`, color: C.onSurfaceVariant },
-  3: { emoji: '🥉', bg: '#3A2010', color: '#FFAB60' },
+const POS_CONFIG: Record<number, { iconColor: string; bg: string; color: string }> = {
+  1: { iconColor: '#FFD700', bg: C.secondaryContainer, color: C.secondary },
+  2: { iconColor: '#9E9E9E', bg: `${C.onSurfaceVariant}25`, color: C.onSurfaceVariant },
+  3: { iconColor: '#CD7F32', bg: '#3A2010', color: '#FFAB60' },
 };
 const POS_LABEL: Record<number, string> = { 1: 'Vô địch', 2: 'Nhì', 3: 'Ba' };
 
@@ -30,13 +31,19 @@ export function JockeyResults() {
 
           {/* Tab switcher */}
           <View style={styles.tabPill}>
-            {([['personal', '🏇 Cá nhân'], ['leaderboard', '🏆 Bảng XH']] as [Tab, string][]).map(([t, label]) => (
+            {([
+              ['personal', 'horse-variant', 'Cá nhân'],
+              ['leaderboard', 'trophy', 'Bảng XH'],
+            ] as [Tab, string, string][]).map(([t, icon, label]) => (
               <TouchableOpacity
                 key={t}
                 style={[styles.tabBtn, tab === t && styles.tabBtnActive]}
                 onPress={() => setTab(t)}
                 activeOpacity={0.8}>
-                <Text style={[styles.tabBtnText, tab === t && styles.tabBtnTextActive]}>{label}</Text>
+                <View style={styles.tabBtnInner}>
+                  <MaterialCommunityIcons name={icon as any} size={14} color={tab === t ? C.onPrimary : C.onSurfaceVariant} />
+                  <Text style={[styles.tabBtnText, tab === t && styles.tabBtnTextActive]}>{label}</Text>
+                </View>
               </TouchableOpacity>
             ))}
           </View>
@@ -73,12 +80,12 @@ function PersonalContent() {
         <Text style={styles.statsCardLabel}>Thống kê gần đây</Text>
         <View style={styles.statsRow}>
           {[
-            { label: 'Cuộc đua',    value: personalResults.length, icon: '🏇' },
-            { label: 'Chiến thắng', value: wins,                   icon: '🏆' },
-            { label: 'Podium',      value: podiums,                 icon: '🥉' },
+            { label: 'Cuộc đua',    value: personalResults.length, icon: 'horse-variant' },
+            { label: 'Chiến thắng', value: wins,                   icon: 'trophy' },
+            { label: 'Podium',      value: podiums,                 icon: 'podium' },
           ].map(s => (
             <View key={s.label} style={styles.statBox}>
-              <Text style={{ fontSize: 16 }}>{s.icon}</Text>
+              <MaterialCommunityIcons name={s.icon as any} size={16} color="rgba(255,217,180,0.8)" />
               <Text style={styles.statValue}>{s.value}</Text>
               <Text style={styles.statLabel}>{s.label}</Text>
             </View>
@@ -94,13 +101,16 @@ function PersonalContent() {
       {/* History */}
       <Text style={styles.historyTitle}>Lịch sử thi đấu</Text>
       {personalResults.map((r, i) => {
-        const pc = POS_CONFIG[r.position] ?? { emoji: `#${r.position}`, bg: SC.high, color: C.onSurfaceVariant };
+        const pc = POS_CONFIG[r.position] ?? { iconColor: null as string | null, bg: SC.high, color: C.onSurfaceVariant };
         const posLabel = POS_LABEL[r.position] ?? `#${r.position}`;
         return (
           <Animated.View key={r.raceId} entering={FadeInDown.delay(i * 60).duration(280)}>
             <View style={styles.resultRow}>
               <View style={[styles.posBadge, { backgroundColor: pc.bg }]}>
-                <Text style={{ fontSize: 22 }}>{pc.emoji}</Text>
+                {pc.iconColor
+                  ? <MaterialCommunityIcons name="trophy" size={22} color={pc.iconColor} />
+                  : <Text style={[styles.rankNum, { color: pc.color }]}>#{r.position}</Text>
+                }
               </View>
               <View style={styles.resultInfo}>
                 <Text style={styles.resultRace}>{r.raceName}</Text>
@@ -109,9 +119,15 @@ function PersonalContent() {
                     {new Date(r.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                   </Text>
                   <Text style={styles.resultMetaDot}>·</Text>
-                  <Text style={styles.resultMetaText}>🐎 {r.horse}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+                    <MaterialCommunityIcons name="horse-variant" size={10} color={C.onSurfaceVariant} />
+                    <Text style={styles.resultMetaText}>{r.horse}</Text>
+                  </View>
                   <Text style={styles.resultMetaDot}>·</Text>
-                  <Text style={styles.resultMetaText}>⏱ {r.time}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+                    <MaterialCommunityIcons name="timer-outline" size={10} color={C.onSurfaceVariant} />
+                    <Text style={styles.resultMetaText}>{r.time}</Text>
+                  </View>
                 </View>
               </View>
               <View style={styles.resultRight}>
@@ -147,7 +163,8 @@ function LeaderboardContent() {
             </View>
           </View>
           <View style={styles.myRankBadge}>
-            <Text style={styles.myRankBadgeText}>🏆 Top 1</Text>
+            <MaterialCommunityIcons name="trophy" size={12} color="#FFD9B4" />
+            <Text style={styles.myRankBadgeText}>Top 1</Text>
           </View>
         </LinearGradient>
       )}
@@ -155,13 +172,12 @@ function LeaderboardContent() {
       <Text style={styles.historyTitle}>Bảng xếp hạng Jockey</Text>
 
       {jockeyRankings.map((j, i) => {
-        const RANK_EMOJI: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
         return (
           <Animated.View key={j.rank} entering={FadeInDown.delay(i * 50).duration(260)}>
             <View style={[styles.rankRow, j.isMe && styles.rankRowMe]}>
               <View style={styles.rankIcon}>
-                {RANK_EMOJI[j.rank] ? (
-                  <Text style={{ fontSize: 22 }}>{RANK_EMOJI[j.rank]}</Text>
+                {j.rank <= 3 ? (
+                  <MedalIcon position={j.rank} size={22} />
                 ) : (
                   <Text style={styles.rankNum}>{j.rank}</Text>
                 )}
@@ -206,6 +222,7 @@ const styles = StyleSheet.create({
   tabPill:        { flexDirection: 'row', backgroundColor: SC.high, borderRadius: Shape.large, padding: 4 },
   tabBtn:         { flex: 1, paddingVertical: 10, borderRadius: Shape.medium, alignItems: 'center' },
   tabBtnActive:   { backgroundColor: C.primary },
+  tabBtnInner:    { flexDirection: 'row', alignItems: 'center', gap: 5 },
   tabBtnText:     { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 14 },
   tabBtnTextActive:{ color: C.onPrimary },
 
@@ -242,7 +259,7 @@ const styles = StyleSheet.create({
   myRankMeta:     { color: 'rgba(255,217,180,0.7)', fontFamily: FontFamily.regular, fontSize: 11 },
   myRankName:     { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 16 },
   myRankStats:    { color: 'rgba(255,217,180,0.65)', fontFamily: FontFamily.regular, fontSize: 11 },
-  myRankBadge:    { backgroundColor: 'rgba(255,217,180,0.2)', borderRadius: Shape.full, paddingHorizontal: 10, paddingVertical: 5 },
+  myRankBadge:    { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(255,217,180,0.2)', borderRadius: Shape.full, paddingHorizontal: 10, paddingVertical: 5 },
   myRankBadgeText:{ color: '#FFD9B4', fontFamily: FontFamily.bold, fontSize: 12 },
 
   // Leaderboard rows

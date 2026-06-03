@@ -11,8 +11,7 @@ import { AvatarTabButton } from '@/components/avatar-tab-button';
 import { formatCurrency, formatDate } from '@/mock-data';
 import { useSpectatorRaces } from '@/hooks/useSpectatorData';
 import { ActivityIndicator } from 'react-native';
-
-const MEDAL = ['🥇', '🥈', '🥉'];
+import { MedalIcon } from '@/components/ui/medal-icon';
 
 export function SpectatorHome() {
   const { races, loading } = useSpectatorRaces();
@@ -33,7 +32,10 @@ export function SpectatorHome() {
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.heroCard}>
-              <Text style={styles.heroTag}>🏆 GIẢI ĐUA 2026</Text>
+              <View style={styles.heroTagRow}>
+                <MaterialCommunityIcons name="trophy" size={11} color={C.tertiary} />
+                <Text style={styles.heroTag}>GIẢI ĐUA 2026</Text>
+              </View>
               <Text style={styles.heroTitle}>Cúp Vô Địch{'\n'}Quốc Gia 2026</Text>
               <Text style={styles.heroDate}>27/05 – 30/05/2026 · Phú Thọ</Text>
               <View style={styles.heroChips}>
@@ -75,10 +77,13 @@ export function SpectatorHome() {
                   {liveRace.entries.filter(e => e.position).length > 0 && (
                     <View style={styles.liveLeaderRow}>
                       <Text style={styles.liveLeaderLabel}>Đang dẫn đầu</Text>
-                      <Text style={styles.liveLeaderName}>
-                        🏇 #{liveRace.entries.find(e => e.position === 1)?.horse.number}{' '}
-                        {liveRace.entries.find(e => e.position === 1)?.horse.name}
-                      </Text>
+                      <View style={styles.liveLeaderNameRow}>
+                        <MaterialCommunityIcons name="horse-variant" size={14} color="#FFFFFF" />
+                        <Text style={styles.liveLeaderName}>
+                          #{liveRace.entries.find(e => e.position === 1)?.horse.number}{' '}
+                          {liveRace.entries.find(e => e.position === 1)?.horse.name}
+                        </Text>
+                      </View>
                     </View>
                   )}
                   <Text style={styles.liveCardCta}>Xem trực tiếp →</Text>
@@ -142,7 +147,9 @@ export function SpectatorHome() {
                   .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
                   .map((entry, i) => (
                     <View key={entry.horse.id} style={styles.resultRow}>
-                      <Text style={styles.resultMedal}>{MEDAL[i]}</Text>
+                      <View style={styles.resultMedalWrap}>
+                        <MedalIcon position={i + 1} size={18} />
+                      </View>
                       <View style={[styles.resultColorDot, { backgroundColor: entry.horse.color }]} />
                       <Text style={styles.resultHorseName}>
                         #{entry.horse.number} {entry.horse.name}
@@ -169,6 +176,7 @@ const styles = StyleSheet.create({
 
   // Hero
   heroCard:    { borderRadius: Shape.large, padding: Spacing.three, gap: Spacing.two },
+  heroTagRow:  { flexDirection: 'row', alignItems: 'center', gap: 4 },
   heroTag:     { color: C.tertiary, fontFamily: FontFamily.medium, fontSize: 11, letterSpacing: 1 },
   heroTitle:   { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 26, lineHeight: 34 },
   heroDate:    { color: 'rgba(255,255,255,0.65)', fontFamily: FontFamily.regular, fontSize: 12 },
@@ -186,9 +194,10 @@ const styles = StyleSheet.create({
   liveBadgeText:  { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 10, letterSpacing: 0.8 },
   liveCardName:   { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 15, flex: 1 },
   liveCardMeta:   { color: 'rgba(255,255,255,0.65)', fontFamily: FontFamily.regular, fontSize: 12 },
-  liveLeaderRow:  { backgroundColor: 'rgba(0,0,0,0.25)', borderRadius: Shape.medium, padding: Spacing.two, gap: 2 },
-  liveLeaderLabel:{ color: 'rgba(255,255,255,0.55)', fontFamily: FontFamily.regular, fontSize: 11 },
-  liveLeaderName: { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 14 },
+  liveLeaderRow:     { backgroundColor: 'rgba(0,0,0,0.25)', borderRadius: Shape.medium, padding: Spacing.two, gap: 2 },
+  liveLeaderLabel:   { color: 'rgba(255,255,255,0.55)', fontFamily: FontFamily.regular, fontSize: 11 },
+  liveLeaderNameRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  liveLeaderName:    { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 14 },
   liveCardCta:    { color: C.tertiary, fontFamily: FontFamily.medium, fontSize: 13, alignSelf: 'flex-end' },
 
   // Upcoming
@@ -208,8 +217,8 @@ const styles = StyleSheet.create({
   resultHeader:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.one },
   resultName:    { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 14, flex: 1 },
   resultDate:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
-  resultRow:     { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  resultMedal:   { fontSize: 18, width: 26 },
+  resultRow:       { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  resultMedalWrap: { width: 26, alignItems: 'center' },
   resultColorDot:{ width: 10, height: 10, borderRadius: 5 },
   resultHorseName:{ color: C.onSurface, fontFamily: FontFamily.medium, fontSize: 13, flex: 1 },
   resultTime:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },

@@ -42,7 +42,10 @@ export function JockeyHome() {
 
               <View style={styles.heroTop}>
                 <View>
-                  <Text style={styles.heroGreeting}>Xin chào 👋</Text>
+                  <View style={styles.heroGreetingRow}>
+                    <Text style={styles.heroGreeting}>Xin chào</Text>
+                    <MaterialCommunityIcons name="hand-wave" size={13} color="rgba(255,217,180,0.7)" />
+                  </View>
                   <Text style={styles.heroName}>
                     {displayName.split(' ').slice(-2).join(' ')}
                   </Text>
@@ -55,12 +58,12 @@ export function JockeyHome() {
 
               <View style={styles.statsRow}>
                 {[
-                  { label: 'Tổng đua',     value: stats.completedRaces + stats.upcomingRaces, icon: '🏇' },
-                  { label: 'Chiến thắng',  value: stats.completedRaces, icon: '🏆' },
-                  { label: 'Tỷ lệ thắng', value: `${winRate}%`, icon: '📊' },
+                  { label: 'Tổng đua',     value: stats.completedRaces + stats.upcomingRaces, icon: 'horse-variant' },
+                  { label: 'Chiến thắng',  value: stats.completedRaces, icon: 'trophy' },
+                  { label: 'Tỷ lệ thắng', value: `${winRate}%`, icon: 'chart-bar' },
                 ].map(s => (
                   <View key={s.label} style={styles.statBox}>
-                    <Text style={styles.statIcon}>{s.icon}</Text>
+                    <MaterialCommunityIcons name={s.icon as any} size={18} color="rgba(255,217,180,0.8)" />
                     <Text style={styles.statValue}>{s.value}</Text>
                     <Text style={styles.statLabel}>{s.label}</Text>
                   </View>
@@ -77,7 +80,7 @@ export function JockeyHome() {
                 onPress={() => router.push('/jockey/invitations')}
                 activeOpacity={0.85}>
                 <View style={styles.inviteIconWrap}>
-                  <Text style={{ fontSize: 20 }}>✉️</Text>
+                  <MaterialCommunityIcons name="email-outline" size={20} color={C.onSecondary} />
                 </View>
                 <View style={styles.inviteText}>
                   <Text style={styles.inviteTitle}>{pendingCount} lời mời chưa phản hồi</Text>
@@ -162,7 +165,7 @@ export function JockeyHome() {
           <Animated.View entering={FadeInDown.delay(360).duration(320)} style={styles.earningsCard}>
             <View style={styles.earningsHeader}>
               <Text style={styles.earningsLabel}>Thu nhập tháng 5</Text>
-              <Text style={{ fontSize: 18 }}>💰</Text>
+              <MaterialCommunityIcons name="cash" size={18} color={C.onSurfaceVariant} />
             </View>
             <Text style={styles.earningsAmount}>{formatCurrency(405_000_000)}</Text>
             <View style={styles.earningsTrend}>
@@ -207,6 +210,7 @@ const styles = StyleSheet.create({
   heroBgCircle1: { position: 'absolute', right: -24, top: -24, width: 96, height: 96, borderRadius: Shape.full, backgroundColor: 'rgba(255,217,180,0.1)' },
   heroBgCircle2: { position: 'absolute', right: -8, top: 32, width: 56, height: 56, borderRadius: Shape.full, backgroundColor: 'rgba(255,217,180,0.1)' },
   heroTop:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: Spacing.three },
+  heroGreetingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   heroGreeting:  { color: 'rgba(255,217,180,0.7)', fontFamily: FontFamily.medium, fontSize: 12 },
   heroName:      { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 22, letterSpacing: -0.3 },
   heroLicense:   { color: 'rgba(255,217,180,0.55)', fontFamily: FontFamily.regular, fontSize: 12 },
@@ -214,7 +218,6 @@ const styles = StyleSheet.create({
   heroInitials:  { color: '#FFD9B4', fontFamily: FontFamily.bold, fontSize: 22 },
   statsRow:      { flexDirection: 'row', gap: Spacing.two },
   statBox:       { flex: 1, backgroundColor: 'rgba(255,217,180,0.1)', borderRadius: Shape.large, padding: Spacing.two, alignItems: 'center', gap: 2 },
-  statIcon:      { fontSize: 18 },
   statValue:     { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 18 },
   statLabel:     { color: 'rgba(255,217,180,0.6)', fontFamily: FontFamily.regular, fontSize: 10, textAlign: 'center' },
 
