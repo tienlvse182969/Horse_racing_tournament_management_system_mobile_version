@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { ChevronLeft, ChevronRight, Calendar, MapPin, Zap } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
@@ -78,11 +78,11 @@ export function JockeySchedule() {
             {/* Month nav */}
             <View style={styles.monthNav}>
               <TouchableOpacity style={styles.navBtn} onPress={prevMonth}>
-                <MaterialCommunityIcons name="chevron-left" size={20} color={C.onSurface} />
+                <ChevronLeft size={20} color={C.onSurface} />
               </TouchableOpacity>
               <Text style={styles.monthTitle}>{MONTHS[viewMonth]} {viewYear}</Text>
               <TouchableOpacity style={styles.navBtn} onPress={nextMonth}>
-                <MaterialCommunityIcons name="chevron-right" size={20} color={C.onSurface} />
+                <ChevronRight size={20} color={C.onSurface} />
               </TouchableOpacity>
             </View>
 
@@ -133,7 +133,7 @@ export function JockeySchedule() {
 
             {selectedRaces.length === 0 ? (
               <View style={styles.empty}>
-                <MaterialCommunityIcons name="calendar-outline" size={36} color={C.onSurfaceVariant} style={{ opacity: 0.4 }} />
+                <Calendar size={36} color={C.onSurfaceVariant} style={{ opacity: 0.4 }} />
                 <Text style={styles.emptyText}>Không có cuộc đua nào</Text>
               </View>
             ) : (
@@ -150,7 +150,7 @@ export function JockeySchedule() {
                         </View>
                         <Text style={styles.raceName}>{race.name}</Text>
                         <View style={styles.raceMeta}>
-                          <MaterialCommunityIcons name="map-marker-outline" size={11} color={C.onSurfaceVariant} />
+                          <MapPin size={11} color={C.onSurfaceVariant} />
                           <Text style={styles.raceMetaText}>{race.location}</Text>
                           <Text style={styles.raceMetaDot}>·</Text>
                           <Text style={styles.raceMetaText}>{race.distance}m</Text>
@@ -165,7 +165,7 @@ export function JockeySchedule() {
 
                     {/* My horse entry */}
                     <View style={styles.myEntry}>
-                      <MaterialCommunityIcons name="horse-variant" size={14} color={C.onPrimaryContainer} />
+                      <Zap size={14} color={C.onPrimaryContainer} />
                       <View>
                         <Text style={styles.myHorse}>{race.myEntry.horse.name} · #{race.myEntry.horse.number}</Text>
                         <Text style={styles.myOdds}>Tỷ lệ cược: {race.myEntry.odds}x</Text>

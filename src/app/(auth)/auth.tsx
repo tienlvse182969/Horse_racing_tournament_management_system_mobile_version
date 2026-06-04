@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Zap, Users } from 'lucide-react-native';
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { AuthHeader } from '@/components/auth/auth-header';
 import { AuthTabSwitcher } from '@/components/auth/auth-tab-switcher';
@@ -162,11 +162,9 @@ export default function AuthScreen() {
                     <Text style={[styles.submitText, { color: onRoleColor }]}>Đăng nhập</Text>
                   ) : (
                     <View style={styles.submitInner}>
-                      <MaterialCommunityIcons
-                        name={isJockey ? 'horse-variant' : 'account-group-outline'}
-                        size={16}
-                        color={onRoleColor}
-                      />
+                      {isJockey
+                        ? <Zap size={16} color={onRoleColor} />
+                        : <Users size={16} color={onRoleColor} />}
                       <Text style={[styles.submitText, { color: onRoleColor }]}>
                         {isJockey ? 'Đăng ký Kỵ sĩ' : 'Đăng ký Khán Giả'}
                       </Text>
@@ -183,7 +181,7 @@ export default function AuthScreen() {
                 disabled={loading}
                 activeOpacity={0.8}>
                 <View style={styles.demoBtnInner}>
-                  <MaterialCommunityIcons name="account-group-outline" size={14} color={C.onSurfaceVariant} />
+                  <Users size={14} color={C.onSurfaceVariant} />
                   <Text style={styles.demoText}>Demo Khán giả</Text>
                 </View>
               </TouchableOpacity>
@@ -193,7 +191,7 @@ export default function AuthScreen() {
                 disabled={loading}
                 activeOpacity={0.8}>
                 <View style={styles.demoBtnInner}>
-                  <MaterialCommunityIcons name="horse-variant" size={14} color={C.primary} />
+                  <Zap size={14} color={C.primary} />
                   <Text style={[styles.demoText, styles.demoTextJockey]}>Demo Kỵ sĩ</Text>
                 </View>
               </TouchableOpacity>

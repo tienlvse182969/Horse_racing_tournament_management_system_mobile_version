@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Redirect, Tabs } from 'expo-router';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Home, Radio, Target, Bell } from 'lucide-react-native';
 import type { ColorValue } from 'react-native';
 import { ActivityIndicator, View } from 'react-native';
 
@@ -8,13 +8,9 @@ import { M3TabBar } from '@/components/m3-tab-bar';
 import { useAuth } from '@/context/AuthContext';
 import { spectatorApi } from '@/api/spectator.api';
 
-function tabIcon(active: string, inactive: string) {
-  return ({ color, size, focused }: { color: ColorValue; size: number; focused: boolean }) => (
-    <MaterialCommunityIcons
-      name={(focused ? active : inactive) as any}
-      color={color as string}
-      size={size}
-    />
+function tabIcon(Icon: React.ComponentType<{ color?: string; size?: number }>) {
+  return ({ color, size }: { color: ColorValue; size: number }) => (
+    <Icon color={color as string} size={size} />
   );
 }
 
@@ -48,21 +44,21 @@ export default function AppLayout() {
       screenOptions={{ headerShown: false }}>
       <Tabs.Screen
         name="home"
-        options={{ title: 'Trang chủ', tabBarIcon: tabIcon('home', 'home-outline') }}
+        options={{ title: 'Trang chủ', tabBarIcon: tabIcon(Home) }}
       />
       <Tabs.Screen
         name="live"
-        options={{ title: 'Trực tiếp', tabBarIcon: tabIcon('broadcast', 'broadcast') }}
+        options={{ title: 'Trực tiếp', tabBarIcon: tabIcon(Radio) }}
       />
       <Tabs.Screen
         name="predict"
-        options={{ title: 'Dự đoán', tabBarIcon: tabIcon('target', 'target') }}
+        options={{ title: 'Dự đoán', tabBarIcon: tabIcon(Target) }}
       />
       <Tabs.Screen
         name="notifications"
         options={{
           title: 'Thông báo',
-          tabBarIcon: tabIcon('bell', 'bell-outline'),
+          tabBarIcon: tabIcon(Bell),
           tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
         }}
       />

@@ -1,15 +1,17 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { CircleCheck, CircleX, Clock } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { formatCurrency, formatDate } from '@/mock-data';
 import type { Prediction } from '@/mock-data/predictions';
 
-const STATUS_CONFIG = {
-  won:     { label: 'Đúng',    color: C.tertiary,        bg: C.tertiaryContainer,   icon: 'check-circle' },
-  lost:    { label: 'Sai',     color: C.error,           bg: C.errorContainer,      icon: 'close-circle' },
-  pending: { label: 'Đang chờ',color: C.secondary,       bg: C.secondaryContainer,  icon: 'clock-outline' },
+type StatusIcon = React.ComponentType<{ size?: number; color?: string }>;
+
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; Icon: StatusIcon }> = {
+  won:     { label: 'Đúng',     color: C.tertiary,  bg: C.tertiaryContainer,  Icon: CircleCheck },
+  lost:    { label: 'Sai',      color: C.error,     bg: C.errorContainer,     Icon: CircleX     },
+  pending: { label: 'Đang chờ', color: C.secondary, bg: C.secondaryContainer, Icon: Clock       },
 };
 
 type Props = { predictions: Prediction[] };
@@ -39,7 +41,7 @@ export function PredictionHistory({ predictions }: Props) {
             <Animated.View key={pred.id} entering={FadeInDown.delay(i * 40).duration(280)} style={styles.card}>
               <View style={styles.cardHeader}>
                 <View style={[styles.statusBadge, { backgroundColor: cfg.bg }]}>
-                  <MaterialCommunityIcons name={cfg.icon as any} size={14} color={cfg.color} />
+                  <cfg.Icon size={14} color={cfg.color} />
                   <Text style={[styles.statusText, { color: cfg.color }]}>{cfg.label}</Text>
                 </View>
                 <Text style={styles.cardDate}>{formatDate(pred.raceDate)}</Text>

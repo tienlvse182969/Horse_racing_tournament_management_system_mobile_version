@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { Users } from 'lucide-react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
@@ -18,7 +19,7 @@ export function RegisterRoleSelection({ onSelect }: Props) {
           onPress={() => onSelect('jockey')}
           activeOpacity={0.8}>
           <View style={[styles.cardIcon, { backgroundColor: C.primaryContainer }]}>
-            <MaterialCommunityIcons name="horse-variant" size={26} color={C.primary} />
+            <MaterialCommunityIcons name="horse-human" size={26} color={C.primary} />
           </View>
           <View style={styles.cardText}>
             <Text style={[styles.cardTitle, { color: C.primary }]}>Kỵ sĩ</Text>
@@ -34,7 +35,7 @@ export function RegisterRoleSelection({ onSelect }: Props) {
           onPress={() => onSelect('spectator')}
           activeOpacity={0.8}>
           <View style={[styles.cardIcon, { backgroundColor: C.tertiaryContainer }]}>
-            <MaterialCommunityIcons name="account-group-outline" size={26} color={C.tertiary} />
+            <Users size={26} color={C.tertiary} />
           </View>
           <View style={styles.cardText}>
             <Text style={[styles.cardTitle, { color: C.tertiary }]}>Khán Giả</Text>

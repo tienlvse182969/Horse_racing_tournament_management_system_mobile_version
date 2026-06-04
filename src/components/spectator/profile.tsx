@@ -1,7 +1,10 @@
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import {
+  ArrowLeft, Calendar, Target, CircleCheck, CircleX, Star, ChartBar,
+  Clock, ChevronRight, LogOut, Bell, Lock, CircleQuestionMark, Info,
+} from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
@@ -11,11 +14,13 @@ import { useAuth } from '@/context/AuthContext';
 import { useSpectatorPoints, useSpectatorPredictions } from '@/hooks/useSpectatorData';
 import { formatCurrency, formatDate } from '@/mock-data';
 
-const SETTINGS = [
-  { icon: 'bell-outline',        label: 'Cài đặt thông báo' },
-  { icon: 'lock-outline',        label: 'Đổi mật khẩu' },
-  { icon: 'help-circle-outline', label: 'Trợ giúp & Hỗ trợ' },
-  { icon: 'information-outline', label: 'Về ứng dụng' },
+type SettingItem = { Icon: React.ComponentType<{ size?: number; color?: string }>; label: string };
+
+const SETTINGS: SettingItem[] = [
+  { Icon: Bell,               label: 'Cài đặt thông báo' },
+  { Icon: Lock,               label: 'Đổi mật khẩu' },
+  { Icon: CircleQuestionMark, label: 'Trợ giúp & Hỗ trợ' },
+  { Icon: Info,               label: 'Về ứng dụng' },
 ];
 
 const STATUS_CONFIG = {
@@ -33,14 +38,17 @@ export function SpectatorProfile() {
   const pending = predictions.filter(p => p.status === 'pending').length;
   const total = predictions.length;
   const winPct = total > 0 ? Math.round((won / total) * 100) : 0;
-  const STATS = [
-    { label: 'Dự đoán', value: total, icon: 'target' },
-    { label: 'Đoán đúng', value: won, icon: 'check-circle-outline' },
-    { label: 'Đoán sai', value: lost, icon: 'close-circle-outline' },
-    { label: 'Điểm thưởng', value: `${(balance / 1000).toFixed(0)}k`, icon: 'star-outline' },
-    { label: 'Tỷ lệ đúng', value: `${winPct}%`, icon: 'chart-bar' },
-    { label: 'Đang chờ', value: pending, icon: 'clock-outline' },
+
+  type StatItem = { label: string; value: string | number; Icon: React.ComponentType<{ size?: number; color?: string }> };
+  const STATS: StatItem[] = [
+    { label: 'Dự đoán',     value: total,                           Icon: Target      },
+    { label: 'Đoán đúng',   value: won,                             Icon: CircleCheck },
+    { label: 'Đoán sai',    value: lost,                            Icon: CircleX     },
+    { label: 'Điểm thưởng', value: `${(balance / 1000).toFixed(0)}k`, Icon: Star     },
+    { label: 'Tỷ lệ đúng',  value: `${winPct}%`,                   Icon: ChartBar    },
+    { label: 'Đang chờ',    value: pending,                         Icon: Clock       },
   ];
+
   const recentPreds = predictions.slice(0, 4);
   const displayName = user?.fullName ?? 'Khán giả';
   const initials = displayName.split(' ').map(w => w[0]).join('').slice(-2).toUpperCase();
@@ -59,7 +67,7 @@ export function SpectatorProfile() {
           contentContainerStyle={styles.scroll}
           leftAction={
             <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-              <MaterialCommunityIcons name="arrow-left" size={22} color={C.onSurface} />
+              <ArrowLeft size={22} color={C.onSurface} />
             </TouchableOpacity>
           }>
 
@@ -76,7 +84,7 @@ export function SpectatorProfile() {
               <Text style={styles.heroName}>{displayName}</Text>
               <Text style={styles.heroPhone}>{user?.email ?? ''}</Text>
               <View style={styles.heroChip}>
-                <MaterialCommunityIcons name="calendar-outline" size={12} color={C.tertiary} />
+                <Calendar size={12} color={C.tertiary} />
                 <Text style={styles.heroChipText}>{balance.toLocaleString()} điểm</Text>
               </View>
             </LinearGradient>
@@ -87,7 +95,7 @@ export function SpectatorProfile() {
             <View style={styles.statsGrid}>
               {STATS.map(s => (
                 <View key={s.label} style={styles.statCard}>
-                  <MaterialCommunityIcons name={s.icon as any} size={20} color={C.primary} />
+                  <s.Icon size={20} color={C.primary} />
                   <Text style={styles.statValue}>{s.value}</Text>
                   <Text style={styles.statLabel}>{s.label}</Text>
                 </View>
@@ -137,17 +145,17 @@ export function SpectatorProfile() {
             {SETTINGS.map(s => (
               <TouchableOpacity key={s.label} style={styles.settingRow} activeOpacity={0.75}>
                 <View style={styles.settingIconWrap}>
-                  <MaterialCommunityIcons name={s.icon as any} size={20} color={C.onSurfaceVariant} />
+                  <s.Icon size={20} color={C.onSurfaceVariant} />
                 </View>
                 <Text style={styles.settingLabel}>{s.label}</Text>
-                <MaterialCommunityIcons name="chevron-right" size={18} color={C.onSurfaceVariant} />
+                <ChevronRight size={18} color={C.onSurfaceVariant} />
               </TouchableOpacity>
             ))}
           </Animated.View>
 
           {/* Logout */}
           <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.85}>
-            <MaterialCommunityIcons name="logout" size={18} color={C.error} />
+            <LogOut size={18} color={C.error} />
             <Text style={styles.logoutText}>Đăng xuất</Text>
           </TouchableOpacity>
 
@@ -211,12 +219,8 @@ const styles = StyleSheet.create({
 
   // Back button
   backBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: Shape.full,
-    backgroundColor: SC.highest,
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 34, height: 34, borderRadius: Shape.full,
+    backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center',
   },
 
   // Logout

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Star, Gift } from 'lucide-react-native';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
@@ -33,13 +33,13 @@ export function SpectatorPredict() {
           {/* Points banner */}
           <View style={styles.pointsBanner}>
             <View style={styles.pointsItem}>
-              <MaterialCommunityIcons name="star-circle" size={18} color={C.secondary} />
+              <Star size={18} color={C.secondary} />
               <Text style={styles.pointsValue}>{totalPoints.toLocaleString()}</Text>
               <Text style={styles.pointsLabel}>Điểm tích lũy</Text>
             </View>
             <View style={styles.pointsDivider} />
             <View style={styles.pointsItem}>
-              <MaterialCommunityIcons name="gift-outline" size={18} color={C.primary} />
+              <Gift size={18} color={C.primary} />
               <Text style={[styles.pointsValue, { color: C.primary }]}>
                 {(totalRewards / 1000).toFixed(0)}k
               </Text>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Gift, Flag, Target, Trophy, Bell } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
@@ -12,12 +12,14 @@ import type { Notification, NotificationType } from '@/mock-data';
 import { formatCurrency } from '@/mock-data';
 import { useSpectatorNotifications } from '@/hooks/useSpectatorData';
 
-const TYPE_CONFIG: Record<NotificationType, { icon: string; color: string; bg: string }> = {
-  reward:     { icon: 'gift',           color: C.primary,    bg: C.primaryContainer },
-  result:     { icon: 'flag-checkered', color: C.tertiary,   bg: C.tertiaryContainer },
-  prediction: { icon: 'target',         color: C.secondary,  bg: C.secondaryContainer },
-  tournament: { icon: 'trophy',         color: C.primary,    bg: C.primaryContainer },
-  system:     { icon: 'bell',           color: C.onSurfaceVariant, bg: `${C.onSurfaceVariant}25` },
+type NotifIconComp = React.ComponentType<{ size?: number; color?: string }>;
+
+const TYPE_CONFIG: Record<NotificationType, { Icon: NotifIconComp; color: string; bg: string }> = {
+  reward:     { Icon: Gift,   color: C.primary,         bg: C.primaryContainer },
+  result:     { Icon: Flag,   color: C.tertiary,        bg: C.tertiaryContainer },
+  prediction: { Icon: Target, color: C.secondary,       bg: C.secondaryContainer },
+  tournament: { Icon: Trophy, color: C.primary,         bg: C.primaryContainer },
+  system:     { Icon: Bell,   color: C.onSurfaceVariant, bg: `${C.onSurfaceVariant}25` },
 };
 
 function timeAgo(dateStr: string): string {
@@ -48,7 +50,7 @@ export function SpectatorNotifications() {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.rewardBanner}>
-            <MaterialCommunityIcons name="gift" size={24} color={C.primary} />
+            <Gift size={24} color={C.primary} />
             <View style={styles.rewardBannerText}>
               <Text style={styles.rewardBannerLabel}>Tổng phần thưởng nhận được</Text>
               <Text style={styles.rewardBannerValue}>{formatCurrency(totalRewards)}</Text>
@@ -77,7 +79,7 @@ export function SpectatorNotifications() {
                   activeOpacity={0.85}>
                   {!notif.read && <View style={styles.unreadDot} />}
                   <View style={[styles.iconWrap, { backgroundColor: cfg.bg }]}>
-                    <MaterialCommunityIcons name={cfg.icon as any} size={20} color={cfg.color} />
+                    <cfg.Icon size={20} color={cfg.color} />
                   </View>
                   <View style={styles.cardContent}>
                     <View style={styles.cardTop}>

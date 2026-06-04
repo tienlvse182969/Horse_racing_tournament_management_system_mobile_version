@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { ArrowLeft } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
@@ -30,7 +30,7 @@ export function RaceDetail({ race, onBack }: Props) {
       {/* Header — respects Android status bar */}
       <View style={[styles.header, { paddingTop: insets.top + Spacing.two }]}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-          <MaterialCommunityIcons name="arrow-left" size={22} color={C.onSurface} />
+          <ArrowLeft size={22} color={C.onSurface} />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>{race.name}</Text>
         <View style={{ width: 38 }} />
