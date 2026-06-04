@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { ArrowLeft, Zap, Trophy, ChartBar, Banknote, ChevronRight, LogOut, UserPen, Bell, Lock, CircleQuestionMark, Star, Target } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
@@ -17,11 +17,22 @@ const ACHIEVEMENT_CONFIG: Record<AchievementType, { bg: string; border: string; 
   special: { bg: C.primaryContainer,    border: C.primary,           label: 'Đặc biệt' },
 };
 
-const SETTINGS = [
-  { icon: 'account-edit-outline',  label: 'Chỉnh sửa hồ sơ' },
-  { icon: 'bell-outline',          label: 'Cài đặt thông báo' },
-  { icon: 'lock-outline',          label: 'Bảo mật' },
-  { icon: 'help-circle-outline',   label: 'Trợ giúp & Hỗ trợ' },
+type AchIconComp = React.ComponentType<{ size?: number; color?: string }>;
+const ACHIEVEMENT_ICONS: Record<string, AchIconComp> = {
+  trophy:            Trophy,
+  'trophy-variant':  Trophy,
+  target:            Target,
+  star:              Star,
+  'star-four-points': Star,
+  'lightning-bolt':  Zap,
+};
+
+type SettingItem = { Icon: AchIconComp; label: string };
+const SETTINGS: SettingItem[] = [
+  { Icon: UserPen,            label: 'Chỉnh sửa hồ sơ' },
+  { Icon: Bell,               label: 'Cài đặt thông báo' },
+  { Icon: Lock,               label: 'Bảo mật' },
+  { Icon: CircleQuestionMark, label: 'Trợ giúp & Hỗ trợ' },
 ];
 
 export function JockeyProfile() {
@@ -31,6 +42,16 @@ export function JockeyProfile() {
       { text: 'Đăng xuất', style: 'destructive', onPress: () => router.replace('/(auth)/auth' as never) },
     ]);
 
+  type StatCard = { label: string; value: string | number; Icon: AchIconComp; color: string };
+  const careerStats: StatCard[] = [
+    { label: 'Tổng cuộc đua', value: currentJockey.stats.totalRaces,                         Icon: Zap,      color: C.primary    },
+    { label: 'Chiến thắng',   value: currentJockey.stats.wins,                               Icon: Trophy,   color: C.secondary  },
+    { label: 'Hạng Nhì',      value: currentJockey.stats.seconds,                            Icon: Trophy,   color: '#9E9E9E'    },
+    { label: 'Hạng Ba',       value: currentJockey.stats.thirds,                             Icon: Trophy,   color: '#CD7F32'    },
+    { label: 'Tỷ lệ thắng',  value: `${currentJockey.stats.winRate}%`,                      Icon: ChartBar, color: C.tertiary   },
+    { label: 'Tổng thu nhập', value: formatCurrency(currentJockey.stats.earnings),           Icon: Banknote, color: C.secondary  },
+  ];
+
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -39,7 +60,7 @@ export function JockeyProfile() {
           contentContainerStyle={styles.scroll}
           leftAction={
             <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-              <MaterialCommunityIcons name="arrow-left" size={22} color={C.onSurface} />
+              <ArrowLeft size={22} color={C.onSurface} />
             </TouchableOpacity>
           }>
 
@@ -57,9 +78,9 @@ export function JockeyProfile() {
                 </View>
                 <View style={styles.heroInfo}>
                   <View style={styles.heroRoleRow}>
-                  <MaterialCommunityIcons name="horse-variant" size={11} color="rgba(255,217,180,0.7)" />
-                  <Text style={styles.heroRole}>Jockey Chuyên Nghiệp</Text>
-                </View>
+                    <Zap size={11} color="rgba(255,217,180,0.7)" />
+                    <Text style={styles.heroRole}>Jockey Chuyên Nghiệp</Text>
+                  </View>
                   <Text style={styles.heroName}>{currentJockey.name}</Text>
                   <Text style={styles.heroNationality}>
                     🇻🇳 {currentJockey.nationality} · {currentJockey.age} tuổi
@@ -74,16 +95,9 @@ export function JockeyProfile() {
           <Animated.View entering={FadeInDown.delay(80).duration(320)}>
             <Text style={styles.sectionTitle}>Thành tích sự nghiệp</Text>
             <View style={styles.statsGrid}>
-              {[
-                { label: 'Tổng cuộc đua', value: currentJockey.stats.totalRaces, icon: 'horse-variant', color: C.primary },
-                { label: 'Chiến thắng',   value: currentJockey.stats.wins,       icon: 'trophy', color: C.secondary },
-                { label: 'Hạng Nhì',      value: currentJockey.stats.seconds,    icon: 'trophy', color: '#9E9E9E' },
-                { label: 'Hạng Ba',       value: currentJockey.stats.thirds,     icon: 'trophy', color: '#CD7F32' },
-                { label: 'Tỷ lệ thắng',  value: `${currentJockey.stats.winRate}%`, icon: 'chart-bar', color: C.tertiary },
-                { label: 'Tổng thu nhập', value: formatCurrency(currentJockey.stats.earnings), icon: 'cash', color: C.secondary },
-              ].map((s, i) => (
+              {careerStats.map((s, i) => (
                 <Animated.View key={s.label} entering={FadeInDown.delay(100 + i * 40).duration(280)} style={styles.statCard}>
-                  <MaterialCommunityIcons name={s.icon as any} size={22} color={s.color} />
+                  <s.Icon size={22} color={s.color} />
                   <Text style={[styles.statValue, { color: s.color }]}>{s.value}</Text>
                   <Text style={styles.statLabel}>{s.label}</Text>
                 </Animated.View>
@@ -96,11 +110,12 @@ export function JockeyProfile() {
             <Text style={styles.sectionTitle}>Thành tích & Danh hiệu</Text>
             {currentJockey.achievements.map((ach, i) => {
               const ac = ACHIEVEMENT_CONFIG[ach.type];
+              const AchIcon = ACHIEVEMENT_ICONS[ach.icon] ?? Trophy;
               return (
                 <Animated.View key={ach.id} entering={FadeInDown.delay(240 + i * 50).duration(260)}>
                   <View style={[styles.achRow, { backgroundColor: ac.bg, borderColor: `${ac.border}44` }]}>
                     <View style={[styles.achIcon, { backgroundColor: `${ac.border}22` }]}>
-                      <MaterialCommunityIcons name={ach.icon as any} size={24} color={ac.border} />
+                      <AchIcon size={24} color={ac.border} />
                     </View>
                     <View style={styles.achInfo}>
                       <Text style={styles.achTitle}>{ach.title}</Text>
@@ -126,17 +141,17 @@ export function JockeyProfile() {
             {SETTINGS.map(s => (
               <TouchableOpacity key={s.label} style={styles.settingRow} activeOpacity={0.75}>
                 <View style={styles.settingIconWrap}>
-                  <MaterialCommunityIcons name={s.icon as any} size={20} color={C.onSurfaceVariant} />
+                  <s.Icon size={20} color={C.onSurfaceVariant} />
                 </View>
                 <Text style={styles.settingLabel}>{s.label}</Text>
-                <MaterialCommunityIcons name="chevron-right" size={18} color={C.onSurfaceVariant} />
+                <ChevronRight size={18} color={C.onSurfaceVariant} />
               </TouchableOpacity>
             ))}
           </Animated.View>
 
           {/* Logout */}
           <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.85}>
-            <MaterialCommunityIcons name="logout" size={18} color={C.error} />
+            <LogOut size={18} color={C.error} />
             <Text style={styles.logoutText}>Đăng xuất</Text>
           </TouchableOpacity>
 

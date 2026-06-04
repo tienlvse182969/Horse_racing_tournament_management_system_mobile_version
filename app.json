@@ -17,12 +17,14 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.anonymous.horse_racing_tournament_management_system_mobile_version"
     },
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
+    "newArchEnabled": false,
     "plugins": [
       "expo-router",
       [

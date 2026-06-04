@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Zap, Clock, MapPin, Route, Trophy, User } from 'lucide-react-native';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import type { Race } from '@/mock-data';
@@ -45,7 +45,7 @@ export function RaceCard({ race, onPress }: Props) {
               <View style={[styles.infoItem, { flex: 2 }]}>
                 <Text style={styles.infoLabel}>Dẫn đầu</Text>
                 <View style={styles.leaderNameRow}>
-                  <MaterialCommunityIcons name="horse-variant" size={13} color="#FFFFFF" />
+                  <Zap size={13} color="#FFFFFF" />
                   <Text style={styles.liveInfoValue} numberOfLines={1}>{leader.horse.name}</Text>
                 </View>
               </View>
@@ -67,11 +67,11 @@ export function RaceCard({ race, onPress }: Props) {
         </View>
         <Text style={styles.cardName}>{race.name}</Text>
         <View style={styles.metaRow}>
-          <MetaChip icon="clock-outline" text={`${race.time} · ${formatDate(race.date)}`} />
-          <MetaChip icon="map-marker-outline" text={race.location} />
-          <MetaChip icon="road-variant" text={`${race.distance}m`} />
-          <MetaChip icon="trophy-outline" text={formatCurrency(race.purse)} />
-          <MetaChip icon="account-outline" text={`${race.entries.length} kỵ sĩ`} />
+          <MetaChip Icon={Clock}   text={`${race.time} · ${formatDate(race.date)}`} />
+          <MetaChip Icon={MapPin}  text={race.location} />
+          <MetaChip Icon={Route}   text={`${race.distance}m`} />
+          <MetaChip Icon={Trophy}  text={formatCurrency(race.purse)} />
+          <MetaChip Icon={User}    text={`${race.entries.length} kỵ sĩ`} />
         </View>
       </TouchableOpacity>
     );
@@ -102,10 +102,10 @@ export function RaceCard({ race, onPress }: Props) {
   );
 }
 
-function MetaChip({ icon, text }: { icon: string; text: string }) {
+function MetaChip({ Icon, text }: { Icon: React.ComponentType<{ size?: number; color?: string }>; text: string }) {
   return (
     <View style={styles.metaChip}>
-      <MaterialCommunityIcons name={icon as any} size={11} color={C.onSurfaceVariant} />
+      <Icon size={11} color={C.onSurfaceVariant} />
       <Text style={styles.metaChipText}>{text}</Text>
     </View>
   );

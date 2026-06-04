@@ -1,5 +1,5 @@
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
@@ -43,11 +43,11 @@ export function Leaderboard({ standalone = true }: { standalone?: boolean }) {
             <View style={styles.entryRight}>
               <Text style={styles.earnings}>{formatCurrency(entry.earnings)}</Text>
               <View style={styles.changeRow}>
-                <MaterialCommunityIcons
-                  name={entry.change > 0 ? 'trending-up' : entry.change < 0 ? 'trending-down' : 'minus'}
-                  size={12}
-                  color={entry.change > 0 ? C.tertiary : entry.change < 0 ? C.error : C.onSurfaceVariant}
-                />
+                {entry.change > 0
+                  ? <TrendingUp size={12} color={C.tertiary} />
+                  : entry.change < 0
+                  ? <TrendingDown size={12} color={C.error} />
+                  : <Minus size={12} color={C.onSurfaceVariant} />}
                 {entry.change !== 0 && (
                   <Text style={[styles.changeText, { color: entry.change > 0 ? C.tertiary : C.error }]}>
                     {Math.abs(entry.change)}

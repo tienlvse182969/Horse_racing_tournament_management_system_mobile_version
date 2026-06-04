@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Hand, Zap, Trophy, ChartBar, Mail, MapPin, Clock, ArrowLeftRight, Banknote, TrendingUp } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
@@ -24,6 +24,13 @@ export function JockeyHome() {
   const initials = displayName.split(' ').map(w => w[0]).join('').slice(-2).toUpperCase();
   const winRate = stats.completedRaces > 0 ? Math.round((stats.completedRaces / (stats.completedRaces + stats.upcomingRaces || 1)) * 100) : 0;
 
+  type HeroStat = { label: string; value: string | number; Icon: React.ComponentType<{ size?: number; color?: string }> };
+  const heroStats: HeroStat[] = [
+    { label: 'Tổng đua',     value: stats.completedRaces + stats.upcomingRaces, Icon: Zap      },
+    { label: 'Chiến thắng',  value: stats.completedRaces,                       Icon: Trophy   },
+    { label: 'Tỷ lệ thắng', value: `${winRate}%`,                              Icon: ChartBar },
+  ];
+
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -44,7 +51,7 @@ export function JockeyHome() {
                 <View>
                   <View style={styles.heroGreetingRow}>
                     <Text style={styles.heroGreeting}>Xin chào</Text>
-                    <MaterialCommunityIcons name="hand-wave" size={13} color="rgba(255,217,180,0.7)" />
+                    <Hand size={13} color="rgba(255,217,180,0.7)" />
                   </View>
                   <Text style={styles.heroName}>
                     {displayName.split(' ').slice(-2).join(' ')}
@@ -57,13 +64,9 @@ export function JockeyHome() {
               </View>
 
               <View style={styles.statsRow}>
-                {[
-                  { label: 'Tổng đua',     value: stats.completedRaces + stats.upcomingRaces, icon: 'horse-variant' },
-                  { label: 'Chiến thắng',  value: stats.completedRaces, icon: 'trophy' },
-                  { label: 'Tỷ lệ thắng', value: `${winRate}%`, icon: 'chart-bar' },
-                ].map(s => (
+                {heroStats.map(s => (
                   <View key={s.label} style={styles.statBox}>
-                    <MaterialCommunityIcons name={s.icon as any} size={18} color="rgba(255,217,180,0.8)" />
+                    <s.Icon size={18} color="rgba(255,217,180,0.8)" />
                     <Text style={styles.statValue}>{s.value}</Text>
                     <Text style={styles.statLabel}>{s.label}</Text>
                   </View>
@@ -80,7 +83,7 @@ export function JockeyHome() {
                 onPress={() => router.push('/jockey/invitations')}
                 activeOpacity={0.85}>
                 <View style={styles.inviteIconWrap}>
-                  <MaterialCommunityIcons name="email-outline" size={20} color={C.onSecondary} />
+                  <Mail size={20} color={C.onSecondary} />
                 </View>
                 <View style={styles.inviteText}>
                   <Text style={styles.inviteTitle}>{pendingCount} lời mời chưa phản hồi</Text>
@@ -111,7 +114,7 @@ export function JockeyHome() {
                     Vị trí hiện tại của bạn: #{liveRace.myEntry.position ?? '–'}
                   </Text>
                 </View>
-                <MaterialCommunityIcons name="lightning-bolt" size={28} color="rgba(180,237,202,0.5)" />
+                <Zap size={28} color="rgba(180,237,202,0.5)" />
               </LinearGradient>
             </Animated.View>
           )}
@@ -131,7 +134,7 @@ export function JockeyHome() {
                     <View style={styles.raceCardInfo}>
                       <Text style={styles.raceName}>{race.name}</Text>
                       <View style={styles.raceLocation}>
-                        <MaterialCommunityIcons name="map-marker-outline" size={12} color={C.onSurfaceVariant} />
+                        <MapPin size={12} color={C.onSurfaceVariant} />
                         <Text style={styles.raceLocationText}>{race.location}</Text>
                       </View>
                     </View>
@@ -141,15 +144,15 @@ export function JockeyHome() {
                   </View>
                   <View style={styles.raceCardMeta}>
                     <View style={styles.raceMeta}>
-                      <MaterialCommunityIcons name="clock-outline" size={12} color={C.onSurfaceVariant} />
+                      <Clock size={12} color={C.onSurfaceVariant} />
                       <Text style={styles.raceMetaText}>{race.time}</Text>
                     </View>
                     <View style={styles.raceMeta}>
-                      <MaterialCommunityIcons name="arrow-expand-horizontal" size={12} color={C.onSurfaceVariant} />
+                      <ArrowLeftRight size={12} color={C.onSurfaceVariant} />
                       <Text style={styles.raceMetaText}>{race.distance}m</Text>
                     </View>
                     <View style={styles.raceMeta}>
-                      <MaterialCommunityIcons name="trophy-outline" size={12} color={C.secondary} />
+                      <Trophy size={12} color={C.secondary} />
                       <Text style={[styles.raceMetaText, { color: C.secondary }]}>{formatCurrency(race.purse)}</Text>
                     </View>
                     <View style={styles.confirmedBadge}>
@@ -165,11 +168,11 @@ export function JockeyHome() {
           <Animated.View entering={FadeInDown.delay(360).duration(320)} style={styles.earningsCard}>
             <View style={styles.earningsHeader}>
               <Text style={styles.earningsLabel}>Thu nhập tháng 5</Text>
-              <MaterialCommunityIcons name="cash" size={18} color={C.onSurfaceVariant} />
+              <Banknote size={18} color={C.onSurfaceVariant} />
             </View>
             <Text style={styles.earningsAmount}>{formatCurrency(405_000_000)}</Text>
             <View style={styles.earningsTrend}>
-              <MaterialCommunityIcons name="trending-up" size={13} color={C.tertiary} />
+              <TrendingUp size={13} color={C.tertiary} />
               <Text style={styles.earningsTrendText}>+12.5%</Text>
               <Text style={styles.earningsTrendSub}>so với tháng trước</Text>
             </View>

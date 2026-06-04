@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { CircleCheck, Circle, Target } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
@@ -46,7 +46,7 @@ export function PredictForm({ onSubmitted }: Props) {
     return (
       <Animated.View entering={FadeIn.duration(300)} style={styles.successBox}>
         <View style={styles.successIcon}>
-          <MaterialCommunityIcons name="check-circle" size={56} color={C.tertiary} />
+          <CircleCheck size={56} color={C.tertiary} />
         </View>
         <Text style={styles.successTitle}>Đã gửi dự đoán!</Text>
         <Text style={styles.successSub}>
@@ -72,8 +72,8 @@ export function PredictForm({ onSubmitted }: Props) {
               activeOpacity={0.8}>
               <View style={styles.raceItemLeft}>
                 {isSelected
-                  ? <MaterialCommunityIcons name="check-circle" size={20} color={C.primary} />
-                  : <MaterialCommunityIcons name="circle-outline" size={20} color={C.onSurfaceVariant} />}
+                  ? <CircleCheck size={20} color={C.primary} />
+                  : <Circle size={20} color={C.onSurfaceVariant} />}
                 <View style={styles.raceItemText}>
                   <Text style={[styles.raceItemName, isSelected && styles.raceItemNameSelected]} numberOfLines={1}>
                     {race.name}
@@ -119,7 +119,7 @@ export function PredictForm({ onSubmitted }: Props) {
                     <Text style={styles.oddsText}>{entry.odds.toFixed(1)}x</Text>
                   </View>
                   {isSelected && (
-                    <MaterialCommunityIcons name="check-circle" size={20} color={C.primary} />
+                    <CircleCheck size={20} color={C.primary} />
                   )}
                 </TouchableOpacity>
               );
@@ -132,7 +132,7 @@ export function PredictForm({ onSubmitted }: Props) {
       {selectedRaceId && selectedHorseId && (
         <Animated.View entering={FadeIn.duration(250)}>
           <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} activeOpacity={0.85}>
-            <MaterialCommunityIcons name="target" size={18} color={C.onSecondary} />
+            <Target size={18} color={C.onSecondary} />
             <Text style={styles.submitText}>Gửi dự đoán</Text>
           </TouchableOpacity>
         </Animated.View>

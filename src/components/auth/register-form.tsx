@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { TextInput } from 'react-native-paper';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Zap, Users, User, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
 
 import { HorseRacingDark as C, Shape, Spacing, FontFamily } from '@/constants/theme';
 import type { RegisterRole } from './types';
@@ -40,11 +40,9 @@ export function RegisterForm({
       <Animated.View entering={FadeInDown.duration(300)} style={styles.form}>
         <View style={styles.roleBadgeRow}>
           <View style={[styles.roleBadge, { backgroundColor: containerColor }]}>
-            <MaterialCommunityIcons
-              name={isJockey ? 'horse-variant' : 'account-group-outline'}
-              size={16}
-              color={accentColor}
-            />
+            {isJockey
+              ? <Zap size={16} color={accentColor} />
+              : <Users size={16} color={accentColor} />}
             <Text style={[styles.roleBadgeLabel, { color: accentColor }]}>
               {isJockey ? 'Kỵ sĩ' : 'Khán Giả'}
             </Text>
@@ -65,7 +63,7 @@ export function RegisterForm({
           value={name}
           onChangeText={onNameChange}
           mode="outlined"
-          left={<TextInput.Icon icon="account-outline" />}
+          left={<TextInput.Icon icon={({ color, size }) => <User color={color} size={size} />} />}
           theme={inputTheme}
         />
         <TextInput
@@ -75,7 +73,7 @@ export function RegisterForm({
           mode="outlined"
           keyboardType="email-address"
           autoCapitalize="none"
-          left={<TextInput.Icon icon="email-outline" />}
+          left={<TextInput.Icon icon={({ color, size }) => <Mail color={color} size={size} />} />}
           theme={inputTheme}
         />
         <TextInput
@@ -84,10 +82,14 @@ export function RegisterForm({
           onChangeText={onPasswordChange}
           mode="outlined"
           secureTextEntry={!pwVisible}
-          left={<TextInput.Icon icon="lock-outline" />}
+          left={<TextInput.Icon icon={({ color, size }) => <Lock color={color} size={size} />} />}
           right={
             <TextInput.Icon
-              icon={pwVisible ? 'eye-off-outline' : 'eye-outline'}
+              icon={({ color, size }) =>
+                pwVisible
+                  ? <EyeOff color={color} size={size} />
+                  : <Eye color={color} size={size} />
+              }
               onPress={() => setPwVisible(v => !v)}
             />
           }

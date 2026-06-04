@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Zap, Trophy, Award, TrendingUp, TrendingDown, Minus, Timer } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
@@ -21,6 +21,12 @@ const POS_CONFIG: Record<number, { iconColor: string; bg: string; color: string 
 };
 const POS_LABEL: Record<number, string> = { 1: 'Vô địch', 2: 'Nhì', 3: 'Ba' };
 
+type TabDef = { key: Tab; Icon: React.ComponentType<{ size?: number; color?: string }>; label: string };
+const TABS: TabDef[] = [
+  { key: 'personal',    Icon: Zap,    label: 'Cá nhân' },
+  { key: 'leaderboard', Icon: Trophy, label: 'Bảng XH' },
+];
+
 export function JockeyResults() {
   const [tab, setTab] = useState<Tab>('personal');
 
@@ -31,18 +37,15 @@ export function JockeyResults() {
 
           {/* Tab switcher */}
           <View style={styles.tabPill}>
-            {([
-              ['personal', 'horse-variant', 'Cá nhân'],
-              ['leaderboard', 'trophy', 'Bảng XH'],
-            ] as [Tab, string, string][]).map(([t, icon, label]) => (
+            {TABS.map(({ key, Icon, label }) => (
               <TouchableOpacity
-                key={t}
-                style={[styles.tabBtn, tab === t && styles.tabBtnActive]}
-                onPress={() => setTab(t)}
+                key={key}
+                style={[styles.tabBtn, tab === key && styles.tabBtnActive]}
+                onPress={() => setTab(key)}
                 activeOpacity={0.8}>
                 <View style={styles.tabBtnInner}>
-                  <MaterialCommunityIcons name={icon as any} size={14} color={tab === t ? C.onPrimary : C.onSurfaceVariant} />
-                  <Text style={[styles.tabBtnText, tab === t && styles.tabBtnTextActive]}>{label}</Text>
+                  <Icon size={14} color={tab === key ? C.onPrimary : C.onSurfaceVariant} />
+                  <Text style={[styles.tabBtnText, tab === key && styles.tabBtnTextActive]}>{label}</Text>
                 </View>
               </TouchableOpacity>
             ))}
@@ -73,19 +76,22 @@ function PersonalContent() {
   const wins    = personalResults.filter(r => r.position === 1).length;
   const podiums = personalResults.filter(r => r.position <= 3).length;
 
+  type StatBox = { label: string; value: string | number; Icon: React.ComponentType<{ size?: number; color?: string }> };
+  const statBoxes: StatBox[] = [
+    { label: 'Cuộc đua',    value: personalResults.length, Icon: Zap   },
+    { label: 'Chiến thắng', value: wins,                   Icon: Trophy },
+    { label: 'Podium',      value: podiums,                Icon: Award  },
+  ];
+
   return (
     <>
       {/* Stats card */}
       <LinearGradient colors={['#3B1A00', '#7B3F00']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.statsCard}>
         <Text style={styles.statsCardLabel}>Thống kê gần đây</Text>
         <View style={styles.statsRow}>
-          {[
-            { label: 'Cuộc đua',    value: personalResults.length, icon: 'horse-variant' },
-            { label: 'Chiến thắng', value: wins,                   icon: 'trophy' },
-            { label: 'Podium',      value: podiums,                 icon: 'podium' },
-          ].map(s => (
+          {statBoxes.map(s => (
             <View key={s.label} style={styles.statBox}>
-              <MaterialCommunityIcons name={s.icon as any} size={16} color="rgba(255,217,180,0.8)" />
+              <s.Icon size={16} color="rgba(255,217,180,0.8)" />
               <Text style={styles.statValue}>{s.value}</Text>
               <Text style={styles.statLabel}>{s.label}</Text>
             </View>
@@ -108,7 +114,7 @@ function PersonalContent() {
             <View style={styles.resultRow}>
               <View style={[styles.posBadge, { backgroundColor: pc.bg }]}>
                 {pc.iconColor
-                  ? <MaterialCommunityIcons name="trophy" size={22} color={pc.iconColor} />
+                  ? <Trophy size={22} color={pc.iconColor} />
                   : <Text style={[styles.rankNum, { color: pc.color }]}>#{r.position}</Text>
                 }
               </View>
@@ -120,12 +126,12 @@ function PersonalContent() {
                   </Text>
                   <Text style={styles.resultMetaDot}>·</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-                    <MaterialCommunityIcons name="horse-variant" size={10} color={C.onSurfaceVariant} />
+                    <Zap size={10} color={C.onSurfaceVariant} />
                     <Text style={styles.resultMetaText}>{r.horse}</Text>
                   </View>
                   <Text style={styles.resultMetaDot}>·</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-                    <MaterialCommunityIcons name="timer-outline" size={10} color={C.onSurfaceVariant} />
+                    <Timer size={10} color={C.onSurfaceVariant} />
                     <Text style={styles.resultMetaText}>{r.time}</Text>
                   </View>
                 </View>
@@ -163,7 +169,7 @@ function LeaderboardContent() {
             </View>
           </View>
           <View style={styles.myRankBadge}>
-            <MaterialCommunityIcons name="trophy" size={12} color="#FFD9B4" />
+            <Trophy size={12} color="#FFD9B4" />
             <Text style={styles.myRankBadgeText}>Top 1</Text>
           </View>
         </LinearGradient>
@@ -199,10 +205,10 @@ function LeaderboardContent() {
                 <Text style={styles.rankEarnings}>{formatCurrency(j.earnings)}</Text>
                 <View style={styles.rankChange}>
                   {j.change > 0
-                    ? <><MaterialCommunityIcons name="trending-up" size={10} color={C.tertiary} /><Text style={[styles.changeText, { color: C.tertiary }]}>+{j.change}</Text></>
+                    ? <><TrendingUp size={10} color={C.tertiary} /><Text style={[styles.changeText, { color: C.tertiary }]}>+{j.change}</Text></>
                     : j.change < 0
-                    ? <><MaterialCommunityIcons name="trending-down" size={10} color={C.error} /><Text style={[styles.changeText, { color: C.error }]}>{j.change}</Text></>
-                    : <><MaterialCommunityIcons name="minus" size={10} color={C.onSurfaceVariant} /><Text style={[styles.changeText, { color: C.onSurfaceVariant }]}>0</Text></>
+                    ? <><TrendingDown size={10} color={C.error} /><Text style={[styles.changeText, { color: C.error }]}>{j.change}</Text></>
+                    : <><Minus size={10} color={C.onSurfaceVariant} /><Text style={[styles.changeText, { color: C.onSurfaceVariant }]}>0</Text></>
                   }
                 </View>
               </View>

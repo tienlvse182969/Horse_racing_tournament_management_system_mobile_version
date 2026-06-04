@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Trophy, Zap, Clock, MapPin, Route, ActivitySquare } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
@@ -33,7 +33,7 @@ export function SpectatorHome() {
               end={{ x: 1, y: 1 }}
               style={styles.heroCard}>
               <View style={styles.heroTagRow}>
-                <MaterialCommunityIcons name="trophy" size={11} color={C.tertiary} />
+                <Trophy size={11} color={C.tertiary} />
                 <Text style={styles.heroTag}>GIẢI ĐUA 2026</Text>
               </View>
               <Text style={styles.heroTitle}>Cúp Vô Địch{'\n'}Quốc Gia 2026</Text>
@@ -78,7 +78,7 @@ export function SpectatorHome() {
                     <View style={styles.liveLeaderRow}>
                       <Text style={styles.liveLeaderLabel}>Đang dẫn đầu</Text>
                       <View style={styles.liveLeaderNameRow}>
-                        <MaterialCommunityIcons name="horse-variant" size={14} color="#FFFFFF" />
+                        <Zap size={14} color="#FFFFFF" />
                         <Text style={styles.liveLeaderName}>
                           #{liveRace.entries.find(e => e.position === 1)?.horse.number}{' '}
                           {liveRace.entries.find(e => e.position === 1)?.horse.name}
@@ -106,19 +106,19 @@ export function SpectatorHome() {
                   </View>
                   <View style={styles.upcomingMeta}>
                     <View style={styles.metaItem}>
-                      <MaterialCommunityIcons name="clock-outline" size={12} color={C.onSurfaceVariant} />
+                      <Clock size={12} color={C.onSurfaceVariant} />
                       <Text style={styles.metaText}>{race.time}</Text>
                     </View>
                     <View style={styles.metaItem}>
-                      <MaterialCommunityIcons name="map-marker-outline" size={12} color={C.onSurfaceVariant} />
+                      <MapPin size={12} color={C.onSurfaceVariant} />
                       <Text style={styles.metaText} numberOfLines={1}>{race.location}</Text>
                     </View>
                     <View style={styles.metaItem}>
-                      <MaterialCommunityIcons name="road-variant" size={12} color={C.onSurfaceVariant} />
+                      <Route size={12} color={C.onSurfaceVariant} />
                       <Text style={styles.metaText}>{race.distance}m</Text>
                     </View>
                     <View style={styles.metaItem}>
-                      <MaterialCommunityIcons name="trophy-outline" size={12} color={C.onSurfaceVariant} />
+                      <Trophy size={12} color={C.onSurfaceVariant} />
                       <Text style={styles.metaText}>{formatCurrency(race.purse)}</Text>
                     </View>
                   </View>

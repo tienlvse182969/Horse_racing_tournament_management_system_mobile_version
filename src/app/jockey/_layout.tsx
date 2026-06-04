@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Redirect, Tabs } from 'expo-router';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Home, Mail, Calendar, Trophy } from 'lucide-react-native';
 import type { ColorValue } from 'react-native';
 import { ActivityIndicator, View } from 'react-native';
 
@@ -8,13 +8,9 @@ import { M3TabBar } from '@/components/m3-tab-bar';
 import { useAuth } from '@/context/AuthContext';
 import { jockeyApi } from '@/api/jockey.api';
 
-function tabIcon(active: string, inactive: string) {
-  return ({ color, size, focused }: { color: ColorValue; size: number; focused: boolean }) => (
-    <MaterialCommunityIcons
-      name={(focused ? active : inactive) as any}
-      color={color as string}
-      size={size}
-    />
+function tabIcon(Icon: React.ComponentType<{ color?: string; size?: number }>) {
+  return ({ color, size }: { color: ColorValue; size: number }) => (
+    <Icon color={color as string} size={size} />
   );
 }
 
@@ -48,23 +44,23 @@ export default function JockeyLayout() {
       screenOptions={{ headerShown: false }}>
       <Tabs.Screen
         name="home"
-        options={{ title: 'Trang chủ', tabBarIcon: tabIcon('home', 'home-outline') }}
+        options={{ title: 'Trang chủ', tabBarIcon: tabIcon(Home) }}
       />
       <Tabs.Screen
         name="invitations"
         options={{
           title: 'Lời mời',
-          tabBarIcon: tabIcon('email', 'email-outline'),
+          tabBarIcon: tabIcon(Mail),
           tabBarBadge: pendingCount > 0 ? pendingCount : undefined,
         }}
       />
       <Tabs.Screen
         name="schedule"
-        options={{ title: 'Lịch đua', tabBarIcon: tabIcon('calendar-month', 'calendar-month-outline') }}
+        options={{ title: 'Lịch đua', tabBarIcon: tabIcon(Calendar) }}
       />
       <Tabs.Screen
         name="results"
-        options={{ title: 'Kết quả', tabBarIcon: tabIcon('trophy', 'trophy-outline') }}
+        options={{ title: 'Kết quả', tabBarIcon: tabIcon(Trophy) }}
       />
     </Tabs>
   );

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MailX, Zap, Clock, CircleCheck, CircleX, MapPin, ArrowLeftRight, Trophy, Handshake, Calendar, MessageSquare, X, Check } from 'lucide-react-native';
 import Animated, { FadeInDown, useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
@@ -13,6 +13,7 @@ import { useJockeyInvitations } from '@/hooks/useJockeyData';
 import { ActivityIndicator } from 'react-native';
 
 type FilterType = 'all' | InvitationStatus;
+type StatusIcon = React.ComponentType<{ size?: number; color?: string }>;
 
 const FILTERS: { key: FilterType; label: string }[] = [
   { key: 'all',      label: 'Tất cả' },
@@ -21,10 +22,10 @@ const FILTERS: { key: FilterType; label: string }[] = [
   { key: 'declined', label: 'Đã từ chối' },
 ];
 
-const STATUS_CONFIG: Record<InvitationStatus, { label: string; color: string; bg: string; icon: string }> = {
-  pending:  { label: 'Chờ phản hồi',  color: C.secondary,  bg: C.secondaryContainer,  icon: 'clock-outline' },
-  accepted: { label: 'Đã chấp nhận', color: C.tertiary,   bg: C.tertiaryContainer,   icon: 'check-circle-outline' },
-  declined: { label: 'Đã từ chối',   color: C.error,      bg: C.errorContainer,      icon: 'close-circle-outline' },
+const STATUS_CONFIG: Record<InvitationStatus, { label: string; color: string; bg: string; Icon: StatusIcon }> = {
+  pending:  { label: 'Chờ phản hồi', color: C.secondary, bg: C.secondaryContainer, Icon: Clock        },
+  accepted: { label: 'Đã chấp nhận', color: C.tertiary,  bg: C.tertiaryContainer,  Icon: CircleCheck  },
+  declined: { label: 'Đã từ chối',   color: C.error,     bg: C.errorContainer,     Icon: CircleX      },
 };
 
 export function JockeyInvitations() {
@@ -69,7 +70,7 @@ export function JockeyInvitations() {
           {/* Cards */}
           {filtered.length === 0 ? (
             <View style={styles.empty}>
-              <MaterialCommunityIcons name="email-off-outline" size={40} color={C.onSurfaceVariant} style={{ opacity: 0.4 }} />
+              <MailX size={40} color={C.onSurfaceVariant} style={{ opacity: 0.4 }} />
               <Text style={styles.emptyText}>Không có lời mời nào</Text>
             </View>
           ) : (
@@ -107,29 +108,41 @@ function InvitationCard({
 }) {
   const sc = STATUS_CONFIG[inv.status];
 
+  type DetailRow = { Icon: React.ComponentType<{ size?: number; color?: string }>; label: string; value: string };
+  const detailRows: DetailRow[] = [
+    { Icon: Zap,          label: 'Giống ngựa', value: `${inv.horse.breed} · ${inv.horse.age} tuổi` },
+    { Icon: MapPin,       label: 'Địa điểm',   value: inv.race.location },
+    { Icon: ArrowLeftRight, label: 'Cự ly',    value: `${inv.race.distance}m · ${inv.race.surface}` },
+    { Icon: Trophy,       label: 'Giải thưởng', value: formatCurrency(inv.race.purse) },
+    { Icon: Handshake,    label: 'Chủ ngựa',   value: inv.ownerName },
+    { Icon: Calendar,     label: 'Lời mời gửi', value:
+        new Date(inv.sentAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) + ' ' +
+        new Date(inv.sentAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) },
+  ];
+
   return (
     <View style={styles.card}>
       {/* Header row */}
       <TouchableOpacity style={styles.cardHeader} onPress={onToggle} activeOpacity={0.85}>
         <View style={[styles.horseIcon, { backgroundColor: `${inv.horse.color}22`, borderColor: `${inv.horse.color}55` }]}>
-          <MaterialCommunityIcons name="horse-variant" size={22} color={inv.horse.color} />
+          <Zap size={22} color={inv.horse.color} />
         </View>
         <View style={styles.cardInfo}>
           <View style={styles.cardTitleRow}>
             <Text style={styles.horseName} numberOfLines={1}>{inv.horse.name}</Text>
             <View style={[styles.statusBadge, { backgroundColor: sc.bg }]}>
-              <MaterialCommunityIcons name={sc.icon as any} size={10} color={sc.color} />
+              <sc.Icon size={10} color={sc.color} />
               <Text style={[styles.statusText, { color: sc.color }]}>{sc.label}</Text>
             </View>
           </View>
           <Text style={styles.raceName}>{inv.race.name}</Text>
           <View style={styles.raceMeta}>
-            <MaterialCommunityIcons name="clock-outline" size={11} color={C.onSurfaceVariant} />
+            <Clock size={11} color={C.onSurfaceVariant} />
             <Text style={styles.raceMetaText}>{formatDate(inv.race.date)} · {inv.race.time}</Text>
           </View>
         </View>
         <View style={[styles.chevron, isExpanded && styles.chevronUp]}>
-          <MaterialCommunityIcons name="chevron-down" size={18} color={C.onSurfaceVariant} />
+          <Text style={styles.chevronText}>›</Text>
         </View>
       </TouchableOpacity>
 
@@ -137,16 +150,9 @@ function InvitationCard({
       {isExpanded && (
         <View style={styles.detail}>
           <View style={styles.detailGrid}>
-            {[
-              { icon: 'horse', label: 'Giống ngựa',   value: `${inv.horse.breed} · ${inv.horse.age} tuổi` },
-              { icon: 'map-marker-outline', label: 'Địa điểm', value: inv.race.location },
-              { icon: 'arrow-expand-horizontal', label: 'Cự ly', value: `${inv.race.distance}m · ${inv.race.surface}` },
-              { icon: 'trophy-outline', label: 'Giải thưởng', value: formatCurrency(inv.race.purse) },
-              { icon: 'handshake-outline', label: 'Chủ ngựa', value: inv.ownerName },
-              { icon: 'calendar-outline', label: 'Lời mời gửi', value: new Date(inv.sentAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) + ' ' + new Date(inv.sentAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) },
-            ].map(row => (
+            {detailRows.map(row => (
               <View key={row.label} style={styles.detailRow}>
-                <MaterialCommunityIcons name={row.icon as any} size={14} color={C.onSurfaceVariant} style={{ width: 20 }} />
+                <row.Icon size={14} color={C.onSurfaceVariant} />
                 <Text style={styles.detailLabel}>{row.label}</Text>
                 <Text style={styles.detailValue}>{row.value}</Text>
               </View>
@@ -155,7 +161,7 @@ function InvitationCard({
 
           {inv.message && (
             <View style={styles.messageBox}>
-              <MaterialCommunityIcons name="message-text-outline" size={14} color={C.onPrimaryContainer} />
+              <MessageSquare size={14} color={C.onPrimaryContainer} />
               <Text style={styles.messageText}>{inv.message}</Text>
             </View>
           )}
@@ -163,11 +169,11 @@ function InvitationCard({
           {inv.status === 'pending' && (
             <View style={styles.actionRow}>
               <TouchableOpacity style={styles.declineBtn} onPress={onDecline} activeOpacity={0.85}>
-                <MaterialCommunityIcons name="close" size={16} color={C.error} />
+                <X size={16} color={C.error} />
                 <Text style={styles.declineBtnText}>Từ chối</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.acceptBtn} onPress={onAccept} activeOpacity={0.85}>
-                <MaterialCommunityIcons name="check" size={16} color={C.onTertiary} />
+                <Check size={16} color={C.onTertiary} />
                 <Text style={styles.acceptBtnText}>Chấp nhận</Text>
               </TouchableOpacity>
             </View>
@@ -208,7 +214,8 @@ const styles = StyleSheet.create({
   raceMeta:    { flexDirection: 'row', alignItems: 'center', gap: 4 },
   raceMetaText:{ color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
   chevron:     { width: 28, height: 28, borderRadius: Shape.full, backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center' },
-  chevronUp:   { transform: [{ rotate: '180deg' }] },
+  chevronUp:   { transform: [{ rotate: '90deg' }] },
+  chevronText: { color: C.onSurfaceVariant, fontSize: 18, lineHeight: 22 },
 
   detail:      { paddingHorizontal: Spacing.two, paddingBottom: Spacing.two, gap: Spacing.two, borderTopWidth: 1, borderTopColor: `${C.outlineVariant}40` },
   detailGrid:  { backgroundColor: SC.base, borderRadius: Shape.large, padding: Spacing.two, gap: Spacing.one, marginTop: Spacing.one },
