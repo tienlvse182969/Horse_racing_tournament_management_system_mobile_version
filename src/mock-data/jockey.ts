@@ -52,7 +52,15 @@ export type JockeyUser = {
 
 export type JockeyRaceEntry = {
   jockeyId: string;
-  horse: { name: string; number: number; color: string };
+  horse: {
+    name: string;
+    number: number;
+    color: string;
+    breed?: string;
+    age?: number;
+    healthStatus?: string;
+    registrationId?: string;
+  };
   odds: number;
   position?: number;
   finishTime?: string;
@@ -71,6 +79,11 @@ export type JockeyRace = {
   surface: string;
   purse: number;
   myEntry: JockeyRaceEntry;
+  fullRaceId?: string;
+  trackName?: string;
+  trackLocation?: string;
+  meetingName?: string;
+  meetingDate?: string;
 };
 
 export type JockeyLeaderEntry = {
@@ -215,6 +228,40 @@ export const jockeyRaces: JockeyRace[] = [
     surface: 'Cỏ',
     purse: 450_000_000,
     myEntry: { jockeyId: 'j1', horse: { name: 'Phi Vũ', number: 4, color: '#72D79A' }, odds: 2.8 },
+  },
+  {
+    id: 'jr6',
+    name: 'Giải Mùa Hè Phú Thọ',
+    status: 'upcoming',
+    date: '2026-06-06',
+    time: '10:30',
+    location: 'Trường đua Phú Thọ',
+    distance: 1200,
+    surface: 'Cỏ',
+    purse: 300_000_000,
+    fullRaceId: 'r2',
+    trackName: 'Trường đua Phú Thọ',
+    trackLocation: 'Quận 11, Thành phố Hồ Chí Minh',
+    meetingName: 'Ngày đua Mùa Hè 2026 - Vòng 3',
+    meetingDate: '2026-06-06',
+    myEntry: { jockeyId: 'j1', horse: { name: 'Bão Lửa', number: 2, color: '#FF6B6B' }, odds: 2.1 },
+  },
+  {
+    id: 'jr7',
+    name: 'Giải Mùa Hè Phú Thọ',
+    status: 'live',
+    date: '2026-06-06',
+    time: '10:30',
+    location: 'Trường đua Phú Thọ',
+    distance: 1200,
+    surface: 'Cỏ',
+    purse: 300_000_000,
+    fullRaceId: 'r2',
+    trackName: 'Trường đua Phú Thọ',
+    trackLocation: 'Quận 11, Thành phố Hồ Chí Minh',
+    meetingName: 'Ngày đua Mùa Hè 2026 - Vòng 3',
+    meetingDate: '2026-06-06',
+    myEntry: { jockeyId: 'j1', horse: { name: 'Bão Lửa', number: 2, color: '#FF6B6B' }, odds: 2.1, position: 2 },
   },
 ];
 

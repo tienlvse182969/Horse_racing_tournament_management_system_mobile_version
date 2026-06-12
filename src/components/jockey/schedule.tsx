@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, ChevronRight, Calendar, MapPin, Zap } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { router } from 'expo-router';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
@@ -139,7 +140,10 @@ export function JockeySchedule() {
             ) : (
               selectedRaces.map((race, i) => (
                 <Animated.View key={race.id} entering={FadeInDown.delay(i * 60).duration(280)}>
-                  <View style={[styles.raceCard, race.status === 'live' && styles.raceCardLive]}>
+                  <TouchableOpacity
+                    style={[styles.raceCard, race.status === 'live' && styles.raceCardLive]}
+                    onPress={() => router.push(`/jockey/race/${race.id}` as any)}
+                    activeOpacity={0.85}>
                     <View style={styles.raceCardTop}>
                       <View style={styles.raceCardLeft}>
                         <View style={styles.raceStatusRow}>
@@ -171,7 +175,7 @@ export function JockeySchedule() {
                         <Text style={styles.myOdds}>Tỷ lệ cược: {race.myEntry.odds}x</Text>
                       </View>
                     </View>
-                  </View>
+                  </TouchableOpacity>
                 </Animated.View>
               ))
             )}

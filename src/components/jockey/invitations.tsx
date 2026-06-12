@@ -36,7 +36,7 @@ export function JockeyInvitations() {
   const filtered = filter === 'all' ? items : items.filter(i => i.status === filter);
 
   const handleRespond = async (id: string, status: 'accepted' | 'declined') => {
-    await respond(id, status);
+    await respond(id, status === 'accepted' ? 'accept' : 'decline');
     setExpanded(null);
   };
 

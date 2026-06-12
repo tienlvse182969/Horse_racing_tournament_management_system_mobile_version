@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -12,14 +13,36 @@ import { useAuth } from '@/context/AuthContext';
 import { useJockeyDashboard, useJockeyInvitations, useJockeyRaces } from '@/hooks/useJockeyData';
 import { formatCurrency, formatDate } from '@/mock-data';
 
+function RaceDayCountdown({ date, time }: { date: string; time: string }) {
+  const [label, setLabel] = useState(() => buildCountdownLabel(date, time));
+  useEffect(() => {
+    const id = setInterval(() => setLabel(buildCountdownLabel(date, time)), 1000);
+    return () => clearInterval(id);
+  }, [date, time]);
+  return <Text style={styles.raceDayCountdown}>{label}</Text>;
+}
+
+function buildCountdownLabel(date: string, time: string): string {
+  const diff = new Date(`${date}T${time}:00`).getTime() - Date.now();
+  if (diff <= 0) return 'ĐÃ ĐẾN GIỜ';
+  const totalSecs = Math.floor(diff / 1000);
+  const hh = String(Math.floor(totalSecs / 3600)).padStart(2, '0');
+  const mm = String(Math.floor((totalSecs % 3600) / 60)).padStart(2, '0');
+  const ss = String(totalSecs % 60).padStart(2, '0');
+  return `${hh}:${mm}:${ss} đến khi xuất phát`;
+}
+
 export function JockeyHome() {
   const { user } = useAuth();
   const stats = useJockeyDashboard();
   const { invitations } = useJockeyInvitations();
   const { races: jockeyRaces } = useJockeyRaces();
   const pendingCount = stats.pendingInvitations || invitations.filter(i => i.status === 'pending').length;
-  const liveRace = jockeyRaces.find(r => r.status === 'live');
-  const upcomingRaces = jockeyRaces.filter(r => r.status === 'upcoming').slice(0, 3);
+  const today = new Date().toISOString().slice(0, 10);
+  const todayRace = jockeyRaces.find(r => r.date === today && r.status !== 'completed');
+  const upcomingRaces = jockeyRaces
+    .filter(r => r.status === 'upcoming' && r.date !== today)
+    .slice(0, 3);
   const displayName = user?.fullName ?? 'Kỵ sĩ';
   const initials = displayName.split(' ').map(w => w[0]).join('').slice(-2).toUpperCase();
   const winRate = stats.completedRaces > 0 ? Math.round((stats.completedRaces / (stats.completedRaces + stats.upcomingRaces || 1)) * 100) : 0;
@@ -96,25 +119,48 @@ export function JockeyHome() {
             </Animated.View>
           )}
 
-          {/* Live race banner */}
-          {liveRace && (
+          {/* Race Day Hero Card */}
+          {todayRace && (
             <Animated.View entering={FadeInDown.delay(120).duration(320)}>
               <LinearGradient
-                colors={['#1A4D2E', '#2D6741']}
+                colors={todayRace.status === 'live'
+                  ? ['#3B0000', '#7B1800', '#C04000']
+                  : ['#1A2A3B', '#1E3A5F']}
                 start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.liveBanner}>
-                <View style={styles.livePill}>
-                  <View style={styles.liveDot} />
-                  <Text style={styles.liveText}>LIVE</Text>
+                end={{ x: 1, y: 1 }}
+                style={styles.raceDayCard}>
+                <View style={styles.raceDayBgCircle} />
+                <View style={styles.raceDayTop}>
+                  <View style={styles.raceDayPill}>
+                    {todayRace.status === 'live' && <View style={styles.liveDot} />}
+                    <Text style={styles.raceDayPillText}>
+                      {todayRace.status === 'live' ? 'RACE DAY · LIVE' : 'RACE DAY'}
+                    </Text>
+                  </View>
+                  <Text style={styles.raceDayName} numberOfLines={1}>{todayRace.name}</Text>
                 </View>
-                <View style={styles.liveInfo}>
-                  <Text style={styles.liveName}>{liveRace.name}</Text>
-                  <Text style={styles.livePos}>
-                    Vị trí hiện tại của bạn: #{liveRace.myEntry.position ?? '–'}
+                <View style={styles.raceDayHorseRow}>
+                  <View style={[styles.raceDayHorseColor, { backgroundColor: todayRace.myEntry.horse.color }]} />
+                  <Text style={styles.raceDayHorseName}>{todayRace.myEntry.horse.name}</Text>
+                  <Text style={styles.raceDayLane}>Số #{todayRace.myEntry.horse.number}</Text>
+                </View>
+                {todayRace.status === 'live' ? (
+                  <Text style={styles.raceDayLivePos}>
+                    VỊ TRÍ #{todayRace.myEntry.position ?? '–'}
                   </Text>
+                ) : (
+                  <RaceDayCountdown date={todayRace.date} time={todayRace.time} />
+                )}
+                <View style={styles.raceDayMeta}>
+                  <Text style={styles.raceDayMetaText}>{todayRace.distance}m · {todayRace.surface}</Text>
+                  <Text style={styles.raceDayMetaText}>{formatCurrency(todayRace.purse)}</Text>
                 </View>
-                <Zap size={28} color="rgba(180,237,202,0.5)" />
+                <TouchableOpacity
+                  style={styles.raceDayBtn}
+                  onPress={() => router.push(`/jockey/race/${todayRace.id}` as any)}
+                  activeOpacity={0.85}>
+                  <Text style={styles.raceDayBtnText}>Xem chi tiết</Text>
+                </TouchableOpacity>
               </LinearGradient>
             </Animated.View>
           )}
@@ -233,14 +279,24 @@ const styles = StyleSheet.create({
   inviteBadge:   { width: 28, height: 28, borderRadius: Shape.full, backgroundColor: C.secondary, justifyContent: 'center', alignItems: 'center' },
   inviteBadgeText:{ color: C.onSecondary, fontFamily: FontFamily.bold, fontSize: 14 },
 
-  // Live banner
-  liveBanner:    { borderRadius: Shape.large, padding: Spacing.two, flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  livePill:      { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#FF4444', borderRadius: Shape.full, paddingHorizontal: 10, paddingVertical: 5 },
-  liveDot:       { width: 6, height: 6, borderRadius: 3, backgroundColor: '#FFFFFF' },
-  liveText:      { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 10 },
-  liveInfo:      { flex: 1 },
-  liveName:      { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 14 },
-  livePos:       { color: 'rgba(180,237,202,0.8)', fontFamily: FontFamily.regular, fontSize: 12 },
+  // Race Day card
+  raceDayCard:       { borderRadius: Shape.large, padding: Spacing.three, gap: Spacing.two, overflow: 'hidden' },
+  raceDayBgCircle:   { position: 'absolute', right: -24, top: -24, width: 100, height: 100, borderRadius: 50, backgroundColor: 'rgba(255,255,255,0.06)' },
+  raceDayTop:        { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  raceDayPill:       { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(255,200,100,0.25)', borderRadius: Shape.full, paddingHorizontal: 10, paddingVertical: 4 },
+  liveDot:           { width: 6, height: 6, borderRadius: 3, backgroundColor: '#FF4444' },
+  raceDayPillText:   { color: '#FFD9B4', fontFamily: FontFamily.bold, fontSize: 9, letterSpacing: 0.8 },
+  raceDayName:       { flex: 1, color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 14 },
+  raceDayHorseRow:   { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  raceDayHorseColor: { width: 14, height: 14, borderRadius: 7 },
+  raceDayHorseName:  { flex: 1, color: 'rgba(255,217,180,0.9)', fontFamily: FontFamily.bold, fontSize: 14 },
+  raceDayLane:       { color: 'rgba(255,217,180,0.6)', fontFamily: FontFamily.regular, fontSize: 13 },
+  raceDayCountdown:  { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 18, letterSpacing: -0.5 },
+  raceDayLivePos:    { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 28, letterSpacing: -1 },
+  raceDayMeta:       { flexDirection: 'row', justifyContent: 'space-between' },
+  raceDayMetaText:   { color: 'rgba(255,217,180,0.6)', fontFamily: FontFamily.regular, fontSize: 12 },
+  raceDayBtn:        { backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: Shape.full, paddingVertical: 10, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
+  raceDayBtnText:    { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 14 },
 
   // Upcoming races
   section:       { gap: Spacing.two },
