@@ -3,6 +3,27 @@ import type { Invitation, InvitationStatus, JockeyRace } from '@/mock-data/jocke
 import type { SpectatorRaceDto } from './spectator.api';
 import type { InvitationDto, JockeyRaceDto } from './jockey.api';
 
+const HORSE_COLOR_HEX: Record<string, string> = {
+  chestnut: '#C07840',
+  bay:      '#8B4513',
+  black:    '#3D3D3D',
+  gray:     '#909090',
+  grey:     '#909090',
+  white:    '#E8E8D0',
+  roan:     '#B87058',
+  palomino: '#C8A055',
+  dun:      '#C8B060',
+  pinto:    '#D4A055',
+  sorrel:   '#A0522D',
+  buckskin: '#C8A856',
+  cremello: '#F5E0C0',
+};
+
+function horseColorToHex(colorName?: string): string {
+  if (!colorName) return '#72D79A';
+  return HORSE_COLOR_HEX[colorName.toLowerCase()] ?? '#72D79A';
+}
+
 function mapStatus(status: string): RaceStatus {
   if (status === 'ongoing') return 'live';
   if (status === 'completed') return 'completed';
@@ -66,11 +87,23 @@ export function mapJockeyRace(dto: JockeyRaceDto): JockeyRace {
     time: dt.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
     location: dto.tournament.name,
     distance: dto.distance ?? 1600,
-    surface: 'Cỏ',
+    surface: dto.track?.surface ?? 'Cỏ',
     purse: myRank?.prize ?? 0,
+    trackName: dto.track?.name,
+    trackLocation: dto.track?.location,
+    meetingName: dto.meeting?.name,
+    meetingDate: dto.meeting?.date,
     myEntry: {
       jockeyId: 'me',
-      horse: { name: dto.participant.horse.name, number: dto.participant.laneNumber, color: '#FFB86C' },
+      horse: {
+        name: dto.participant.horse.name,
+        number: dto.participant.laneNumber,
+        color: horseColorToHex(dto.participant.horse.color),
+        breed: dto.participant.horse.breed,
+        age: dto.participant.horse.age,
+        healthStatus: dto.participant.horse.healthStatus,
+        registrationId: dto.participant.horse.registrationId,
+      },
       odds: 2.5,
       position: myRank?.rank,
       finishTime: myRank?.finishTime ? `${myRank.finishTime}s` : undefined,

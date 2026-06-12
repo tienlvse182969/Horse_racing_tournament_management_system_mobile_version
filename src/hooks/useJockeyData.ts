@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { mapInvitation, mapJockeyRace } from '@/api/mappers';
 import { jockeyApi } from '@/api/jockey.api';
-import type { Invitation } from '@/mock-data/jockey';
-import type { JockeyRace } from '@/mock-data/jockey';
+import type { Invitation, JockeyRace } from '@/mock-data/jockey';
+import { jockeyRaces } from '@/mock-data/jockey';
+import { races } from '@/mock-data/races';
+import type { Race } from '@/mock-data/races';
 
 export function useJockeyInvitations() {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
@@ -47,4 +49,24 @@ export function useJockeyDashboard() {
     jockeyApi.dashboard().then(setStats).catch(() => {});
   }, []);
   return stats;
+}
+
+export function useJockeyRaceDetail(id: string): { jockeyRace: JockeyRace | null; fullRace: Race | null } {
+  const [jockeyRace, setJockeyRace] = useState<JockeyRace | null>(
+    () => jockeyRaces.find(r => r.id === id) ?? null,
+  );
+
+  useEffect(() => {
+    jockeyApi.getRace(id)
+      .then(res => setJockeyRace(mapJockeyRace(res.race)))
+      .catch(() => {
+        setJockeyRace(jockeyRaces.find(r => r.id === id) ?? null);
+      });
+  }, [id]);
+
+  const fullRace = jockeyRace?.fullRaceId
+    ? races.find(r => r.id === jockeyRace.fullRaceId) ?? null
+    : null;
+
+  return { jockeyRace, fullRace };
 }

@@ -35,7 +35,15 @@ export interface JockeyRaceDto {
   distance?: number;
   tournament: { id: string; name: string };
   participant: {
-    horse: { id: string; name: string };
+    horse: {
+      id: string;
+      name: string;
+      breed?: string;
+      age?: number;
+      color?: string;       // text name, e.g. "Chestnut", "Bay"
+      healthStatus?: string;
+      registrationId?: string;
+    };
     owner: { id: string; fullName: string };
     laneNumber: number;
     confirmedAt?: string | null;
@@ -43,6 +51,8 @@ export interface JockeyRaceDto {
   result?: {
     rankings: Array<{ rank: number; horse: { name: string }; finishTime?: number; prize: number }>;
   } | null;
+  track?: { name: string; location: string; surface: string } | null;
+  meeting?: { name: string; date: string } | null;
 }
 
 export interface NotificationDto {

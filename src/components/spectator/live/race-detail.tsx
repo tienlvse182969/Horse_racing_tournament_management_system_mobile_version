@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { LiveViewer } from './live-viewer';
+import { TicketConfirmation } from './ticket-confirmation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft } from 'lucide-react-native';
@@ -15,7 +17,23 @@ type Props = { race: Race; onBack: () => void };
 
 export function RaceDetail({ race, onBack }: Props) {
   const insets = useSafeAreaInsets();
-  const [purchasing, setPurchasing] = useState(false);
+  const [isWatching, setIsWatching] = useState(false);
+  const [ticketPurchased, setTicketPurchased] = useState(false);
+
+  if (isWatching) {
+    return <LiveViewer race={race} onClose={() => setIsWatching(false)} />;
+  }
+
+  if (ticketPurchased) {
+    return (
+      <TicketConfirmation
+        race={race}
+        onBack={() => setTicketPurchased(false)}
+        onWatch={() => { setTicketPurchased(false); setIsWatching(true); }}
+      />
+    );
+  }
+
   const isCompleted = race.status === 'completed';
   const isLive = race.status === 'live';
   const sortedEntries = [...race.entries].sort((a, b) => {
@@ -93,22 +111,14 @@ export function RaceDetail({ race, onBack }: Props) {
           ))}
         </Animated.View>
 
-        {!isCompleted && (
-          <TouchableOpacity
-            style={styles.ticketBtn}
-            disabled={purchasing}
-            onPress={async () => {
-              setPurchasing(true);
-              try {
-                await spectatorApi.purchaseViewingPass(race.id);
-                Alert.alert('Thành công', 'Đã mua vé xem cuộc đua');
-              } catch (e) {
-                Alert.alert('Lỗi', e instanceof Error ? e.message : 'Không thể mua vé');
-              } finally {
-                setPurchasing(false);
-              }
-            }}>
-            <Text style={styles.ticketBtnText}>{purchasing ? 'Đang xử lý...' : 'Mua vé xem (điểm)'}</Text>
+        {isLive && (
+          <TouchableOpacity style={styles.ticketBtn} onPress={() => setIsWatching(true)}>
+            <Text style={styles.ticketBtnText}>Xem trực tiếp</Text>
+          </TouchableOpacity>
+        )}
+        {race.status === 'upcoming' && (
+          <TouchableOpacity style={styles.ticketBtn} onPress={() => setTicketPurchased(true)}>
+            <Text style={styles.ticketBtnText}>Mua vé xem (điểm)</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
