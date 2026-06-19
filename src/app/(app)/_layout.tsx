@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Redirect, Tabs } from 'expo-router';
-import { Home, Radio, Target, Bell } from 'lucide-react-native';
+import { Home, Radio, Target, Bell, Trophy } from 'lucide-react-native';
 import type { ColorValue } from 'react-native';
 import { ActivityIndicator, View } from 'react-native';
 
@@ -51,6 +51,10 @@ export default function AppLayout() {
         options={{ title: 'Trực tiếp', tabBarIcon: tabIcon(Radio) }}
       />
       <Tabs.Screen
+        name="tournaments"
+        options={{ title: 'Giải đấu', tabBarIcon: tabIcon(Trophy) }}
+      />
+      <Tabs.Screen
         name="predict"
         options={{ title: 'Dự đoán', tabBarIcon: tabIcon(Target) }}
       />
@@ -61,6 +65,10 @@ export default function AppLayout() {
           tabBarIcon: tabIcon(Bell),
           tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
         }}
+      />
+      <Tabs.Screen
+        name="rewards"
+        options={{ href: null }}
       />
     </Tabs>
   );

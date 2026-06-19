@@ -93,6 +93,7 @@ export function mapJockeyRace(dto: JockeyRaceDto): JockeyRace {
     trackLocation: dto.track?.location,
     meetingName: dto.meeting?.name,
     meetingDate: dto.meeting?.date,
+    ownerName: dto.participant.owner.fullName,
     myEntry: {
       jockeyId: 'me',
       horse: {
