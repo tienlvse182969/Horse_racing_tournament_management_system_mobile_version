@@ -79,6 +79,7 @@ export type JockeyRace = {
   surface: string;
   purse: number;
   myEntry: JockeyRaceEntry;
+  ownerName?: string;
   fullRaceId?: string;
   trackName?: string;
   trackLocation?: string;

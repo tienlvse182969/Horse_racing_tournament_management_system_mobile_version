@@ -1,7 +1,7 @@
 import { apiGet, apiPost } from './client';
 
 export const spectatorApi = {
-  listTournaments: () => apiGet<{ tournaments: unknown[] }>('/api/spectator/tournaments'),
+  listTournaments: () => apiGet<{ tournaments: TournamentDto[] }>('/api/spectator/tournaments'),
   listRaces: (filter?: string) =>
     apiGet<{ races: SpectatorRaceDto[] }>(`/api/spectator/races${filter ? `?filter=${filter}` : ''}`),
   getRace: (id: string) => apiGet<{ race: SpectatorRaceDto }>(`/api/spectator/races/${id}`),
@@ -15,6 +15,16 @@ export const spectatorApi = {
   purchaseViewingPass: (raceId: string) => apiPost(`/api/spectator/races/${raceId}/viewing-pass`),
   listNotifications: () => apiGet<{ notifications: NotificationDto[] }>('/api/spectator/notifications'),
 };
+
+export interface TournamentDto {
+  id: string;
+  name: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  location: string;
+  status: 'draft' | 'published' | 'ongoing' | 'completed';
+}
 
 export interface SpectatorRaceDto {
   id: string;
@@ -46,7 +56,7 @@ export interface SpectatorPointsDto {
   currentBalance: number;
   totalPointsEarned: number;
   totalPointsSpent: number;
-  transactions: Array<{ id: string; type: string; points: number; note?: string; createdAt: string }>;
+  transactions: Array<{ id: string; type: string; points: number; balanceAfter: number; note?: string; createdAt: string }>;
 }
 
 export interface ProductDto {

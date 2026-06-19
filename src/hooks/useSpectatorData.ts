@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { mapSpectatorRace } from '@/api/mappers';
 import { spectatorApi } from '@/api/spectator.api';
+import type { TournamentDto } from '@/api/spectator.api';
 import type { Race } from '@/mock-data/races';
 import type { Notification } from '@/mock-data/notifications';
 import type { Prediction } from '@/mock-data/predictions';
@@ -23,13 +24,21 @@ export function useSpectatorRaces() {
   return { races, loading, error, reload };
 }
 
+export type PointTransaction = {
+  id: string; type: string; points: number; balanceAfter: number; note?: string; createdAt: string;
+};
+
 export function useSpectatorPoints() {
   const [balance, setBalance] = useState(0);
+  const [transactions, setTransactions] = useState<PointTransaction[]>([]);
   const reload = useCallback(() => {
-    spectatorApi.getPoints().then((res) => setBalance(res.points.currentBalance)).catch(() => {});
+    spectatorApi.getPoints().then((res) => {
+      setBalance(res.points.currentBalance);
+      setTransactions(res.points.transactions.filter(tx => tx.points > 0).slice(0, 10));
+    }).catch(() => {});
   }, []);
   useEffect(() => { reload(); }, [reload]);
-  return { balance, reload };
+  return { balance, transactions, reload };
 }
 
 export function useSpectatorPredictions() {
@@ -75,6 +84,20 @@ export function useSpectatorNotifications() {
   }, []);
   useEffect(() => { reload(); }, [reload]);
   return { notifications, setNotifications, reload };
+}
+
+export function useSpectatorTournaments() {
+  const [tournaments, setTournaments] = useState<TournamentDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const reload = useCallback(() => {
+    setLoading(true);
+    spectatorApi.listTournaments()
+      .then(res => setTournaments(res.tournaments))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+  useEffect(() => { reload(); }, [reload]);
+  return { tournaments, loading, reload };
 }
 
 export function useSpectatorProducts() {

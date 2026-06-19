@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Platform, Alert } from 'react-native';
+import * as Calendar from 'expo-calendar/legacy';
 import { LiveViewer } from './live-viewer';
-import { TicketConfirmation } from './ticket-confirmation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, CalendarPlus } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
@@ -18,24 +18,59 @@ type Props = { race: Race; onBack: () => void };
 export function RaceDetail({ race, onBack }: Props) {
   const insets = useSafeAreaInsets();
   const [isWatching, setIsWatching] = useState(false);
-  const [ticketPurchased, setTicketPurchased] = useState(false);
+  const [addingToCalendar, setAddingToCalendar] = useState(false);
 
   if (isWatching) {
     return <LiveViewer race={race} onClose={() => setIsWatching(false)} />;
   }
 
-  if (ticketPurchased) {
-    return (
-      <TicketConfirmation
-        race={race}
-        onBack={() => setTicketPurchased(false)}
-        onWatch={() => { setTicketPurchased(false); setIsWatching(true); }}
-      />
-    );
-  }
-
   const isCompleted = race.status === 'completed';
   const isLive = race.status === 'live';
+
+  async function addToCalendar() {
+    setAddingToCalendar(true);
+    try {
+      const { status } = await Calendar.requestCalendarPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Không có quyền', 'Vui lòng cấp quyền truy cập lịch trong Cài đặt.');
+        return;
+      }
+
+      const [year, month, day] = race.date.split('-').map(Number);
+      const [hours, minutes] = race.time.split(':').map(Number);
+      const startDate = new Date(year, month - 1, day, hours, minutes, 0);
+      const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
+
+      let calendarId: string;
+      if (Platform.OS === 'ios') {
+        const cal = await Calendar.getDefaultCalendarAsync();
+        calendarId = cal.id;
+      } else {
+        const cals = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+        const writable = cals.find(c => c.allowsModifications);
+        if (!writable) {
+          Alert.alert('Lỗi', 'Không tìm thấy lịch có thể ghi. Vui lòng kiểm tra ứng dụng lịch.');
+          return;
+        }
+        calendarId = writable.id;
+      }
+
+      await Calendar.createEventAsync(calendarId, {
+        title: race.name,
+        startDate,
+        endDate,
+        location: race.location,
+        notes: `Đua ngựa tại ${race.location} — ${race.distance}m, ${race.laps} vòng. Giải thưởng: ${formatCurrency(race.purse)}`,
+        timeZone: 'Asia/Ho_Chi_Minh',
+      });
+
+      Alert.alert('Đã thêm vào lịch', `"${race.name}" đã được lưu vào lịch của bạn.`);
+    } catch {
+      Alert.alert('Lỗi', 'Không thể thêm vào lịch. Vui lòng thử lại.');
+    } finally {
+      setAddingToCalendar(false);
+    }
+  }
   const sortedEntries = [...race.entries].sort((a, b) => {
     if (a.position && b.position) return a.position - b.position;
     if (a.position) return -1;
@@ -117,8 +152,15 @@ export function RaceDetail({ race, onBack }: Props) {
           </TouchableOpacity>
         )}
         {race.status === 'upcoming' && (
-          <TouchableOpacity style={styles.ticketBtn} onPress={() => setTicketPurchased(true)}>
-            <Text style={styles.ticketBtnText}>Mua vé xem (điểm)</Text>
+          <TouchableOpacity
+            style={[styles.calendarBtn, addingToCalendar && styles.calendarBtnDisabled]}
+            onPress={addToCalendar}
+            disabled={addingToCalendar}
+            activeOpacity={0.8}>
+            <CalendarPlus size={18} color={C.onPrimary} />
+            <Text style={styles.calendarBtnText}>
+              {addingToCalendar ? 'Đang thêm...' : 'Thêm vào lịch'}
+            </Text>
           </TouchableOpacity>
         )}
       </ScrollView>
@@ -171,6 +213,9 @@ const styles = StyleSheet.create({
   oddsBadge:    { backgroundColor: C.primaryContainer, borderRadius: Shape.full, paddingHorizontal: 8, paddingVertical: 3 },
   oddsText:     { color: C.onPrimaryContainer, fontFamily: FontFamily.bold, fontSize: 12 },
   finishTime:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
-  ticketBtn:    { backgroundColor: C.primary, borderRadius: Shape.full, paddingVertical: 14, alignItems: 'center' },
-  ticketBtnText:{ color: C.onPrimary, fontFamily: FontFamily.bold, fontSize: 14 },
+  ticketBtn:          { backgroundColor: C.primary, borderRadius: Shape.full, paddingVertical: 14, alignItems: 'center' },
+  ticketBtnText:      { color: C.onPrimary, fontFamily: FontFamily.bold, fontSize: 14 },
+  calendarBtn:        { backgroundColor: C.primary, borderRadius: Shape.full, paddingVertical: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: Spacing.two },
+  calendarBtnDisabled:{ opacity: 0.6 },
+  calendarBtnText:    { color: C.onPrimary, fontFamily: FontFamily.bold, fontSize: 14 },
 });

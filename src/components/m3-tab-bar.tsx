@@ -98,6 +98,8 @@ export function M3TabBar({ state, descriptors, navigation }: TabBarProps) {
     <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 6) }]}>
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
+        if (!options.tabBarIcon) return null;
+
         const isFocused = state.index === index;
         const label = options.title ?? route.name;
 

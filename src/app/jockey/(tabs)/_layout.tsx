@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Tabs } from 'expo-router';
-import { Home, Mail, Calendar, Trophy } from 'lucide-react-native';
+import { Home, Mail, Flag, Calendar, Trophy } from 'lucide-react-native';
 import type { ColorValue } from 'react-native';
 
 import { M3TabBar } from '@/components/m3-tab-bar';
@@ -16,11 +16,15 @@ function tabIcon(Icon: React.ComponentType<{ color?: string; size?: number }>) {
 export default function JockeyTabsLayout() {
   const { user } = useAuth();
   const [pendingCount, setPendingCount] = useState(0);
+  const [upcomingRaceCount, setUpcomingRaceCount] = useState(0);
 
   useEffect(() => {
     if (user?.role === 'jockey') {
       jockeyApi.listInvitations('pending').then((res) => {
         setPendingCount(res.invitations.length);
+      }).catch(() => {});
+      jockeyApi.dashboard().then((res) => {
+        setUpcomingRaceCount(res.upcomingRaces);
       }).catch(() => {});
     }
   }, [user]);
@@ -39,6 +43,14 @@ export default function JockeyTabsLayout() {
           title: 'Lời mời',
           tabBarIcon: tabIcon(Mail),
           tabBarBadge: pendingCount > 0 ? pendingCount : undefined,
+        }}
+      />
+      <Tabs.Screen
+        name="assigned"
+        options={{
+          title: 'Cuộc đua',
+          tabBarIcon: tabIcon(Flag),
+          tabBarBadge: upcomingRaceCount > 0 ? upcomingRaceCount : undefined,
         }}
       />
       <Tabs.Screen

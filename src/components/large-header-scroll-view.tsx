@@ -49,7 +49,14 @@ export function LargeHeaderScrollView({ title, bangers = false, contentContainer
   return (
     <View style={styles.root}>
       {/* Compact header — fades in on scroll, title only (non-interactive) */}
-      <Animated.View style={[styles.compactHeader, compactAnim]} pointerEvents="none">
+      <Animated.View
+        style={[
+          styles.compactHeader,
+          compactAnim,
+          rightAction != null && styles.compactHeaderWithRight,
+          leftAction != null && styles.compactHeaderWithLeft,
+        ]}
+        pointerEvents="none">
         <Text style={bangers ? styles.compactBangers : styles.compactTitle} numberOfLines={1}>
           {title}
         </Text>
@@ -100,6 +107,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
+    paddingHorizontal: Spacing.three,
+  },
+  compactHeaderWithRight: {
+    paddingRight: 170,
+    alignItems: 'flex-start',
+  },
+  compactHeaderWithLeft: {
+    paddingLeft: 56,
   },
 
   // Persistent action overlays — always above scroll content

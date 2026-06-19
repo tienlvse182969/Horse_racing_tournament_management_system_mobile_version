@@ -8,7 +8,11 @@
     "scheme": "horseracingtournamentmanagementsystemmobileversion",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "infoPlist": {
+        "NSCalendarsUsageDescription": "Ứng dụng cần quyền truy cập lịch để thêm sự kiện đua ngựa.",
+        "NSCalendarsFullAccessUsageDescription": "Ứng dụng cần quyền truy cập lịch để thêm sự kiện đua ngựa."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -27,6 +31,12 @@
     "newArchEnabled": false,
     "plugins": [
       "expo-router",
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Ứng dụng cần quyền truy cập lịch để thêm sự kiện đua ngựa."
+        }
+      ],
       [
         "expo-splash-screen",
         {

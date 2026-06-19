@@ -151,6 +151,12 @@ export function LiveViewer({ race, onClose }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [race.id]);
 
+  // ── Auto-start on mount ────────────────────────────────────────────────────
+  useEffect(() => {
+    startRace();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ── Standings + commentary update every 300ms ──────────────────────────────
   useEffect(() => {
     if (raceState !== 'racing') return;
@@ -259,11 +265,6 @@ export function LiveViewer({ race, onClose }: Props) {
 
       {/* Bottom CTA */}
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + Spacing.two }]}>
-        {raceState === 'idle' && (
-          <TouchableOpacity style={styles.ctaBtn} onPress={startRace} activeOpacity={0.85}>
-            <Text style={styles.ctaBtnText}>Bắt đầu xem</Text>
-          </TouchableOpacity>
-        )}
         {raceState === 'racing' && (
           <View style={styles.racingIndicator}>
             <View style={styles.racingDot} />
@@ -297,8 +298,6 @@ const styles = StyleSheet.create({
   lapPct:        { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 11, width: 30, textAlign: 'right' },
 
   bottomBar:       { paddingHorizontal: Spacing.three, paddingTop: Spacing.two, backgroundColor: SC.high },
-  ctaBtn:          { backgroundColor: C.primary, borderRadius: Shape.full, paddingVertical: 14, alignItems: 'center' },
-  ctaBtnText:      { color: C.onPrimary, fontFamily: FontFamily.bold, fontSize: 15 },
   racingIndicator: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two, paddingVertical: 14 },
   racingDot:       { width: 8, height: 8, borderRadius: 4, backgroundColor: C.error },
   racingText:      { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 14 },
