@@ -34,7 +34,7 @@ export function SpectatorHome() {
             <View style={styles.headerActions}>
               <Pressable
                 style={styles.rewardChip}
-                onPress={() => router.push('/rewards')}
+                onPress={() => router.push('/(app)/rewards' as never)}
                 android_ripple={{ color: `${C.tertiary}22`, radius: 40, borderless: false }}>
                 <Award size={13} color={C.tertiary} />
                 <Text style={styles.rewardChipText}>{balance.toLocaleString('vi-VN')}</Text>

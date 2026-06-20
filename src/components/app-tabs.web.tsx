@@ -33,7 +33,7 @@ export default function AppTabs() {
           <TabTrigger name="notifications" href="/(app)/notifications" asChild>
             <TabButton>Thông báo</TabButton>
           </TabTrigger>
-          <TabTrigger name="profile" href="/(app)/profile" asChild>
+          <TabTrigger name="profile" href="/profile" asChild>
             <TabButton>Hồ sơ</TabButton>
           </TabTrigger>
         </CustomTabList>
