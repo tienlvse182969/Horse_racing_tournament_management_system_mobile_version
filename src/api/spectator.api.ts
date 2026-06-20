@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from './client';
+import { apiGet, apiPatch, apiPost } from './client';
 
 export const spectatorApi = {
   listTournaments: () => apiGet<{ tournaments: TournamentDto[] }>('/api/spectator/tournaments'),
@@ -8,6 +8,8 @@ export const spectatorApi = {
   listPredictions: () => apiGet<{ predictions: PredictionDto[] }>('/api/spectator/predictions/current'),
   createPrediction: (raceId: string, predictedRanks: Array<{ rank: number; horseId: string }>) =>
     apiPost(`/api/spectator/predictions/${raceId}`, { raceId, predictedRanks }),
+  cancelPrediction: (predictionId: string) =>
+    apiPatch(`/api/spectator/predictions/${predictionId}/cancel`),
   getPoints: () => apiGet<{ points: SpectatorPointsDto }>('/api/spectator/points'),
   listProducts: () => apiGet<{ products: ProductDto[] }>('/api/spectator/products'),
   redeem: (productId: string, quantity = 1) =>

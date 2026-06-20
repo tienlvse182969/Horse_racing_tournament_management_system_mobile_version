@@ -54,7 +54,12 @@ export function useSpectatorPredictions() {
           predictedHorseId: p.predictedRanks[0]?.horseId ?? '',
           predictedHorseName: p.predictedRanks[0]?.horseName ?? '-',
           predictedHorseNumber: p.predictedRanks[0]?.rank ?? 0,
-          status: (p.status === 'evaluated_won' ? 'won' : p.status === 'evaluated_lost' ? 'lost' : 'pending') as Prediction['status'],
+          status: (
+            p.status === 'correct' ? 'won' :
+            p.status === 'incorrect' ? 'lost' :
+            p.status === 'cancelled' ? 'cancelled' :
+            'pending'
+          ) as Prediction['status'],
           madeAt: p.createdAt,
           points: p.totalPoints,
           reward: p.totalPoints > 0 ? p.totalPoints * 10 : undefined,
@@ -63,7 +68,11 @@ export function useSpectatorPredictions() {
     }).catch(() => {});
   }, []);
   useEffect(() => { reload(); }, [reload]);
-  return { predictions, reload };
+  const cancelPrediction = useCallback(async (predictionId: string) => {
+    await spectatorApi.cancelPrediction(predictionId);
+    reload();
+  }, [reload]);
+  return { predictions, reload, cancelPrediction };
 }
 
 export function useSpectatorNotifications() {

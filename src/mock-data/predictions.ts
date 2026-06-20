@@ -6,7 +6,7 @@ export type Prediction = {
   predictedHorseId: string;
   predictedHorseName: string;
   predictedHorseNumber: number;
-  status: 'won' | 'lost' | 'pending';
+  status: 'won' | 'lost' | 'pending' | 'cancelled';
   madeAt: string;
   reward?: number;
   points?: number;

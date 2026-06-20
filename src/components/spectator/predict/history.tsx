@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { CircleCheck, CircleX, Clock } from 'lucide-react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { Ban, CircleCheck, CircleX, Clock } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
@@ -12,11 +12,12 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   won:     { label: 'Đúng',     color: C.tertiary,  bg: C.tertiaryContainer,  Icon: CircleCheck },
   lost:    { label: 'Sai',      color: C.error,     bg: C.errorContainer,     Icon: CircleX     },
   pending: { label: 'Đang chờ', color: C.secondary, bg: C.secondaryContainer, Icon: Clock       },
+  cancelled: { label: 'Đã hủy', color: C.onSurfaceVariant, bg: SC.high, Icon: Ban },
 };
 
-type Props = { predictions: Prediction[] };
+type Props = { predictions: Prediction[]; onCancel?: (predictionId: string) => void };
 
-export function PredictionHistory({ predictions }: Props) {
+export function PredictionHistory({ predictions, onCancel }: Props) {
   const won     = predictions.filter(p => p.status === 'won').length;
   const lost    = predictions.filter(p => p.status === 'lost').length;
   const pending = predictions.filter(p => p.status === 'pending').length;
@@ -53,6 +54,11 @@ export function PredictionHistory({ predictions }: Props) {
               {pred.reward ? (
                 <Text style={styles.cardReward}>+{formatCurrency(pred.reward)}</Text>
               ) : null}
+              {pred.status === 'pending' && onCancel ? (
+                <Pressable style={styles.cancelBtn} onPress={() => onCancel(pred.id)}>
+                  <Text style={styles.cancelText}>Hủy dự đoán</Text>
+                </Pressable>
+              ) : null}
             </Animated.View>
           );
         })
@@ -85,4 +91,6 @@ const styles = StyleSheet.create({
   cardRace:    { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15 },
   cardPick:    { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 13 },
   cardReward:  { color: C.primary, fontFamily: FontFamily.bold, fontSize: 14 },
+  cancelBtn:   { alignSelf: 'flex-start', borderRadius: Shape.full, borderWidth: 1, borderColor: C.error, paddingHorizontal: 12, paddingVertical: 6, marginTop: 2 },
+  cancelText:  { color: C.error, fontFamily: FontFamily.medium, fontSize: 12 },
 });

@@ -15,7 +15,7 @@ type Tab = 'predict' | 'history';
 export function SpectatorPredict() {
   const [tab, setTab] = useState<Tab>('predict');
   const { balance } = useSpectatorPoints();
-  const { predictions, reload } = useSpectatorPredictions();
+  const { predictions, reload, cancelPrediction } = useSpectatorPredictions();
 
   const totalPoints  = balance;
   const totalRewards = predictions.reduce((s, p) => s + (p.reward ?? 0), 0);
@@ -64,7 +64,7 @@ export function SpectatorPredict() {
           </View>
 
           {tab === 'predict' && <PredictForm onSubmitted={handleSubmitted} />}
-          {tab === 'history' && <PredictionHistory predictions={predictions} />}
+          {tab === 'history' && <PredictionHistory predictions={predictions} onCancel={cancelPrediction} />}
 
         </LargeHeaderScrollView>
       </SafeAreaView>
