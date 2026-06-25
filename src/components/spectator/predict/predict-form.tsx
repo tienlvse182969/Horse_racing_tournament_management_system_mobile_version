@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { CircleCheck, Circle, Target } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
@@ -33,6 +33,9 @@ export function PredictForm({ onSubmitted }: Props) {
       await spectatorApi.createPrediction(selectedRaceId, [{ rank: 1, horseId: selectedHorseId }]);
       setSubmitted(true);
       setTimeout(onSubmitted, 1800);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Có lỗi xảy ra, vui lòng thử lại.';
+      Alert.alert('Không thể gửi dự đoán', message);
     } finally {
       setSubmitting(false);
     }

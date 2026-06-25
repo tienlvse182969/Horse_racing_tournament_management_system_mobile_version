@@ -30,15 +30,17 @@ export type PointTransaction = {
 
 export function useSpectatorPoints() {
   const [balance, setBalance] = useState(0);
+  const [totalEarned, setTotalEarned] = useState(0);
   const [transactions, setTransactions] = useState<PointTransaction[]>([]);
   const reload = useCallback(() => {
     spectatorApi.getPoints().then((res) => {
       setBalance(res.points.currentBalance);
+      setTotalEarned(res.points.totalPointsEarned);
       setTransactions(res.points.transactions.filter(tx => tx.points > 0).slice(0, 10));
     }).catch(() => {});
   }, []);
   useEffect(() => { reload(); }, [reload]);
-  return { balance, transactions, reload };
+  return { balance, totalEarned, transactions, reload };
 }
 
 export function useSpectatorPredictions() {

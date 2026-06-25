@@ -32,7 +32,7 @@ const TX_LABEL: Record<string, string> = {
 };
 
 export function SpectatorRewardsHistory() {
-  const { balance, transactions } = useSpectatorPoints();
+  const { balance, totalEarned, transactions } = useSpectatorPoints();
 
   return (
     <View style={styles.root}>
@@ -67,6 +67,23 @@ export function SpectatorRewardsHistory() {
                 </Text>
                 <Text style={styles.bannerSub}>
                   {transactions.length} giao dịch thưởng gần nhất
+                </Text>
+              </View>
+            </LinearGradient>
+          </Animated.View>
+
+          {/* Total earned banner */}
+          <Animated.View entering={FadeIn.duration(400)}>
+            <LinearGradient
+              colors={['#3D2800', '#8B5E00']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.rewardBanner}>
+              <Gift size={24} color={C.primary} />
+              <View style={styles.rewardBannerText}>
+                <Text style={styles.rewardBannerLabel}>Tổng phần thưởng nhận được</Text>
+                <Text style={styles.rewardBannerValue}>
+                  {totalEarned.toLocaleString('vi-VN')} <Text style={styles.rewardBannerUnit}>điểm</Text>
                 </Text>
               </View>
             </LinearGradient>
@@ -141,4 +158,10 @@ const styles = StyleSheet.create({
   cardFooter:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardTime:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
   cardAmount:  { color: C.primary, fontFamily: FontFamily.bold, fontSize: 13 },
+
+  rewardBanner:     { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, borderRadius: Shape.large, padding: Spacing.three },
+  rewardBannerText: { flex: 1 },
+  rewardBannerLabel:{ color: 'rgba(255,255,255,0.65)', fontFamily: FontFamily.regular, fontSize: 11 },
+  rewardBannerValue:{ color: C.primary, fontFamily: FontFamily.bold, fontSize: 22, lineHeight: 28 },
+  rewardBannerUnit: { fontSize: 14, fontFamily: FontFamily.regular },
 });

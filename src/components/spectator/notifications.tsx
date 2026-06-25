@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Gift, Flag, Target, Trophy, Bell } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
@@ -34,7 +33,6 @@ function timeAgo(dateStr: string): string {
 export function SpectatorNotifications() {
   const { notifications: items, setNotifications } = useSpectatorNotifications();
   const unread = items.filter(n => !n.read).length;
-  const totalRewards = items.reduce((s, n) => s + (n.reward ?? 0), 0);
 
   const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   const markRead    = (id: string) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
@@ -43,19 +41,6 @@ export function SpectatorNotifications() {
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <LargeHeaderScrollView title="Thông báo" contentContainerStyle={styles.scroll} rightAction={<AvatarTabButton />}>
-
-          {/* Rewards banner */}
-          <LinearGradient
-            colors={['#3D2800', '#8B5E00']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.rewardBanner}>
-            <Gift size={24} color={C.primary} />
-            <View style={styles.rewardBannerText}>
-              <Text style={styles.rewardBannerLabel}>Tổng phần thưởng nhận được</Text>
-              <Text style={styles.rewardBannerValue}>{formatCurrency(totalRewards)}</Text>
-            </View>
-          </LinearGradient>
 
           {/* Header row */}
           <View style={styles.listHeader}>
