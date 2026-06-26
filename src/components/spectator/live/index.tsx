@@ -9,6 +9,7 @@ import { useSpectatorRaces } from '@/hooks/useSpectatorData';
 import type { Race, RaceStatus } from '@/mock-data';
 import { RaceCard } from './race-card';
 import { RaceDetail } from './race-detail';
+import { LiveViewer } from './live-viewer';
 import { Leaderboard } from './leaderboard';
 
 type MainTab = 'races' | 'leaderboard';
@@ -26,13 +27,19 @@ export function SpectatorLive() {
   const [tab, setTab]               = useState<MainTab>('races');
   const [filter, setFilter]         = useState<FilterStatus>('all');
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
+  const [watchingRace, setWatchingRace] = useState<Race | null>(null);
 
   const handleBack = useCallback(() => setSelectedRace(null), []);
+
+  if (watchingRace) {
+    return <LiveViewer race={watchingRace} onClose={() => setWatchingRace(null)} />;
+  }
 
   if (selectedRace) {
     return <RaceDetail race={selectedRace} onBack={handleBack} />;
   }
 
+  const liveRaces = races.filter(r => r.status === 'live');
   const filtered = filter === 'all' ? races : races.filter(r => r.status === filter);
 
   const grouped = STATUS_ORDER.reduce<Record<RaceStatus, Race[]>>((acc, s) => {
@@ -63,6 +70,21 @@ export function SpectatorLive() {
 
           {tab === 'races' && (
             <>
+              {/* Continue watching banner — shown whenever there's a live race, regardless of filter */}
+              {liveRaces.length > 0 && (
+                <TouchableOpacity
+                  style={styles.liveNowBanner}
+                  onPress={() => setWatchingRace(liveRaces[0])}
+                  activeOpacity={0.85}>
+                  <View style={styles.liveNowDot} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.liveNowLabel}>Cuộc đua đang diễn ra</Text>
+                    <Text style={styles.liveNowName} numberOfLines={1}>{liveRaces[0].name}</Text>
+                  </View>
+                  <Text style={styles.liveNowCta}>Tiếp tục xem →</Text>
+                </TouchableOpacity>
+              )}
+
               {/* Filter chips */}
               <View style={styles.filterRow}>
                 {(['all', 'live', 'upcoming', 'completed'] as FilterStatus[]).map(f => (
@@ -129,4 +151,15 @@ const styles = StyleSheet.create({
   group:      { marginBottom: Spacing.three },
   groupLabel: { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 12, letterSpacing: 0.5, marginBottom: Spacing.two },
   cardWrap:   { marginBottom: Spacing.two },
+
+  liveNowBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.two,
+    backgroundColor: `${C.error}20`, borderRadius: Shape.medium,
+    borderWidth: 1, borderColor: `${C.error}50`,
+    padding: Spacing.three, marginBottom: Spacing.two,
+  },
+  liveNowDot:   { width: 10, height: 10, borderRadius: 5, backgroundColor: C.error },
+  liveNowLabel: { color: C.error, fontFamily: FontFamily.medium, fontSize: 11 },
+  liveNowName:  { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 14 },
+  liveNowCta:   { color: C.tertiary, fontFamily: FontFamily.bold, fontSize: 13 },
 });
