@@ -3,6 +3,11 @@ import type { Invitation, InvitationStatus, JockeyRace } from '@/mock-data/jocke
 import type { SpectatorRaceDto } from './spectator.api';
 import type { InvitationDto, JockeyRaceDto } from './jockey.api';
 
+const LANE_COLORS = [
+  '#E05C5C', '#4A9BE5', '#F0B429', '#72D79A', '#C47ED4',
+  '#F07250', '#5DC8C8', '#E8A0C0', '#8BC48A', '#7090D0',
+];
+
 const HORSE_COLOR_HEX: Record<string, string> = {
   chestnut: '#C07840',
   bay:      '#8B4513',
@@ -46,7 +51,7 @@ export function mapSpectatorRace(dto: SpectatorRaceDto): Race {
     laps: 2,
     purse: dto.viewingTicket.pricePoints * 1000,
     entries: dto.participants.map((p, i) => ({
-      horse: { id: p.id, name: p.name, number: p.laneNumber, breed: '-', color: '#72D79A' },
+      horse: { id: p.id, name: p.name, number: p.laneNumber, breed: '-', color: LANE_COLORS[(p.laneNumber - 1) % LANE_COLORS.length] },
       jockeyName: '-',
       odds: 2 + i * 0.5,
       position: dto.result?.rankings.find((r) => r.horse.id === p.id)?.rank,
