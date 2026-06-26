@@ -1,16 +1,18 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSharedValue, useFrameCallback, runOnJS } from 'react-native-reanimated';
 import { X } from 'lucide-react-native';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import type { Race, RaceEntry } from '@/mock-data';
+import { spectatorApi, type SpectatorRaceDto } from '@/api/spectator.api';
+import { mapSpectatorRace } from '@/api/mappers';
 import { RaceLaneTrack } from './race-lane-track';
 import { LiveStandings } from './live-standings';
 import { Commentary } from './commentary';
 
-export type RaceState = 'idle' | 'racing' | 'finished';
+export type RaceState = 'waiting' | 'idle' | 'racing' | 'finished';
 
 export type StandingEntry = {
   entry: RaceEntry;
@@ -36,10 +38,20 @@ function formatFinishTime(ms: number): string {
 
 export function LiveViewer({ race, onClose }: Props) {
   const insets = useSafeAreaInsets();
-  const [raceState, setRaceState] = useState<RaceState>('idle');
-  const [standings, setStandings] = useState<StandingEntry[]>(
-    race.entries.map((e, i) => ({ entry: e, progress: 0, rank: i + 1, previousRank: i + 1, finished: false })),
-  );
+  const initialState: RaceState = race.status === 'live' ? 'idle' : (race.status === 'completed' ? 'finished' : 'waiting');
+  const [raceState, setRaceState] = useState<RaceState>(initialState);
+  const [standings, setStandings] = useState<StandingEntry[]>(() => {
+    const entries = race.entries.map((e, i) => ({
+      entry: e,
+      progress: 0,
+      rank: e.position ?? i + 1,
+      previousRank: e.position ?? i + 1,
+      finished: race.status === 'completed' && !!e.position,
+    }));
+    return race.status === 'completed'
+      ? [...entries].sort((a, b) => a.rank - b.rank)
+      : entries;
+  });
   const [commentary, setCommentary] = useState<string[]>([]);
   const [lapProgress, setLapProgress] = useState(0);
 
@@ -104,6 +116,23 @@ export function LiveViewer({ race, onClose }: Props) {
     setRaceState('finished');
   }, [isRacingSv]);
 
+  // Called when backend signals race is completed — override standings with real results
+  // isRacingSv.value = false stops the frame callback naturally (it checks this flag)
+  const handleBackendCompleted = useCallback((rankings: NonNullable<SpectatorRaceDto['result']>['rankings']) => {
+    if (!rankings || rankings.length === 0) return;
+    raceFinishedRef.current = true;
+    isRacingSv.value = false;
+    setRaceState('finished');
+    setStandings(prev => {
+      const updated = prev.map(s => {
+        const real = rankings.find(r => r.horse.id === s.entry.horse.id);
+        return real ? { ...s, rank: real.rank, finished: true } : s;
+      });
+      return [...updated].sort((a, b) => a.rank - b.rank);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRacingSv]);
+
   // ── Frame callback — only accesses shared values, no JS refs ──────────────
   const frameCallback = useFrameCallback((fi) => {
     if (!isRacingSv.value) return;
@@ -151,11 +180,36 @@ export function LiveViewer({ race, onClose }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [race.id]);
 
-  // ── Auto-start on mount ────────────────────────────────────────────────────
+  // ── Auto-start if already live on mount ───────────────────────────────────
   useEffect(() => {
-    startRace();
+    if (race.status === 'live') startRace();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── Poll backend every 3s for status changes ───────────────────────────────
+  useEffect(() => {
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const { race: dto } = await spectatorApi.getRace(race.id);
+        if (cancelled) return;
+        const updated = mapSpectatorRace(dto);
+        if (updated.status === 'live' && !isRacingSv.value && !raceFinishedRef.current) {
+          startRace();
+        } else if (updated.status === 'completed' && !raceFinishedRef.current) {
+          handleBackendCompleted(dto.result?.rankings ?? []);
+        }
+      } catch {
+        // ignore network errors between polls
+      }
+    };
+    // For completed races, poll once immediately to get real rankings, then stop
+    poll();
+    if (race.status === 'completed') return () => { cancelled = true; };
+    const interval = setInterval(poll, 3000);
+    return () => { cancelled = true; clearInterval(interval); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [race.id]);
 
   // ── Standings + commentary update every 300ms ──────────────────────────────
   useEffect(() => {
@@ -234,6 +288,10 @@ export function LiveViewer({ race, onClose }: Props) {
             <View style={styles.liveDot} />
             <Text style={styles.liveBadgeText}>TRỰC TIẾP</Text>
           </View>
+        ) : raceState === 'waiting' ? (
+          <View style={styles.waitingBadge}>
+            <Text style={styles.waitingBadgeText}>SẮP ĐUA</Text>
+          </View>
         ) : (
           <View style={styles.headerSpacer} />
         )}
@@ -247,7 +305,7 @@ export function LiveViewer({ race, onClose }: Props) {
       />
 
       {/* Lap progress bar */}
-      {raceState !== 'idle' && (
+      {(raceState === 'racing' || raceState === 'finished') && (
         <View style={styles.lapRow}>
           <Text style={styles.lapText}>Vòng {currentLap} / {race.laps}</Text>
           <View style={styles.progressTrack}>
@@ -265,6 +323,12 @@ export function LiveViewer({ race, onClose }: Props) {
 
       {/* Bottom CTA */}
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + Spacing.two }]}>
+        {raceState === 'waiting' && (
+          <View style={styles.racingIndicator}>
+            <ActivityIndicator size="small" color={C.tertiary} />
+            <Text style={styles.racingText}>Chờ trọng tài bắt đầu cuộc đua...</Text>
+          </View>
+        )}
         {raceState === 'racing' && (
           <View style={styles.racingIndicator}>
             <View style={styles.racingDot} />
@@ -287,9 +351,11 @@ const styles = StyleSheet.create({
   closeBtn:     { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
   headerTitle:  { flex: 1, color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15 },
   headerSpacer: { width: 60 },
-  liveBadge:    { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: `${C.error}30`, borderRadius: Shape.full, paddingHorizontal: 10, paddingVertical: 4 },
-  liveDot:      { width: 6, height: 6, borderRadius: 3, backgroundColor: C.error },
-  liveBadgeText:{ color: C.error, fontFamily: FontFamily.bold, fontSize: 10, letterSpacing: 0.8 },
+  liveBadge:     { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: `${C.error}30`, borderRadius: Shape.full, paddingHorizontal: 10, paddingVertical: 4 },
+  liveDot:       { width: 6, height: 6, borderRadius: 3, backgroundColor: C.error },
+  liveBadgeText: { color: C.error, fontFamily: FontFamily.bold, fontSize: 10, letterSpacing: 0.8 },
+  waitingBadge:  { backgroundColor: `${C.tertiary}30`, borderRadius: Shape.full, paddingHorizontal: 10, paddingVertical: 4 },
+  waitingBadgeText: { color: C.tertiary, fontFamily: FontFamily.bold, fontSize: 10, letterSpacing: 0.8 },
 
   lapRow:        { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, paddingHorizontal: Spacing.three, paddingTop: Spacing.two },
   lapText:       { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 11, width: 72 },
