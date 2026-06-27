@@ -5,8 +5,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, BellRing, CalendarDays, CheckCircle, Share2 } from 'lucide-react-native';
 
 import { FontFamily, HorseRacingDark as C, Shape, Spacing, SurfaceContainers as SC } from '@/constants/theme';
-import type { Race } from '@/mock-data';
-import { formatDate } from '@/mock-data';
+import type { Race } from '@/types/race';
+import { formatDate } from '@/utils/format';
 
 type Props = { race: Race; onBack: () => void; onWatch: () => void };
 type TimeLeft = { h: number; m: number; s: number } | null;
