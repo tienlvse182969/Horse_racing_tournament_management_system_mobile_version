@@ -6,7 +6,7 @@ import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFami
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { AvatarTabButton } from '@/components/avatar-tab-button';
 import { useSpectatorRaces } from '@/hooks/useSpectatorData';
-import type { Race, RaceStatus } from '@/mock-data';
+import type { Race, RaceStatus } from '@/types/race';
 import { RaceCard } from './race-card';
 import { RaceDetail } from './race-detail';
 import { LiveViewer } from './live-viewer';

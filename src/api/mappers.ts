@@ -1,4 +1,4 @@
-import type { Race, RaceStatus } from '@/mock-data/races';
+import type { Race, RaceStatus } from '@/types/race';
 import type { Invitation, InvitationStatus, JockeyRace } from '@/mock-data/jockey';
 import type { SpectatorRaceDto } from './spectator.api';
 import type { InvitationDto, JockeyRaceDto } from './jockey.api';

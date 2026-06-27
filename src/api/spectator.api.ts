@@ -16,6 +16,10 @@ export const spectatorApi = {
     apiPost('/api/spectator/redemptions', { productId, quantity }),
   purchaseViewingPass: (raceId: string) => apiPost(`/api/spectator/races/${raceId}/viewing-pass`),
   listNotifications: () => apiGet<{ notifications: NotificationDto[] }>('/api/spectator/notifications'),
+  getSimulation: (id: string) =>
+    apiGet<{ available: boolean; rankings: Array<{ horseId: string; rank: number; finishTime?: number }> }>(
+      `/api/spectator/races/${id}/simulation`,
+    ),
 };
 
 export interface TournamentDto {

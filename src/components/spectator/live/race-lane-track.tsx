@@ -5,7 +5,7 @@ import Animated, { useAnimatedProps, useSharedValue, withRepeat, withTiming } fr
 import type { SharedValue } from 'react-native-reanimated';
 
 import { Spacing, Shape } from '@/constants/theme';
-import type { RaceEntry } from '@/mock-data';
+import type { RaceEntry } from '@/types/race';
 
 // ─── Track geometry ────────────────────────────────────────────────────────────
 const VB_W = 340;

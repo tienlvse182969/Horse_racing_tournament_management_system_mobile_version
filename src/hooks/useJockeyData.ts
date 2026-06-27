@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Alert } from 'react-native';
 import { mapInvitation, mapJockeyRace } from '@/api/mappers';
 import { jockeyApi } from '@/api/jockey.api';
 import type { Invitation, JockeyRace } from '@/mock-data/jockey';
@@ -19,8 +20,13 @@ export function useJockeyInvitations() {
   }, []);
 
   const respond = useCallback(async (id: string, action: 'accept' | 'decline') => {
-    await jockeyApi.respondInvitation(id, action);
-    reload();
+    try {
+      await jockeyApi.respondInvitation(id, action);
+      reload();
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Không thể phản hồi lời mời';
+      Alert.alert('Không thể thực hiện', message);
+    }
   }, [reload]);
 
   useEffect(() => { reload(); }, [reload]);

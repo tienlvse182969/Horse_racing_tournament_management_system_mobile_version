@@ -5,8 +5,8 @@ import { useSharedValue, useFrameCallback, runOnJS } from 'react-native-reanimat
 import { X } from 'lucide-react-native';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
-import type { Race, RaceEntry } from '@/mock-data';
-import { spectatorApi, type SpectatorRaceDto } from '@/api/spectator.api';
+import type { Race, RaceEntry } from '@/types/race';
+import { spectatorApi } from '@/api/spectator.api';
 import { mapSpectatorRace } from '@/api/mappers';
 import { RaceLaneTrack } from './race-lane-track';
 import { LiveStandings } from './live-standings';
@@ -25,6 +25,8 @@ export type StandingEntry = {
 
 type Props = { race: Race; onClose: () => void };
 
+type LocalEntry = RaceEntry & { finishTimeSecs?: number };
+
 // laps / (SPEED_CONSTANT * 60000ms) ≈ 2 / (0.0000333 * 60000) = 1.0 → fastest finishes ~60s
 const SPEED_CONSTANT = 0.0000333;
 const MAX_HORSES = 10;
@@ -38,7 +40,10 @@ function formatFinishTime(ms: number): string {
 
 export function LiveViewer({ race, onClose }: Props) {
   const insets = useSafeAreaInsets();
-  const initialState: RaceState = race.status === 'live' ? 'idle' : (race.status === 'completed' ? 'finished' : 'waiting');
+  const initialState: RaceState =
+    race.status === 'live' ? 'idle' :
+    race.status === 'completed' ? 'finished' :
+    'waiting';
   const [raceState, setRaceState] = useState<RaceState>(initialState);
   const [standings, setStandings] = useState<StandingEntry[]>(() => {
     const entries = race.entries.map((e, i) => ({
@@ -61,7 +66,7 @@ export function LiveViewer({ race, onClose }: Props) {
   const prevRanksRef = useRef<Record<string, number>>({});
   const commentaryTriggersRef = useRef<Set<string>>(new Set());
   const raceFinishedRef = useRef(false);
-  const entriesRef = useRef<RaceEntry[]>(race.entries.slice(0, MAX_HORSES));
+  const entriesRef = useRef<LocalEntry[]>(race.entries.slice(0, MAX_HORSES));
 
   // ── Progress shared values (10 horses, unconditional) ──────────────────────
   const sv0 = useSharedValue(0); const sv1 = useSharedValue(0);
@@ -116,22 +121,6 @@ export function LiveViewer({ race, onClose }: Props) {
     setRaceState('finished');
   }, [isRacingSv]);
 
-  // Called when backend signals race is completed — override standings with real results
-  // isRacingSv.value = false stops the frame callback naturally (it checks this flag)
-  const handleBackendCompleted = useCallback((rankings: NonNullable<SpectatorRaceDto['result']>['rankings']) => {
-    if (!rankings || rankings.length === 0) return;
-    raceFinishedRef.current = true;
-    isRacingSv.value = false;
-    setRaceState('finished');
-    setStandings(prev => {
-      const updated = prev.map(s => {
-        const real = rankings.find(r => r.horse.id === s.entry.horse.id);
-        return real ? { ...s, rank: real.rank, finished: true } : s;
-      });
-      return [...updated].sort((a, b) => a.rank - b.rank);
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isRacingSv]);
 
   // ── Frame callback — only accesses shared values, no JS refs ──────────────
   const frameCallback = useFrameCallback((fi) => {
@@ -169,10 +158,14 @@ export function LiveViewer({ race, onClose }: Props) {
     const maxOdds = Math.max(...entries.map(e => e.odds));
     const oddsRange = maxOdds - minOdds || 1;
     entries.forEach((e, i) => {
-      // Compress to ±20% spread: fastest = SPEED_CONSTANT, slowest = SPEED_CONSTANT * 0.80
-      const normalized = 1 - 0.20 * (e.odds - minOdds) / oddsRange;
-      speedSvs[i].value  = SPEED_CONSTANT * normalized;
-      jitterSvs[i].value = (((i * 7 + 3) % 10) - 5) * 0.000004;
+      if (e.finishTimeSecs) {
+        speedSvs[i].value  = race.laps / (e.finishTimeSecs * 1000);
+        jitterSvs[i].value = 0;
+      } else {
+        const normalized = 1 - 0.20 * (e.odds - minOdds) / oddsRange;
+        speedSvs[i].value  = SPEED_CONSTANT * normalized;
+        jitterSvs[i].value = (((i * 7 + 3) % 10) - 5) * 0.000004;
+      }
     });
     horseCountSv.value = entries.length;
     raceLapsSv.value   = race.laps;
@@ -194,18 +187,55 @@ export function LiveViewer({ race, onClose }: Props) {
         const { race: dto } = await spectatorApi.getRace(race.id);
         if (cancelled) return;
         const updated = mapSpectatorRace(dto);
+
         if (updated.status === 'live' && !isRacingSv.value && !raceFinishedRef.current) {
           startRace();
-        } else if (updated.status === 'completed' && !raceFinishedRef.current) {
-          handleBackendCompleted(dto.result?.rankings ?? []);
+        }
+
+        if (updated.status === 'completed') {
+          if (!raceFinishedRef.current && !isRacingSv.value) {
+            // Fetch finishTimes from dedicated simulation endpoint
+            const simData = await spectatorApi.getSimulation(race.id);
+
+            if (simData.available && simData.rankings.length > 0) {
+              // Update entries with real finishTimeSecs, recalculate speeds, then start animation
+              const updatedEntries = entriesRef.current.map(e => {
+                const sim = simData.rankings.find(r => r.horseId === e.horse.id);
+                return sim ? { ...e, finishTimeSecs: sim.finishTime } : e;
+              });
+              entriesRef.current = updatedEntries;
+              const laps = race.laps;
+              updatedEntries.forEach((e, i) => {
+                if (e.finishTimeSecs) {
+                  speedSvs[i].value  = laps / (e.finishTimeSecs * 1000);
+                  jitterSvs[i].value = 0;
+                }
+              });
+              startRace();
+            } else {
+              // No simulation data yet — just stop
+              raceFinishedRef.current = true;
+              isRacingSv.value = false;
+              setRaceState('finished');
+            }
+          }
+
+          // Update standings with real rankings once result is published (runs regardless of animation state)
+          const rankings = dto.result?.rankings;
+          if (rankings && rankings.length > 0) {
+            setStandings(prev =>
+              [...prev.map(s => {
+                const real = rankings.find(r => r.horse.id === s.entry.horse.id);
+                return real ? { ...s, rank: real.rank, finished: true } : s;
+              })].sort((a, b) => a.rank - b.rank),
+            );
+          }
         }
       } catch {
         // ignore network errors between polls
       }
     };
-    // For completed races, poll once immediately to get real rankings, then stop
     poll();
-    if (race.status === 'completed') return () => { cancelled = true; };
     const interval = setInterval(poll, 3000);
     return () => { cancelled = true; clearInterval(interval); };
   // eslint-disable-next-line react-hooks/exhaustive-deps

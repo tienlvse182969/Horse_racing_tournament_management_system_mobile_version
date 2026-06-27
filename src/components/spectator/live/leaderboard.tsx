@@ -3,7 +3,8 @@ import { TrendingUp, TrendingDown, Minus } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
-import { jockeyLeaderboard, formatCurrency } from '@/mock-data';
+import { jockeyLeaderboard } from '@/mock-data/leaderboard';
+import { formatCurrency } from '@/utils/format';
 
 const PODIUM_COLORS = [C.secondary, C.onSurfaceVariant, C.primary];
 const PODIUM_BG     = [C.secondaryContainer, `${C.onSurfaceVariant}25`, C.primaryContainer];

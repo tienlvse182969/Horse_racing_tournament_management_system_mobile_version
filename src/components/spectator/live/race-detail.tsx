@@ -8,8 +8,8 @@ import { ArrowLeft, CalendarPlus } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
-import type { Race } from '@/mock-data';
-import { formatCurrency, formatDate } from '@/mock-data';
+import type { Race } from '@/types/race';
+import { formatCurrency, formatDate } from '@/utils/format';
 import { spectatorApi } from '@/api/spectator.api';
 import { MedalIcon } from '@/components/ui/medal-icon';
 

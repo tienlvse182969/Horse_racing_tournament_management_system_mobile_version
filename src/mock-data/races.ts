@@ -1,28 +1,5 @@
-export type RaceStatus = 'live' | 'upcoming' | 'completed';
-
-export type RaceEntry = {
-  horse: { id: string; name: string; number: number; breed: string; color: string };
-  jockeyName: string;
-  odds: number;
-  position?: number;
-  finishTime?: string;
-};
-
-export type Race = {
-  id: string;
-  name: string;
-  number: number;
-  status: RaceStatus;
-  date: string;
-  time: string;
-  location: string;
-  surface: string;
-  track: string;
-  distance: number;
-  laps: number;
-  purse: number;
-  entries: RaceEntry[];
-};
+import type { Race } from '@/types/race';
+export type { RaceStatus, RaceEntry, Race } from '@/types/race';
 
 export const races: Race[] = [
   {

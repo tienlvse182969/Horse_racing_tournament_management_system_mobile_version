@@ -3,7 +3,7 @@ import { Alert } from 'react-native';
 import { mapSpectatorRace } from '@/api/mappers';
 import { spectatorApi } from '@/api/spectator.api';
 import type { TournamentDto } from '@/api/spectator.api';
-import type { Race } from '@/mock-data/races';
+import type { Race } from '@/types/race';
 import type { Notification } from '@/mock-data/notifications';
 import type { Prediction } from '@/mock-data/predictions';
 
