@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Alert } from 'react-native';
 import { mapSpectatorRace } from '@/api/mappers';
 import { spectatorApi } from '@/api/spectator.api';
 import type { TournamentDto } from '@/api/spectator.api';
@@ -71,8 +72,13 @@ export function useSpectatorPredictions() {
   }, []);
   useEffect(() => { reload(); }, [reload]);
   const cancelPrediction = useCallback(async (predictionId: string) => {
-    await spectatorApi.cancelPrediction(predictionId);
-    reload();
+    try {
+      await spectatorApi.cancelPrediction(predictionId);
+      reload();
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Không thể hủy dự đoán';
+      Alert.alert('Không thể hủy', message);
+    }
   }, [reload]);
   return { predictions, reload, cancelPrediction };
 }
