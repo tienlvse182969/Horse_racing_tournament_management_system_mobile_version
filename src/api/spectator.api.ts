@@ -6,11 +6,19 @@ export const spectatorApi = {
     apiGet<{ races: SpectatorRaceDto[] }>(`/api/spectator/races${filter ? `?filter=${filter}` : ''}`),
   getRace: (id: string) => apiGet<{ race: SpectatorRaceDto }>(`/api/spectator/races/${id}`),
   listPredictions: () => apiGet<{ predictions: PredictionDto[] }>('/api/spectator/predictions/current'),
-  createPrediction: (raceId: string, predictedRanks: Array<{ rank: number; horseId: string }>) =>
-    apiPost(`/api/spectator/predictions/${raceId}`, { raceId, predictedRanks }),
+  createPrediction: (
+    raceId: string,
+    predictedRanks: Array<{ rank: number; horseId: string }>,
+    riskMultiplier = 1,
+  ) =>
+    apiPost(`/api/spectator/predictions/${raceId}`, { raceId, predictedRanks, riskMultiplier }),
   cancelPrediction: (predictionId: string) =>
     apiPatch(`/api/spectator/predictions/${predictionId}/cancel`),
   getPoints: () => apiGet<{ points: SpectatorPointsDto }>('/api/spectator/points'),
+  topUpPoints: (points: number) =>
+    apiPost<{ payment: PaymentTransactionDto; points: SpectatorPointsDto }>('/api/spectator/top-ups', { points }),
+  createPayosTopUp: (points: number) =>
+    apiPost<{ payment: PaymentTransactionDto; paymentUrl: string }>('/api/spectator/top-ups/payos', { points }),
   listProducts: () => apiGet<{ products: ProductDto[] }>('/api/spectator/products'),
   redeem: (productId: string, quantity = 1) =>
     apiPost('/api/spectator/redemptions', { productId, quantity }),
@@ -43,6 +51,7 @@ export interface SpectatorRaceDto {
   participants: Array<{ id: string; name: string; laneNumber: number }>;
   canPredict: boolean;
   hasPrediction: boolean;
+  predictionConfig: { isEnabled: boolean; poolEnabled: boolean; entryFee: number; quickRiskMultipliers: number[] };
   viewingTicket: { requiresTicket: boolean; hasPass: boolean; canPurchase: boolean; pricePoints: number };
   streamUrl?: string;
   result?: { rankings: Array<{ rank: number; horse: { id: string; name: string }; jockey: { fullName: string } }> } | null;
@@ -63,6 +72,19 @@ export interface SpectatorPointsDto {
   totalPointsEarned: number;
   totalPointsSpent: number;
   transactions: Array<{ id: string; type: string; points: number; balanceAfter: number; note?: string; createdAt: string }>;
+}
+
+export interface PaymentTransactionDto {
+  id: string;
+  provider: string;
+  amountVnd: number;
+  points: number;
+  exchangeRateVndPerPoint: number;
+  status: string;
+  providerTransactionId?: string | null;
+  paidAt?: string | null;
+  expiredAt?: string | null;
+  createdAt: string;
 }
 
 export interface ProductDto {

@@ -5,32 +5,45 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { formatCurrency, formatDate } from '@/mock-data';
-import { useSpectatorRaces } from '@/hooks/useSpectatorData';
+import { useSpectatorPoints, useSpectatorRaces } from '@/hooks/useSpectatorData';
 import { spectatorApi } from '@/api/spectator.api';
 
 type Props = { onSubmitted: () => void };
 
 export function PredictForm({ onSubmitted }: Props) {
   const { races, loading } = useSpectatorRaces();
-  const predictableRaces = races.filter(r => r.status !== 'completed');
+  const { balance, reload: reloadPoints } = useSpectatorPoints();
+  const predictableRaces = races.filter(r => r.canPredict && !r.hasPrediction);
   const [selectedRaceId, setSelectedRaceId]   = useState<string | null>(null);
   const [selectedHorseId, setSelectedHorseId] = useState<string | null>(null);
+  const [riskMultiplier, setRiskMultiplier]   = useState(1);
   const [submitted, setSubmitted]             = useState(false);
   const [submitting, setSubmitting]           = useState(false);
 
   const selectedRace  = predictableRaces.find(r => r.id === selectedRaceId);
   const selectedHorse = selectedRace?.entries.find(e => e.horse.id === selectedHorseId);
+  const entryFee = selectedRace?.predictionConfig?.poolEnabled ? selectedRace.predictionConfig.entryFee : 0;
+  const cost = entryFee * riskMultiplier;
+  const riskOptions = selectedRace?.predictionConfig?.quickRiskMultipliers.length
+    ? selectedRace.predictionConfig.quickRiskMultipliers
+    : [1];
 
   const handleSelectRace = (id: string) => {
     setSelectedRaceId(id);
     setSelectedHorseId(null);
+    setRiskMultiplier(1);
   };
 
   const handleSubmit = async () => {
     if (!selectedRaceId || !selectedHorseId) return;
+    if (cost > balance) {
+      Alert.alert('Không đủ điểm', `Bạn cần ${cost.toLocaleString('vi-VN')} điểm để gửi dự đoán này.`);
+      return;
+    }
     setSubmitting(true);
     try {
-      await spectatorApi.createPrediction(selectedRaceId, [{ rank: 1, horseId: selectedHorseId }]);
+      await spectatorApi.createPrediction(selectedRaceId, [{ rank: 1, horseId: selectedHorseId }], riskMultiplier);
+      reloadPoints();
       setSubmitted(true);
       setTimeout(onSubmitted, 1800);
     } catch (err) {
@@ -64,6 +77,7 @@ export function PredictForm({ onSubmitted }: Props) {
     <View style={styles.root}>
       {/* Step 1: Race selection */}
       <Text style={styles.stepLabel}>Bước 1 — Chọn cuộc đua</Text>
+      <Text style={styles.walletText}>Số dư: {balance.toLocaleString('vi-VN')} điểm</Text>
       <View style={styles.raceList}>
         {predictableRaces.map(race => {
           const isSelected = selectedRaceId === race.id;
@@ -131,12 +145,34 @@ export function PredictForm({ onSubmitted }: Props) {
         </Animated.View>
       )}
 
+      {selectedRace && (
+        <Animated.View entering={FadeInDown.duration(280)}>
+          <Text style={styles.stepLabel}>Bước 3 — Chọn hệ số rủi ro</Text>
+          <View style={styles.riskRow}>
+            {riskOptions.map((risk) => (
+              <TouchableOpacity
+                key={risk}
+                style={[styles.riskChip, riskMultiplier === risk && styles.riskChipSelected]}
+                onPress={() => setRiskMultiplier(risk)}
+                activeOpacity={0.85}>
+                <Text style={[styles.riskText, riskMultiplier === risk && styles.riskTextSelected]}>
+                  {risk}x · {(entryFee * risk).toLocaleString('vi-VN')} pts
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Animated.View>
+      )}
+
       {/* Submit */}
       {selectedRaceId && selectedHorseId && (
         <Animated.View entering={FadeIn.duration(250)}>
-          <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} activeOpacity={0.85}>
+          <TouchableOpacity
+            style={[styles.submitBtn, cost > balance && styles.submitBtnDisabled]}
+            onPress={handleSubmit}
+            activeOpacity={0.85}>
             <Target size={18} color={C.onSecondary} />
-            <Text style={styles.submitText}>Gửi dự đoán</Text>
+            <Text style={styles.submitText}>Gửi dự đoán · {cost.toLocaleString('vi-VN')} pts</Text>
           </TouchableOpacity>
         </Animated.View>
       )}
@@ -148,6 +184,7 @@ const styles = StyleSheet.create({
   root: { gap: Spacing.three },
 
   stepLabel: { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 12, letterSpacing: 0.5, marginBottom: Spacing.one },
+  walletText:{ color: C.primary, fontFamily: FontFamily.bold, fontSize: 13, marginBottom: Spacing.one },
 
   raceList:            { gap: Spacing.two },
   raceItem:            { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, gap: Spacing.two, borderWidth: 1, borderColor: 'transparent' },
@@ -173,7 +210,13 @@ const styles = StyleSheet.create({
   oddsText:         { color: C.primary, fontFamily: FontFamily.bold, fontSize: 12 },
 
   submitBtn:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two, backgroundColor: C.secondary, borderRadius: Shape.full, paddingVertical: 14, marginTop: Spacing.one },
+  submitBtnDisabled: { opacity: 0.5 },
   submitText: { color: C.onSecondary, fontFamily: FontFamily.bold, fontSize: 16 },
+  riskRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
+  riskChip: { backgroundColor: SC.high, borderRadius: Shape.full, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: 'transparent' },
+  riskChipSelected: { backgroundColor: C.secondaryContainer, borderColor: C.secondary },
+  riskText: { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 12 },
+  riskTextSelected: { color: C.onSecondaryContainer },
 
   successBox:   { alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.six },
   successIcon:  { marginBottom: Spacing.two },
