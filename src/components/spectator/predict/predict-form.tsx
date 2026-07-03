@@ -5,15 +5,15 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { formatCurrency, formatDate } from '@/mock-data';
-import { useSpectatorRaces, useSpectatorPoints } from '@/hooks/useSpectatorData';
+import { useSpectatorPoints, useSpectatorRaces } from '@/hooks/useSpectatorData';
 import { spectatorApi } from '@/api/spectator.api';
 
 type Props = { onSubmitted: () => void };
 
 export function PredictForm({ onSubmitted }: Props) {
   const { races, loading } = useSpectatorRaces();
-  const { balance } = useSpectatorPoints();
-  const predictableRaces = races.filter(r => r.canPredict);
+  const { balance, reload: reloadPoints } = useSpectatorPoints();
+  const predictableRaces = races.filter(r => r.canPredict && !r.hasPrediction);
   const [selectedRaceId, setSelectedRaceId]   = useState<string | null>(null);
   const [selectedHorseId, setSelectedHorseId] = useState<string | null>(null);
   const [riskMultiplier, setRiskMultiplier]   = useState(1);
@@ -22,14 +22,11 @@ export function PredictForm({ onSubmitted }: Props) {
 
   const selectedRace  = predictableRaces.find(r => r.id === selectedRaceId);
   const selectedHorse = selectedRace?.entries.find(e => e.horse.id === selectedHorseId);
-
-  const poolEnabled = !!selectedRace?.predictionConfig?.poolEnabled;
-  const entryFee = selectedRace?.predictionConfig?.entryFee ?? 0;
-  const multipliers = poolEnabled && selectedRace?.predictionConfig?.quickRiskMultipliers.length
+  const entryFee = selectedRace?.predictionConfig?.poolEnabled ? selectedRace.predictionConfig.entryFee : 0;
+  const cost = entryFee * riskMultiplier;
+  const riskOptions = selectedRace?.predictionConfig?.quickRiskMultipliers.length
     ? selectedRace.predictionConfig.quickRiskMultipliers
     : [1];
-  const cost = poolEnabled ? entryFee * riskMultiplier : 0;
-  const insufficientPoints = poolEnabled && cost > balance;
 
   const handleSelectRace = (id: string) => {
     setSelectedRaceId(id);
@@ -38,10 +35,15 @@ export function PredictForm({ onSubmitted }: Props) {
   };
 
   const handleSubmit = async () => {
-    if (!selectedRaceId || !selectedHorseId || insufficientPoints) return;
+    if (!selectedRaceId || !selectedHorseId) return;
+    if (cost > balance) {
+      Alert.alert('Không đủ điểm', `Bạn cần ${cost.toLocaleString('vi-VN')} điểm để gửi dự đoán này.`);
+      return;
+    }
     setSubmitting(true);
     try {
       await spectatorApi.createPrediction(selectedRaceId, [{ rank: 1, horseId: selectedHorseId }], riskMultiplier);
+      reloadPoints();
       setSubmitted(true);
       setTimeout(onSubmitted, 1800);
     } catch (err) {
@@ -85,6 +87,7 @@ export function PredictForm({ onSubmitted }: Props) {
     <View style={styles.root}>
       {/* Step 1: Race selection */}
       <Text style={styles.stepLabel}>Bước 1 — Chọn cuộc đua</Text>
+      <Text style={styles.walletText}>Số dư: {balance.toLocaleString('vi-VN')} điểm</Text>
       <View style={styles.raceList}>
         {predictableRaces.map(race => {
           const isSelected = selectedRaceId === race.id;
@@ -152,33 +155,22 @@ export function PredictForm({ onSubmitted }: Props) {
         </Animated.View>
       )}
 
-      {/* Step 3: Risk multiplier (pool-based races only) */}
-      {selectedHorseId && poolEnabled && (
+      {selectedRace && (
         <Animated.View entering={FadeInDown.duration(280)}>
-          <Text style={styles.stepLabel}>Bước 3 — Chọn mức cược</Text>
+          <Text style={styles.stepLabel}>Bước 3 — Chọn hệ số rủi ro</Text>
           <View style={styles.riskRow}>
-            {multipliers.map(m => {
-              const isSelected = riskMultiplier === m;
-              return (
-                <TouchableOpacity
-                  key={m}
-                  style={[styles.riskChip, isSelected && styles.riskChipSelected]}
-                  onPress={() => setRiskMultiplier(m)}
-                  activeOpacity={0.8}>
-                  <Text style={[styles.riskChipText, isSelected && styles.riskChipTextSelected]}>{m}x</Text>
-                </TouchableOpacity>
-              );
-            })}
+            {riskOptions.map((risk) => (
+              <TouchableOpacity
+                key={risk}
+                style={[styles.riskChip, riskMultiplier === risk && styles.riskChipSelected]}
+                onPress={() => setRiskMultiplier(risk)}
+                activeOpacity={0.85}>
+                <Text style={[styles.riskText, riskMultiplier === risk && styles.riskTextSelected]}>
+                  {risk}x · {(entryFee * risk).toLocaleString('vi-VN')} pts
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
-          <View style={styles.costRow}>
-            <Coins size={16} color={insufficientPoints ? C.error : C.secondary} />
-            <Text style={[styles.costText, insufficientPoints && styles.costTextError]}>
-              Chi phí: {cost.toLocaleString()} điểm
-            </Text>
-          </View>
-          {insufficientPoints && (
-            <Text style={styles.insufficientText}>Không đủ điểm ({balance.toLocaleString()} điểm khả dụng)</Text>
-          )}
         </Animated.View>
       )}
 
@@ -186,12 +178,11 @@ export function PredictForm({ onSubmitted }: Props) {
       {selectedRaceId && selectedHorseId && (
         <Animated.View entering={FadeIn.duration(250)}>
           <TouchableOpacity
-            style={[styles.submitBtn, insufficientPoints && styles.submitBtnDisabled]}
+            style={[styles.submitBtn, cost > balance && styles.submitBtnDisabled]}
             onPress={handleSubmit}
-            disabled={insufficientPoints || submitting}
             activeOpacity={0.85}>
             <Target size={18} color={C.onSecondary} />
-            <Text style={styles.submitText}>{cost > 0 ? `Gửi dự đoán · ${cost.toLocaleString()} điểm` : 'Gửi dự đoán'}</Text>
+            <Text style={styles.submitText}>Gửi dự đoán · {cost.toLocaleString('vi-VN')} pts</Text>
           </TouchableOpacity>
         </Animated.View>
       )}
@@ -203,6 +194,7 @@ const styles = StyleSheet.create({
   root: { gap: Spacing.three },
 
   stepLabel: { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 12, letterSpacing: 0.5, marginBottom: Spacing.one },
+  walletText:{ color: C.primary, fontFamily: FontFamily.bold, fontSize: 13, marginBottom: Spacing.one },
 
   raceList:            { gap: Spacing.two },
   raceItem:            { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, gap: Spacing.two, borderWidth: 1, borderColor: 'transparent' },
@@ -227,19 +219,14 @@ const styles = StyleSheet.create({
   oddsBadge:        { backgroundColor: SC.highest, borderRadius: Shape.full, paddingHorizontal: 8, paddingVertical: 3 },
   oddsText:         { color: C.primary, fontFamily: FontFamily.bold, fontSize: 12 },
 
-  riskRow:            { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },
-  riskChip:           { paddingHorizontal: 18, paddingVertical: 10, borderRadius: Shape.full, backgroundColor: SC.high, borderWidth: 1, borderColor: 'transparent' },
-  riskChipSelected:   { backgroundColor: C.primaryContainer, borderColor: C.primary },
-  riskChipText:       { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 14 },
-  riskChipTextSelected:{ color: C.onPrimaryContainer },
-  costRow:            { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: Spacing.two },
-  costText:           { color: C.secondary, fontFamily: FontFamily.medium, fontSize: 13 },
-  costTextError:      { color: C.error },
-  insufficientText:   { color: C.error, fontFamily: FontFamily.regular, fontSize: 12, marginTop: 4 },
-
-  submitBtn:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two, backgroundColor: C.secondary, borderRadius: Shape.full, paddingVertical: 14, marginTop: Spacing.one },
+  submitBtn:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two, backgroundColor: C.secondary, borderRadius: Shape.full, paddingVertical: 14, marginTop: Spacing.one },
   submitBtnDisabled: { opacity: 0.5 },
-  submitText:        { color: C.onSecondary, fontFamily: FontFamily.bold, fontSize: 16 },
+  submitText: { color: C.onSecondary, fontFamily: FontFamily.bold, fontSize: 16 },
+  riskRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
+  riskChip: { backgroundColor: SC.high, borderRadius: Shape.full, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: 'transparent' },
+  riskChipSelected: { backgroundColor: C.secondaryContainer, borderColor: C.secondary },
+  riskText: { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 12 },
+  riskTextSelected: { color: C.onSecondaryContainer },
 
   successBox:   { alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.six },
   successIcon:  { marginBottom: Spacing.two },

@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { useState } from 'react';
+import { View, Text, StyleSheet, Pressable, TextInput, Alert, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Gift, Trophy, ChevronLeft } from 'lucide-react-native';
@@ -9,6 +10,7 @@ import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFami
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { AvatarTabButton } from '@/components/avatar-tab-button';
 import { useSpectatorPoints } from '@/hooks/useSpectatorData';
+import { spectatorApi } from '@/api/spectator.api';
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -32,7 +34,46 @@ const TX_LABEL: Record<string, string> = {
 };
 
 export function SpectatorRewardsHistory() {
-  const { balance, totalEarned, transactions } = useSpectatorPoints();
+  const { balance, totalEarned, transactions, reload } = useSpectatorPoints();
+  const [topUpPoints, setTopUpPoints] = useState('100');
+  const [submitting, setSubmitting] = useState(false);
+
+  const parseTopUpPoints = () => {
+    const points = Number(topUpPoints);
+    if (!Number.isInteger(points) || points < 100) {
+      Alert.alert('Không thể nạp điểm', 'Mỗi lần nạp tối thiểu 100 điểm.');
+      return null;
+    }
+    return points;
+  };
+
+  const submitMockTopUp = async () => {
+    const points = parseTopUpPoints();
+    if (!points) return;
+    setSubmitting(true);
+    try {
+      await spectatorApi.topUpPoints(points);
+      reload();
+      Alert.alert('Nạp điểm thành công', `Đã nạp ${points.toLocaleString('vi-VN')} điểm.`);
+    } catch (error) {
+      Alert.alert('Không thể nạp điểm', error instanceof Error ? error.message : 'Vui lòng thử lại.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const submitPayosTopUp = async () => {
+    const points = parseTopUpPoints();
+    if (!points) return;
+    setSubmitting(true);
+    try {
+      const res = await spectatorApi.createPayosTopUp(points);
+      await Linking.openURL(res.paymentUrl);
+    } catch (error) {
+      Alert.alert('Không thể tạo thanh toán', error instanceof Error ? error.message : 'Vui lòng thử lại.');
+      setSubmitting(false);
+    }
+  };
 
   return (
     <View style={styles.root}>
@@ -70,6 +111,28 @@ export function SpectatorRewardsHistory() {
                 </Text>
               </View>
             </LinearGradient>
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.duration(320)} style={styles.topUpCard}>
+            <Text style={styles.topUpTitle}>Nạp điểm</Text>
+            <Text style={styles.topUpSub}>1000 VND = 1 điểm · tối thiểu 100 điểm</Text>
+            <TextInput
+              style={styles.topUpInput}
+              keyboardType="number-pad"
+              value={topUpPoints}
+              editable={!submitting}
+              onChangeText={setTopUpPoints}
+              placeholder="100"
+              placeholderTextColor={C.onSurfaceVariant}
+            />
+            <View style={styles.topUpActions}>
+              <Pressable style={styles.topUpBtn} disabled={submitting} onPress={submitMockTopUp}>
+                <Text style={styles.topUpBtnText}>{submitting ? 'Đang xử lý...' : 'Top up demo'}</Text>
+              </Pressable>
+              <Pressable style={[styles.topUpBtn, styles.topUpBtnGhost]} disabled={submitting} onPress={submitPayosTopUp}>
+                <Text style={styles.topUpBtnText}>PayOS</Text>
+              </Pressable>
+            </View>
           </Animated.View>
 
           {/* Total earned banner */}
@@ -164,4 +227,13 @@ const styles = StyleSheet.create({
   rewardBannerLabel:{ color: 'rgba(255,255,255,0.65)', fontFamily: FontFamily.regular, fontSize: 11 },
   rewardBannerValue:{ color: C.primary, fontFamily: FontFamily.bold, fontSize: 22, lineHeight: 28 },
   rewardBannerUnit: { fontSize: 14, fontFamily: FontFamily.regular },
+
+  topUpCard: { backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.three, gap: Spacing.two },
+  topUpTitle: { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15 },
+  topUpSub: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
+  topUpInput: { color: C.onSurface, borderWidth: 1, borderColor: C.outlineVariant, borderRadius: Shape.medium, paddingHorizontal: 12, paddingVertical: 10, fontFamily: FontFamily.medium },
+  topUpActions: { flexDirection: 'row', gap: Spacing.two },
+  topUpBtn: { flex: 1, backgroundColor: C.primary, borderRadius: Shape.full, paddingVertical: 11, alignItems: 'center' },
+  topUpBtnGhost: { backgroundColor: C.secondary },
+  topUpBtnText: { color: C.onPrimary, fontFamily: FontFamily.bold, fontSize: 13 },
 });
