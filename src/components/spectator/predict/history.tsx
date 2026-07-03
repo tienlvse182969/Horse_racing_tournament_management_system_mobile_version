@@ -71,7 +71,7 @@ export function PredictionHistory({ predictions, onCancel }: Props) {
                 ) : null}
               </View>
               {pred.contribution ? (
-                <Text style={styles.cardStake}>Đã đặt cược: {pred.contribution.toLocaleString()} điểm</Text>
+                <Text style={styles.cardStake}>{pred.contribution.toLocaleString()} điểm</Text>
               ) : null}
               {pred.reward ? (
                 <Text style={styles.cardReward}>+{pred.reward.toLocaleString()} điểm</Text>

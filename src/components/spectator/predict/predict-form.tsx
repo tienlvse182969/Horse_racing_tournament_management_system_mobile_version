@@ -171,6 +171,9 @@ export function PredictForm({ onSubmitted }: Props) {
               </TouchableOpacity>
             ))}
           </View>
+          {cost > balance && (
+            <Text style={styles.insufficientText}>Số dư không đủ để đặt hệ số rủi ro này</Text>
+          )}
         </Animated.View>
       )}
 
@@ -227,6 +230,7 @@ const styles = StyleSheet.create({
   riskChipSelected: { backgroundColor: C.secondaryContainer, borderColor: C.secondary },
   riskText: { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 12 },
   riskTextSelected: { color: C.onSecondaryContainer },
+  insufficientText: { color: C.error, fontFamily: FontFamily.medium, fontSize: 12, marginTop: Spacing.one },
 
   successBox:   { alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.six },
   successIcon:  { marginBottom: Spacing.two },
