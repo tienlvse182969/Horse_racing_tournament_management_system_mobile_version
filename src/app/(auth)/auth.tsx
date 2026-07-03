@@ -25,6 +25,7 @@ import type { Tab, RegisterRole } from '@/components/auth/types';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/api/client';
 import * as authApi from '@/api/auth.api';
+import { APP_VERSION } from '@/constants/version';
 
 const DEMO_PASSWORD = 'Demo@123';
 
@@ -196,6 +197,8 @@ export default function AuthScreen() {
                 </View>
               </TouchableOpacity>
             </View>
+
+            <Text style={styles.versionText}>Phiên bản {APP_VERSION}</Text>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -219,4 +222,5 @@ const styles = StyleSheet.create({
   demoBtnJockey:    { borderColor: `${C.primary}60`, backgroundColor: `${C.primary}15` },
   demoText:         { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 13 },
   demoTextJockey:   { color: C.primary },
+  versionText:      { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12, textAlign: 'center', marginTop: Spacing.two },
 });
