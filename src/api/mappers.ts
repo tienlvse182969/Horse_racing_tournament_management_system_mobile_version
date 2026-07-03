@@ -56,6 +56,9 @@ export function mapSpectatorRace(dto: SpectatorRaceDto): Race {
       odds: 2 + i * 0.5,
       position: dto.result?.rankings.find((r) => r.horse.id === p.id)?.rank,
     })),
+    canPredict: dto.canPredict,
+    hasPrediction: dto.hasPrediction,
+    predictionConfig: dto.predictionConfig,
   };
 }
 

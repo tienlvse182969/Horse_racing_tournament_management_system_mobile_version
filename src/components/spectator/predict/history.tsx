@@ -1,23 +1,35 @@
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { Ban, CircleCheck, CircleX, Clock } from 'lucide-react-native';
+import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
+import { Ban, CircleCheck, CircleX, CircleDashed, Clock } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
-import { formatCurrency, formatDate } from '@/mock-data';
+import { formatDate } from '@/mock-data';
 import type { Prediction } from '@/mock-data/predictions';
 
 type StatusIcon = React.ComponentType<{ size?: number; color?: string }>;
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; Icon: StatusIcon }> = {
-  won:     { label: 'Đúng',     color: C.tertiary,  bg: C.tertiaryContainer,  Icon: CircleCheck },
-  lost:    { label: 'Sai',      color: C.error,     bg: C.errorContainer,     Icon: CircleX     },
-  pending: { label: 'Đang chờ', color: C.secondary, bg: C.secondaryContainer, Icon: Clock       },
-  cancelled: { label: 'Đã hủy', color: C.onSurfaceVariant, bg: SC.high, Icon: Ban },
+  won:     { label: 'Đúng',        color: C.tertiary,  bg: C.tertiaryContainer,  Icon: CircleCheck },
+  partial: { label: 'Đúng một phần', color: C.primary, bg: C.primaryContainer,  Icon: CircleDashed },
+  lost:    { label: 'Sai',         color: C.error,     bg: C.errorContainer,     Icon: CircleX     },
+  pending: { label: 'Đang chờ',    color: C.secondary, bg: C.secondaryContainer, Icon: Clock       },
+  cancelled: { label: 'Đã hủy',    color: C.onSurfaceVariant, bg: SC.high, Icon: Ban },
 };
 
 type Props = { predictions: Prediction[]; onCancel?: (predictionId: string) => void };
 
 export function PredictionHistory({ predictions, onCancel }: Props) {
+  const handleCancel = (predictionId: string) => {
+    Alert.alert(
+      'Hủy dự đoán',
+      'Bạn có chắc muốn hủy dự đoán này? Điểm đã đặt cược (nếu có) sẽ được hoàn lại.',
+      [
+        { text: 'Không', style: 'cancel' },
+        { text: 'Hủy dự đoán', style: 'destructive', onPress: () => onCancel?.(predictionId) },
+      ],
+    );
+  };
+
   const won     = predictions.filter(p => p.status === 'won').length;
   const lost    = predictions.filter(p => p.status === 'lost').length;
   const pending = predictions.filter(p => p.status === 'pending').length;
@@ -48,14 +60,24 @@ export function PredictionHistory({ predictions, onCancel }: Props) {
                 <Text style={styles.cardDate}>{formatDate(pred.raceDate)}</Text>
               </View>
               <Text style={styles.cardRace}>{pred.raceName}</Text>
-              <Text style={styles.cardPick}>
-                #{pred.predictedHorseNumber} {pred.predictedHorseName}
-              </Text>
+              <View style={styles.cardPickRow}>
+                <Text style={styles.cardPick}>
+                  #{pred.predictedHorseNumber} {pred.predictedHorseName}
+                </Text>
+                {pred.riskMultiplier && pred.riskMultiplier > 1 ? (
+                  <View style={styles.riskBadge}>
+                    <Text style={styles.riskBadgeText}>{pred.riskMultiplier}x</Text>
+                  </View>
+                ) : null}
+              </View>
+              {pred.contribution ? (
+                <Text style={styles.cardStake}>Đã đặt cược: {pred.contribution.toLocaleString()} điểm</Text>
+              ) : null}
               {pred.reward ? (
-                <Text style={styles.cardReward}>+{formatCurrency(pred.reward)}</Text>
+                <Text style={styles.cardReward}>+{pred.reward.toLocaleString()} điểm</Text>
               ) : null}
               {pred.status === 'pending' && onCancel ? (
-                <Pressable style={styles.cancelBtn} onPress={() => onCancel(pred.id)}>
+                <Pressable style={styles.cancelBtn} onPress={() => handleCancel(pred.id)}>
                   <Text style={styles.cancelText}>Hủy dự đoán</Text>
                 </Pressable>
               ) : null}
@@ -89,7 +111,11 @@ const styles = StyleSheet.create({
   statusText:  { fontFamily: FontFamily.medium, fontSize: 11 },
   cardDate:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
   cardRace:    { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15 },
+  cardPickRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   cardPick:    { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 13 },
+  riskBadge:     { backgroundColor: SC.highest, borderRadius: Shape.full, paddingHorizontal: 6, paddingVertical: 1 },
+  riskBadgeText: { color: C.primary, fontFamily: FontFamily.bold, fontSize: 10 },
+  cardStake:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
   cardReward:  { color: C.primary, fontFamily: FontFamily.bold, fontSize: 14 },
   cancelBtn:   { alignSelf: 'flex-start', borderRadius: Shape.full, borderWidth: 1, borderColor: C.error, paddingHorizontal: 12, paddingVertical: 6, marginTop: 2 },
   cancelText:  { color: C.error, fontFamily: FontFamily.medium, fontSize: 12 },

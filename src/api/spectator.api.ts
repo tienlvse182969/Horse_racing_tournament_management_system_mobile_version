@@ -6,8 +6,8 @@ export const spectatorApi = {
     apiGet<{ races: SpectatorRaceDto[] }>(`/api/spectator/races${filter ? `?filter=${filter}` : ''}`),
   getRace: (id: string) => apiGet<{ race: SpectatorRaceDto }>(`/api/spectator/races/${id}`),
   listPredictions: () => apiGet<{ predictions: PredictionDto[] }>('/api/spectator/predictions/current'),
-  createPrediction: (raceId: string, predictedRanks: Array<{ rank: number; horseId: string }>) =>
-    apiPost(`/api/spectator/predictions/${raceId}`, { raceId, predictedRanks }),
+  createPrediction: (raceId: string, predictedRanks: Array<{ rank: number; horseId: string }>, riskMultiplier = 1) =>
+    apiPost(`/api/spectator/predictions/${raceId}`, { raceId, predictedRanks, riskMultiplier }),
   cancelPrediction: (predictionId: string) =>
     apiPatch(`/api/spectator/predictions/${predictionId}/cancel`),
   getPoints: () => apiGet<{ points: SpectatorPointsDto }>('/api/spectator/points'),
@@ -43,6 +43,9 @@ export interface SpectatorRaceDto {
   participants: Array<{ id: string; name: string; laneNumber: number }>;
   canPredict: boolean;
   hasPrediction: boolean;
+  predictionOpenAt?: string | null;
+  predictionCloseAt?: string | null;
+  predictionConfig: { isEnabled: boolean; poolEnabled: boolean; entryFee: number; quickRiskMultipliers: number[] };
   viewingTicket: { requiresTicket: boolean; hasPass: boolean; canPurchase: boolean; pricePoints: number };
   streamUrl?: string;
   result?: { rankings: Array<{ rank: number; horse: { id: string; name: string }; jockey: { fullName: string } }> } | null;
@@ -52,9 +55,16 @@ export interface PredictionDto {
   id: string;
   raceId: string;
   raceName: string;
+  tournamentName?: string;
   predictedRanks: Array<{ rank: number; horseId: string; horseName?: string }>;
   status: string;
+  riskMultiplier: number;
+  contribution: number;
+  pointsEarned: number;
+  bonusPoints: number;
+  poolShare: number;
   totalPoints: number;
+  evaluatedAt?: string | null;
   createdAt: string;
 }
 

@@ -20,6 +20,7 @@ type SettingItem = { Icon: React.ComponentType<{ size?: number; color?: string }
 
 const STATUS_CONFIG = {
   won:     { color: C.tertiary,  bg: C.tertiaryContainer,  label: 'Đúng' },
+  partial: { color: C.primary,   bg: C.primaryContainer,   label: 'Một phần' },
   lost:    { color: C.error,     bg: C.errorContainer,     label: 'Sai' },
   pending: { color: C.secondary, bg: C.secondaryContainer, label: 'Chờ' },
   cancelled: { color: C.onSurfaceVariant, bg: SC.high, label: 'Đã hủy' },

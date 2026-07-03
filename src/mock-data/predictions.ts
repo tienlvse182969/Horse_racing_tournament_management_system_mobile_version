@@ -6,10 +6,12 @@ export type Prediction = {
   predictedHorseId: string;
   predictedHorseName: string;
   predictedHorseNumber: number;
-  status: 'won' | 'lost' | 'pending' | 'cancelled';
+  status: 'won' | 'lost' | 'pending' | 'partial' | 'cancelled';
   madeAt: string;
   reward?: number;
   points?: number;
+  riskMultiplier?: number;
+  contribution?: number;
   actualWinner?: string;
 };
 

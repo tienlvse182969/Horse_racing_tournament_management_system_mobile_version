@@ -59,13 +59,16 @@ export function useSpectatorPredictions() {
           predictedHorseNumber: p.predictedRanks[0]?.rank ?? 0,
           status: (
             p.status === 'correct' ? 'won' :
+            p.status === 'partial' ? 'partial' :
             p.status === 'incorrect' ? 'lost' :
             p.status === 'cancelled' ? 'cancelled' :
             'pending'
           ) as Prediction['status'],
           madeAt: p.createdAt,
           points: p.totalPoints,
-          reward: p.totalPoints > 0 ? p.totalPoints * 10 : undefined,
+          reward: p.totalPoints > 0 ? p.totalPoints : undefined,
+          riskMultiplier: p.riskMultiplier,
+          contribution: p.contribution,
         })),
       );
     }).catch(() => {});

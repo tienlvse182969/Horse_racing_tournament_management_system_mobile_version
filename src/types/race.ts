@@ -22,4 +22,7 @@ export type Race = {
   laps: number;
   purse: number;
   entries: RaceEntry[];
+  canPredict?: boolean;
+  hasPrediction?: boolean;
+  predictionConfig?: { isEnabled: boolean; poolEnabled: boolean; entryFee: number; quickRiskMultipliers: number[] };
 };
