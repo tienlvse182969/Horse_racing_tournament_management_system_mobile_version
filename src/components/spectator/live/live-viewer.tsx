@@ -152,7 +152,7 @@ export function LiveViewer({ race, onClose }: Props) {
 
   // ── Sync horse params into shared values when race changes ─────────────────
   useEffect(() => {
-    const entries = race.entries.slice(0, MAX_HORSES);
+    const entries: LocalEntry[] = race.entries.slice(0, MAX_HORSES);
     entriesRef.current = entries;
     const minOdds = Math.min(...entries.map(e => e.odds));
     const maxOdds = Math.max(...entries.map(e => e.odds));
@@ -199,7 +199,7 @@ export function LiveViewer({ race, onClose }: Props) {
 
             if (simData.available && simData.rankings.length > 0) {
               // Update entries with real finishTimeSecs, recalculate speeds, then start animation
-              const updatedEntries = entriesRef.current.map(e => {
+              const updatedEntries: LocalEntry[] = entriesRef.current.map(e => {
                 const sim = simData.rankings.find(r => r.horseId === e.horse.id);
                 return sim ? { ...e, finishTimeSecs: sim.finishTime } : e;
               });
