@@ -5,7 +5,7 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
-import { AvatarTabButton } from '@/components/avatar-tab-button';
+import { HeaderActions } from '@/components/header-actions';
 import { useSpectatorTournaments } from '@/hooks/useSpectatorData';
 import type { TournamentDto } from '@/api/spectator.api';
 
@@ -65,7 +65,7 @@ export function SpectatorTournaments() {
         <LargeHeaderScrollView
           title="Giải đấu"
           contentContainerStyle={styles.scroll}
-          rightAction={<AvatarTabButton />}>
+          rightAction={<HeaderActions />}>
 
           {loading && (
             <ActivityIndicator color={C.primary} style={{ marginVertical: Spacing.three }} />

@@ -1,22 +1,21 @@
-import { View, Text, TouchableOpacity, StyleSheet, Pressable } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Trophy, Zap, Clock, MapPin, Route, ActivitySquare, Target, Award } from 'lucide-react-native';
+import { Trophy, Zap, Clock, MapPin, Route, ActivitySquare, Target } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
-import { AvatarTabButton } from '@/components/avatar-tab-button';
+import { HeaderActions } from '@/components/header-actions';
 import { formatCurrency, formatDate } from '@/mock-data';
-import { useSpectatorRaces, useSpectatorPredictions, useSpectatorPoints } from '@/hooks/useSpectatorData';
+import { useSpectatorRaces, useSpectatorPredictions } from '@/hooks/useSpectatorData';
 import { ActivityIndicator } from 'react-native';
 import { MedalIcon } from '@/components/ui/medal-icon';
 
 export function SpectatorHome() {
   const { races, loading } = useSpectatorRaces();
   const { predictions } = useSpectatorPredictions();
-  const { balance } = useSpectatorPoints();
 
   const liveRace = races.find(r => r.status === 'live');
   const upcomingRaces = races.filter(r => r.status === 'upcoming');
@@ -30,18 +29,7 @@ export function SpectatorHome() {
           title="RaceTrack VN"
           bangers
           contentContainerStyle={styles.scroll}
-          rightAction={
-            <View style={styles.headerActions}>
-              <Pressable
-                style={styles.rewardChip}
-                onPress={() => router.push('/(app)/rewards' as never)}
-                android_ripple={{ color: `${C.tertiary}22`, radius: 40, borderless: false }}>
-                <Award size={13} color={C.tertiary} />
-                <Text style={styles.rewardChipText}>{balance.toLocaleString('vi-VN')}</Text>
-              </Pressable>
-              <AvatarTabButton />
-            </View>
-          }>
+          rightAction={<HeaderActions />}>
 
           {loading && <ActivityIndicator color={C.primary} style={{ marginVertical: Spacing.three }} />}
 
@@ -210,10 +198,6 @@ const styles = StyleSheet.create({
   root:    { flex: 1, backgroundColor: SC.lowest },
   safeArea:{ flex: 1 },
   scroll:  { paddingHorizontal: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.five },
-
-  headerActions: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  rewardChip:    { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: SC.highest, borderRadius: Shape.full, paddingHorizontal: 10, paddingVertical: 7, overflow: 'hidden' },
-  rewardChipText:{ color: C.tertiary, fontFamily: FontFamily.bold, fontSize: 12 },
 
   sectionTitle: { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 16, marginBottom: Spacing.two },
 

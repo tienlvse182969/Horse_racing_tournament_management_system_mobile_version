@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
-import { AvatarTabButton } from '@/components/avatar-tab-button';
+import { HeaderActions } from '@/components/header-actions';
 import { useSpectatorRaces } from '@/hooks/useSpectatorData';
 import type { Race, RaceStatus } from '@/types/race';
 import { RaceCard } from './race-card';
@@ -50,7 +50,7 @@ export function SpectatorLive() {
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <LargeHeaderScrollView title="Trực tiếp" contentContainerStyle={styles.scroll} rightAction={<AvatarTabButton />}>
+        <LargeHeaderScrollView title="Trực tiếp" contentContainerStyle={styles.scroll} rightAction={<HeaderActions />}>
 
           {/* Tab switcher */}
           <View style={styles.tabSwitcher}>

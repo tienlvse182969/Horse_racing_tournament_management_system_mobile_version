@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   ArrowLeft, Calendar, Target, CircleCheck, CircleX, Star, ChartBar,
-  Clock, ChevronRight, LogOut, Lock, Info, X,
+  Clock, ChevronRight, LogOut, Lock, Info, X, Wallet,
 } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
@@ -33,6 +33,7 @@ export function SpectatorProfile() {
   const [aboutVisible, setAboutVisible] = useState(false);
 
   const SETTINGS: SettingItem[] = [
+    { Icon: Wallet, label: 'Nạp điểm',     onPress: () => router.push('/top-up' as never) },
     { Icon: Lock, label: 'Đổi mật khẩu', onPress: () => router.push('/change-password' as never) },
     { Icon: Info, label: 'Về ứng dụng',   onPress: () => setAboutVisible(true) },
   ];

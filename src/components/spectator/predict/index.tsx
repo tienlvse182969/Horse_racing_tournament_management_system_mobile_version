@@ -5,7 +5,7 @@ import { Star, Gift } from 'lucide-react-native';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
-import { AvatarTabButton } from '@/components/avatar-tab-button';
+import { HeaderActions } from '@/components/header-actions';
 import { useSpectatorPoints, useSpectatorPredictions } from '@/hooks/useSpectatorData';
 import { PredictForm } from './predict-form';
 import { PredictionHistory } from './history';
@@ -28,7 +28,7 @@ export function SpectatorPredict() {
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <LargeHeaderScrollView title="Dự đoán" contentContainerStyle={styles.scroll} rightAction={<AvatarTabButton />}>
+        <LargeHeaderScrollView title="Dự đoán" contentContainerStyle={styles.scroll} rightAction={<HeaderActions />}>
 
           {/* Points banner */}
           <View style={styles.pointsBanner}>

@@ -86,6 +86,15 @@ export function useSpectatorPredictions() {
   return { predictions, reload, cancelPrediction };
 }
 
+export function useSpectatorTopUps() {
+  const [topUps, setTopUps] = useState<Awaited<ReturnType<typeof spectatorApi.listTopUps>>['payments']>([]);
+  const reload = useCallback(() => {
+    spectatorApi.listTopUps().then((res) => setTopUps(res.payments)).catch(() => {});
+  }, []);
+  useEffect(() => { reload(); }, [reload]);
+  return { topUps, reload };
+}
+
 export function useSpectatorNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const reload = useCallback(() => {

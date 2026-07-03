@@ -11,6 +11,11 @@ export const spectatorApi = {
   cancelPrediction: (predictionId: string) =>
     apiPatch(`/api/spectator/predictions/${predictionId}/cancel`),
   getPoints: () => apiGet<{ points: SpectatorPointsDto }>('/api/spectator/points'),
+  createTopUp: (points: number) =>
+    apiPost<{ payment: PaymentTransactionDto; points: SpectatorPointsDto }>('/api/spectator/top-ups', { points }),
+  createPayosTopUp: (points: number) =>
+    apiPost<{ payment: PaymentTransactionDto; paymentUrl: string }>('/api/spectator/top-ups/payos', { points }),
+  listTopUps: () => apiGet<{ payments: PaymentTransactionDto[] }>('/api/spectator/top-ups'),
   listProducts: () => apiGet<{ products: ProductDto[] }>('/api/spectator/products'),
   redeem: (productId: string, quantity = 1) =>
     apiPost('/api/spectator/redemptions', { productId, quantity }),
@@ -65,6 +70,19 @@ export interface PredictionDto {
   poolShare: number;
   totalPoints: number;
   evaluatedAt?: string | null;
+  createdAt: string;
+}
+
+export interface PaymentTransactionDto {
+  id: string;
+  provider: string;
+  amountVnd: number;
+  points: number;
+  exchangeRateVndPerPoint: number;
+  status: string;
+  providerTransactionId?: string | null;
+  paidAt?: string | null;
+  expiredAt?: string | null;
   createdAt: string;
 }
 
