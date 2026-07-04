@@ -70,6 +70,10 @@ export default function AppLayout() {
         name="rewards"
         options={{ href: null }}
       />
+      <Tabs.Screen
+        name="tournament/[id]"
+        options={{ href: null }}
+      />
     </Tabs>
   );
 }

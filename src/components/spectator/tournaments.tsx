@@ -1,11 +1,12 @@
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MapPin, Calendar, Trophy } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { router } from 'expo-router';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
-import { AvatarTabButton } from '@/components/avatar-tab-button';
+import { HeaderActions } from '@/components/header-actions';
 import { useSpectatorTournaments } from '@/hooks/useSpectatorData';
 import type { TournamentDto } from '@/api/spectator.api';
 
@@ -20,11 +21,11 @@ const STATUS_CONFIG = {
   draft:     { label: 'Chuẩn bị',     color: C.onSurfaceVariant, bg: `${C.onSurfaceVariant}22` },
 } as const;
 
-function TournamentCard({ t, index }: { t: TournamentDto; index: number }) {
+function TournamentCard({ t, index, onPress }: { t: TournamentDto; index: number; onPress: () => void }) {
   const cfg = STATUS_CONFIG[t.status] ?? STATUS_CONFIG.draft;
   return (
     <Animated.View entering={FadeInDown.delay(index * 60).duration(300)}>
-      <View style={styles.card}>
+      <Pressable style={styles.card} onPress={onPress} android_ripple={{ color: `${C.onSurface}11` }}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardName} numberOfLines={2}>{t.name}</Text>
           <View style={[styles.badge, { backgroundColor: cfg.bg }]}>
@@ -48,7 +49,7 @@ function TournamentCard({ t, index }: { t: TournamentDto; index: number }) {
         {t.description ? (
           <Text style={styles.cardDesc} numberOfLines={2}>{t.description}</Text>
         ) : null}
-      </View>
+      </Pressable>
     </Animated.View>
   );
 }
@@ -65,7 +66,7 @@ export function SpectatorTournaments() {
         <LargeHeaderScrollView
           title="Giải đấu"
           contentContainerStyle={styles.scroll}
-          rightAction={<AvatarTabButton />}>
+          rightAction={<HeaderActions />}>
 
           {loading && (
             <ActivityIndicator color={C.primary} style={{ marginVertical: Spacing.three }} />
@@ -86,7 +87,14 @@ export function SpectatorTournaments() {
                 <Text style={styles.sectionTitle}>Đang diễn ra</Text>
                 <Text style={styles.sectionCount}>{live.length}</Text>
               </View>
-              {live.map((t, i) => <TournamentCard key={t.id} t={t} index={i} />)}
+              {live.map((t, i) => (
+                <TournamentCard
+                  key={t.id}
+                  t={t}
+                  index={i}
+                  onPress={() => router.push(`/tournament/${t.id}` as any)}
+                />
+              ))}
             </Animated.View>
           )}
 
@@ -97,7 +105,12 @@ export function SpectatorTournaments() {
                 <Text style={styles.sectionCount}>{open.length}</Text>
               </View>
               {open.map((t, i) => (
-                <TournamentCard key={t.id} t={t} index={live.length + i} />
+                <TournamentCard
+                  key={t.id}
+                  t={t}
+                  index={live.length + i}
+                  onPress={() => router.push(`/tournament/${t.id}` as any)}
+                />
               ))}
             </Animated.View>
           )}

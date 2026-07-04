@@ -1,9 +1,10 @@
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   ArrowLeft, Calendar, Target, CircleCheck, CircleX, Star, ChartBar,
-  Clock, ChevronRight, LogOut, Bell, Lock, CircleQuestionMark, Info,
+  Clock, ChevronRight, LogOut, Lock, Info, X, Wallet,
 } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
@@ -13,18 +14,13 @@ import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { useAuth } from '@/context/AuthContext';
 import { useSpectatorPoints, useSpectatorPredictions } from '@/hooks/useSpectatorData';
 import { formatCurrency, formatDate } from '@/mock-data';
+import { APP_VERSION } from '@/constants/version';
 
-type SettingItem = { Icon: React.ComponentType<{ size?: number; color?: string }>; label: string };
-
-const SETTINGS: SettingItem[] = [
-  { Icon: Bell,               label: 'Cài đặt thông báo' },
-  { Icon: Lock,               label: 'Đổi mật khẩu' },
-  { Icon: CircleQuestionMark, label: 'Trợ giúp & Hỗ trợ' },
-  { Icon: Info,               label: 'Về ứng dụng' },
-];
+type SettingItem = { Icon: React.ComponentType<{ size?: number; color?: string }>; label: string; onPress: () => void };
 
 const STATUS_CONFIG = {
   won:     { color: C.tertiary,  bg: C.tertiaryContainer,  label: 'Đúng' },
+  partial: { color: C.primary,   bg: C.primaryContainer,   label: 'Một phần' },
   lost:    { color: C.error,     bg: C.errorContainer,     label: 'Sai' },
   pending: { color: C.secondary, bg: C.secondaryContainer, label: 'Chờ' },
   cancelled: { color: C.onSurfaceVariant, bg: SC.high, label: 'Đã hủy' },
@@ -34,6 +30,13 @@ export function SpectatorProfile() {
   const { user, logout } = useAuth();
   const { balance } = useSpectatorPoints();
   const { predictions } = useSpectatorPredictions();
+  const [aboutVisible, setAboutVisible] = useState(false);
+
+  const SETTINGS: SettingItem[] = [
+    { Icon: Wallet, label: 'Nạp điểm',     onPress: () => router.push('/top-up' as never) },
+    { Icon: Lock, label: 'Đổi mật khẩu', onPress: () => router.push('/change-password' as never) },
+    { Icon: Info, label: 'Về ứng dụng',   onPress: () => setAboutVisible(true) },
+  ];
   const won = predictions.filter(p => p.status === 'won').length;
   const lost = predictions.filter(p => p.status === 'lost').length;
   const pending = predictions.filter(p => p.status === 'pending').length;
@@ -144,7 +147,7 @@ export function SpectatorProfile() {
           <Animated.View entering={FadeInDown.delay(260).duration(320)} style={styles.section}>
             <Text style={styles.sectionTitle}>Cài đặt</Text>
             {SETTINGS.map(s => (
-              <TouchableOpacity key={s.label} style={styles.settingRow} activeOpacity={0.75}>
+              <TouchableOpacity key={s.label} style={styles.settingRow} activeOpacity={0.75} onPress={s.onPress}>
                 <View style={styles.settingIconWrap}>
                   <s.Icon size={20} color={C.onSurfaceVariant} />
                 </View>
@@ -162,6 +165,22 @@ export function SpectatorProfile() {
 
         </LargeHeaderScrollView>
       </SafeAreaView>
+
+      <Modal
+        visible={aboutVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setAboutVisible(false)}>
+        <Pressable style={styles.modalBackdrop} onPress={() => setAboutVisible(false)}>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setAboutVisible(false)} activeOpacity={0.7}>
+              <X size={20} color={C.onSurfaceVariant} />
+            </TouchableOpacity>
+            <Text style={styles.modalAppName}>RaceTrack VN</Text>
+            <Text style={styles.modalVersion}>Phiên bản {APP_VERSION}</Text>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -227,4 +246,11 @@ const styles = StyleSheet.create({
   // Logout
   logoutBtn:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two, borderRadius: Shape.full, paddingVertical: 14, borderWidth: 1, borderColor: C.error, marginTop: Spacing.one },
   logoutText: { color: C.error, fontFamily: FontFamily.bold, fontSize: 15 },
+
+  // About modal
+  modalBackdrop:  { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', alignItems: 'center', padding: Spacing.three },
+  modalCard:      { width: '100%', maxWidth: 320, backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.four, alignItems: 'center', gap: Spacing.one },
+  modalCloseBtn:  { position: 'absolute', top: Spacing.two, right: Spacing.two, width: 32, height: 32, borderRadius: Shape.full, backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center' },
+  modalAppName:   { color: C.primary, fontFamily: FontFamily.bangers, fontSize: 28, letterSpacing: 2, marginTop: Spacing.two },
+  modalVersion:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 13 },
 });

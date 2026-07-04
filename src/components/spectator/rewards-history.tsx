@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, TextInput, Alert, Linking } from 'react-native';
+import { View, Text, StyleSheet, Pressable, TextInput, Alert, Linking, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Gift, Trophy, ChevronLeft } from 'lucide-react-native';
+import { Gift, Wallet, PiggyBank, ChevronLeft, Plus, X } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
@@ -34,9 +33,10 @@ const TX_LABEL: Record<string, string> = {
 };
 
 export function SpectatorRewardsHistory() {
-  const { balance, totalEarned, transactions, reload } = useSpectatorPoints();
+  const { balance, totalEarned, totalSpent, transactions, reload } = useSpectatorPoints();
   const [topUpPoints, setTopUpPoints] = useState('100');
   const [submitting, setSubmitting] = useState(false);
+  const [topUpVisible, setTopUpVisible] = useState(false);
 
   const parseTopUpPoints = () => {
     const points = Number(topUpPoints);
@@ -54,6 +54,7 @@ export function SpectatorRewardsHistory() {
     try {
       await spectatorApi.topUpPoints(points);
       reload();
+      setTopUpVisible(false);
       Alert.alert('Nạp điểm thành công', `Đã nạp ${points.toLocaleString('vi-VN')} điểm.`);
     } catch (error) {
       Alert.alert('Không thể nạp điểm', error instanceof Error ? error.message : 'Vui lòng thử lại.');
@@ -68,6 +69,7 @@ export function SpectatorRewardsHistory() {
     setSubmitting(true);
     try {
       const res = await spectatorApi.createPayosTopUp(points);
+      setTopUpVisible(false);
       await Linking.openURL(res.paymentUrl);
     } catch (error) {
       Alert.alert('Không thể tạo thanh toán', error instanceof Error ? error.message : 'Vui lòng thử lại.');
@@ -79,7 +81,7 @@ export function SpectatorRewardsHistory() {
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <LargeHeaderScrollView
-          title="Lịch sử thưởng"
+          title="Điểm thưởng"
           contentContainerStyle={styles.scroll}
           leftAction={
             <Pressable
@@ -91,65 +93,30 @@ export function SpectatorRewardsHistory() {
           }
           rightAction={<AvatarTabButton />}>
 
-          {/* Balance banner */}
-          <Animated.View entering={FadeIn.duration(400)}>
-            <LinearGradient
-              colors={['#3D2800', '#8B5E00']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.banner}>
-              <View style={styles.bannerIconWrap}>
-                <Trophy size={28} color={C.primary} />
-              </View>
-              <View style={styles.bannerText}>
-                <Text style={styles.bannerLabel}>Số dư hiện tại</Text>
-                <Text style={styles.bannerBalance}>
-                  {balance.toLocaleString('vi-VN')} <Text style={styles.bannerUnit}>điểm</Text>
-                </Text>
-                <Text style={styles.bannerSub}>
-                  {transactions.length} giao dịch thưởng gần nhất
-                </Text>
-              </View>
-            </LinearGradient>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.duration(320)} style={styles.topUpCard}>
-            <Text style={styles.topUpTitle}>Nạp điểm</Text>
-            <Text style={styles.topUpSub}>1000 VND = 1 điểm · tối thiểu 100 điểm</Text>
-            <TextInput
-              style={styles.topUpInput}
-              keyboardType="number-pad"
-              value={topUpPoints}
-              editable={!submitting}
-              onChangeText={setTopUpPoints}
-              placeholder="100"
-              placeholderTextColor={C.onSurfaceVariant}
-            />
-            <View style={styles.topUpActions}>
-              <Pressable style={styles.topUpBtn} disabled={submitting} onPress={submitMockTopUp}>
-                <Text style={styles.topUpBtnText}>{submitting ? 'Đang xử lý...' : 'Top up demo'}</Text>
-              </Pressable>
-              <Pressable style={[styles.topUpBtn, styles.topUpBtnGhost]} disabled={submitting} onPress={submitPayosTopUp}>
-                <Text style={styles.topUpBtnText}>PayOS</Text>
-              </Pressable>
+          {/* Points overview */}
+          <Animated.View entering={FadeIn.duration(400)} style={styles.statsRow}>
+            <View style={styles.statCard}>
+              <Wallet size={20} color={C.primary} />
+              <Text style={styles.statValue}>{balance.toLocaleString('vi-VN')}</Text>
+              <Text style={styles.statLabel}>Số dư hiện tại</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Gift size={20} color={C.tertiary} />
+              <Text style={[styles.statValue, { color: C.tertiary }]}>{totalEarned.toLocaleString('vi-VN')}</Text>
+              <Text style={styles.statLabel}>Tổng đã nhận được</Text>
+            </View>
+            <View style={styles.statCard}>
+              <PiggyBank size={20} color={C.secondary} />
+              <Text style={[styles.statValue, { color: C.secondary }]}>{totalSpent.toLocaleString('vi-VN')}</Text>
+              <Text style={styles.statLabel}>Tổng tiết kiệm</Text>
             </View>
           </Animated.View>
 
-          {/* Total earned banner */}
-          <Animated.View entering={FadeIn.duration(400)}>
-            <LinearGradient
-              colors={['#3D2800', '#8B5E00']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.rewardBanner}>
-              <Gift size={24} color={C.primary} />
-              <View style={styles.rewardBannerText}>
-                <Text style={styles.rewardBannerLabel}>Tổng phần thưởng nhận được</Text>
-                <Text style={styles.rewardBannerValue}>
-                  {totalEarned.toLocaleString('vi-VN')} <Text style={styles.rewardBannerUnit}>điểm</Text>
-                </Text>
-              </View>
-            </LinearGradient>
+          <Animated.View entering={FadeInDown.duration(320)}>
+            <Pressable style={styles.topUpTrigger} onPress={() => setTopUpVisible(true)}>
+              <Plus size={18} color={C.onPrimary} />
+              <Text style={styles.topUpTriggerText}>Nạp thêm điểm thưởng</Text>
+            </Pressable>
           </Animated.View>
 
           {/* List */}
@@ -188,6 +155,39 @@ export function SpectatorRewardsHistory() {
 
         </LargeHeaderScrollView>
       </SafeAreaView>
+
+      <Modal
+        visible={topUpVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setTopUpVisible(false)}>
+        <Pressable style={styles.modalBackdrop} onPress={() => setTopUpVisible(false)}>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <Pressable style={styles.modalCloseBtn} onPress={() => setTopUpVisible(false)}>
+              <X size={20} color={C.onSurfaceVariant} />
+            </Pressable>
+            <Text style={styles.topUpTitle}>Nạp thêm điểm thưởng</Text>
+            <Text style={styles.topUpSub}>1000 VND = 1 điểm · tối thiểu 100 điểm</Text>
+            <TextInput
+              style={styles.topUpInput}
+              keyboardType="number-pad"
+              value={topUpPoints}
+              editable={!submitting}
+              onChangeText={setTopUpPoints}
+              placeholder="100"
+              placeholderTextColor={C.onSurfaceVariant}
+            />
+            <View style={styles.topUpActions}>
+              <Pressable style={styles.topUpBtn} disabled={submitting} onPress={submitMockTopUp}>
+                <Text style={styles.topUpBtnText}>{submitting ? 'Đang xử lý...' : 'Top up demo'}</Text>
+              </Pressable>
+              <Pressable style={[styles.topUpBtn, styles.topUpBtnGhost]} disabled={submitting} onPress={submitPayosTopUp}>
+                <Text style={styles.topUpBtnText}>Nạp điểm thưởng</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -197,13 +197,10 @@ const styles = StyleSheet.create({
   safeArea:{ flex: 1 },
   scroll:  { paddingHorizontal: Spacing.three, gap: Spacing.two, paddingBottom: Spacing.five },
 
-  banner:        { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, borderRadius: Shape.large, padding: Spacing.three },
-  bannerIconWrap:{ width: 48, height: 48, borderRadius: Shape.full, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
-  bannerText:    { flex: 1 },
-  bannerLabel:   { color: 'rgba(255,255,255,0.6)', fontFamily: FontFamily.regular, fontSize: 11 },
-  bannerBalance: { color: C.primary, fontFamily: FontFamily.bold, fontSize: 26, lineHeight: 32 },
-  bannerUnit:    { fontSize: 14, fontFamily: FontFamily.regular },
-  bannerSub:     { color: 'rgba(255,255,255,0.5)', fontFamily: FontFamily.regular, fontSize: 11, marginTop: 2 },
+  statsRow:  { flexDirection: 'row', gap: Spacing.two },
+  statCard:  { flex: 1, backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, gap: 4, alignItems: 'flex-start' },
+  statValue: { color: C.primary, fontFamily: FontFamily.bold, fontSize: 16 },
+  statLabel: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11, lineHeight: 14 },
 
   backBtn:      { width: 34, height: 34, borderRadius: Shape.full, justifyContent: 'center', alignItems: 'center' },
   sectionTitle: { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15, marginTop: Spacing.one },
@@ -222,18 +219,18 @@ const styles = StyleSheet.create({
   cardTime:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
   cardAmount:  { color: C.primary, fontFamily: FontFamily.bold, fontSize: 13 },
 
-  rewardBanner:     { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, borderRadius: Shape.large, padding: Spacing.three },
-  rewardBannerText: { flex: 1 },
-  rewardBannerLabel:{ color: 'rgba(255,255,255,0.65)', fontFamily: FontFamily.regular, fontSize: 11 },
-  rewardBannerValue:{ color: C.primary, fontFamily: FontFamily.bold, fontSize: 22, lineHeight: 28 },
-  rewardBannerUnit: { fontSize: 14, fontFamily: FontFamily.regular },
+  topUpTrigger: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: Spacing.one, backgroundColor: C.primary, borderRadius: Shape.full, paddingVertical: 13 },
+  topUpTriggerText: { color: C.onPrimary, fontFamily: FontFamily.bold, fontSize: 14 },
 
-  topUpCard: { backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.three, gap: Spacing.two },
   topUpTitle: { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15 },
   topUpSub: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
-  topUpInput: { color: C.onSurface, borderWidth: 1, borderColor: C.outlineVariant, borderRadius: Shape.medium, paddingHorizontal: 12, paddingVertical: 10, fontFamily: FontFamily.medium },
-  topUpActions: { flexDirection: 'row', gap: Spacing.two },
+  topUpInput: { color: C.onSurface, borderWidth: 1, borderColor: C.outlineVariant, borderRadius: Shape.medium, paddingHorizontal: 12, paddingVertical: 10, fontFamily: FontFamily.medium, marginTop: Spacing.two },
+  topUpActions: { flexDirection: 'row', gap: Spacing.two, marginTop: Spacing.one },
   topUpBtn: { flex: 1, backgroundColor: C.primary, borderRadius: Shape.full, paddingVertical: 11, alignItems: 'center' },
   topUpBtnGhost: { backgroundColor: C.secondary },
   topUpBtnText: { color: C.onPrimary, fontFamily: FontFamily.bold, fontSize: 13 },
+
+  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', alignItems: 'center', padding: Spacing.three },
+  modalCard:     { width: '100%', maxWidth: 360, backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.three, gap: 4 },
+  modalCloseBtn: { position: 'absolute', top: Spacing.two, right: Spacing.two, width: 32, height: 32, borderRadius: Shape.full, backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center', zIndex: 1 },
 });

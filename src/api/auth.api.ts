@@ -33,3 +33,7 @@ export async function getMe(): Promise<{ user: AuthUser }> {
 export async function logout(): Promise<void> {
   await setStoredToken(null);
 }
+
+export async function changePassword(oldPassword: string, newPassword: string): Promise<{ message: string }> {
+  return apiPost<{ message: string }>('/api/auth/change-password', { oldPassword, newPassword });
+}

@@ -6,7 +6,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
-import { AvatarTabButton } from '@/components/avatar-tab-button';
+import { HeaderActions } from '@/components/header-actions';
 import type { Notification, NotificationType } from '@/mock-data';
 import { formatCurrency } from '@/mock-data';
 import { useSpectatorNotifications } from '@/hooks/useSpectatorData';
@@ -40,7 +40,7 @@ export function SpectatorNotifications() {
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <LargeHeaderScrollView title="Thông báo" contentContainerStyle={styles.scroll} rightAction={<AvatarTabButton />}>
+        <LargeHeaderScrollView title="Thông báo" contentContainerStyle={styles.scroll} rightAction={<HeaderActions />}>
 
           {/* Header row */}
           <View style={styles.listHeader}>

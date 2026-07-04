@@ -51,6 +51,8 @@ export interface SpectatorRaceDto {
   participants: Array<{ id: string; name: string; laneNumber: number }>;
   canPredict: boolean;
   hasPrediction: boolean;
+  predictionOpenAt?: string | null;
+  predictionCloseAt?: string | null;
   predictionConfig: { isEnabled: boolean; poolEnabled: boolean; entryFee: number; quickRiskMultipliers: number[] };
   viewingTicket: { requiresTicket: boolean; hasPass: boolean; canPurchase: boolean; pricePoints: number };
   streamUrl?: string;
@@ -61,9 +63,29 @@ export interface PredictionDto {
   id: string;
   raceId: string;
   raceName: string;
+  tournamentName?: string;
   predictedRanks: Array<{ rank: number; horseId: string; horseName?: string }>;
   status: string;
+  riskMultiplier: number;
+  contribution: number;
+  pointsEarned: number;
+  bonusPoints: number;
+  poolShare: number;
   totalPoints: number;
+  evaluatedAt?: string | null;
+  createdAt: string;
+}
+
+export interface PaymentTransactionDto {
+  id: string;
+  provider: string;
+  amountVnd: number;
+  points: number;
+  exchangeRateVndPerPoint: number;
+  status: string;
+  providerTransactionId?: string | null;
+  paidAt?: string | null;
+  expiredAt?: string | null;
   createdAt: string;
 }
 

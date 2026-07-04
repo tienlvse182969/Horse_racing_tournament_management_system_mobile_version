@@ -32,16 +32,18 @@ export type PointTransaction = {
 export function useSpectatorPoints() {
   const [balance, setBalance] = useState(0);
   const [totalEarned, setTotalEarned] = useState(0);
+  const [totalSpent, setTotalSpent] = useState(0);
   const [transactions, setTransactions] = useState<PointTransaction[]>([]);
   const reload = useCallback(() => {
     spectatorApi.getPoints().then((res) => {
       setBalance(res.points.currentBalance);
       setTotalEarned(res.points.totalPointsEarned);
+      setTotalSpent(res.points.totalPointsSpent);
       setTransactions(res.points.transactions.filter(tx => tx.points > 0).slice(0, 10));
     }).catch(() => {});
   }, []);
   useEffect(() => { reload(); }, [reload]);
-  return { balance, totalEarned, transactions, reload };
+  return { balance, totalEarned, totalSpent, transactions, reload };
 }
 
 export function useSpectatorPredictions() {
@@ -59,13 +61,16 @@ export function useSpectatorPredictions() {
           predictedHorseNumber: p.predictedRanks[0]?.rank ?? 0,
           status: (
             p.status === 'correct' ? 'won' :
+            p.status === 'partial' ? 'partial' :
             p.status === 'incorrect' ? 'lost' :
             p.status === 'cancelled' ? 'cancelled' :
             'pending'
           ) as Prediction['status'],
           madeAt: p.createdAt,
           points: p.totalPoints,
-          reward: p.totalPoints > 0 ? p.totalPoints * 10 : undefined,
+          reward: p.totalPoints > 0 ? p.totalPoints : undefined,
+          riskMultiplier: p.riskMultiplier,
+          contribution: p.contribution,
         })),
       );
     }).catch(() => {});
@@ -81,6 +86,15 @@ export function useSpectatorPredictions() {
     }
   }, [reload]);
   return { predictions, reload, cancelPrediction };
+}
+
+export function useSpectatorTopUps() {
+  const [topUps, setTopUps] = useState<Awaited<ReturnType<typeof spectatorApi.listTopUps>>['payments']>([]);
+  const reload = useCallback(() => {
+    spectatorApi.listTopUps().then((res) => setTopUps(res.payments)).catch(() => {});
+  }, []);
+  useEffect(() => { reload(); }, [reload]);
+  return { topUps, reload };
 }
 
 export function useSpectatorNotifications() {

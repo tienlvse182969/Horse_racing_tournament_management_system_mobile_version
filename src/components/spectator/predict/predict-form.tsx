@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert } from 'react-native';
-import { CircleCheck, Circle, Target } from 'lucide-react-native';
+import { CircleCheck, Circle, Target, Coins } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
@@ -68,8 +68,18 @@ export function PredictForm({ onSubmitted }: Props) {
         <Text style={styles.successSub}>
           #{selectedHorse?.horse.number} {selectedHorse?.horse.name}{'\n'}
           {selectedRace?.name}
+          {cost > 0 ? `\n-${cost.toLocaleString()} điểm` : ''}
         </Text>
       </Animated.View>
+    );
+  }
+
+  if (predictableRaces.length === 0) {
+    return (
+      <View style={styles.emptyBox}>
+        <Target size={40} color={C.onSurfaceVariant} />
+        <Text style={styles.emptyText}>Hiện không có cuộc đua nào đang mở dự đoán</Text>
+      </View>
     );
   }
 
@@ -77,7 +87,6 @@ export function PredictForm({ onSubmitted }: Props) {
     <View style={styles.root}>
       {/* Step 1: Race selection */}
       <Text style={styles.stepLabel}>Bước 1 — Chọn cuộc đua</Text>
-      <Text style={styles.walletText}>Số dư: {balance.toLocaleString('vi-VN')} điểm</Text>
       <View style={styles.raceList}>
         {predictableRaces.map(race => {
           const isSelected = selectedRaceId === race.id;
@@ -161,6 +170,9 @@ export function PredictForm({ onSubmitted }: Props) {
               </TouchableOpacity>
             ))}
           </View>
+          {cost > balance && (
+            <Text style={styles.insufficientText}>Số dư không đủ để đặt hệ số rủi ro này</Text>
+          )}
         </Animated.View>
       )}
 
@@ -184,7 +196,6 @@ const styles = StyleSheet.create({
   root: { gap: Spacing.three },
 
   stepLabel: { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 12, letterSpacing: 0.5, marginBottom: Spacing.one },
-  walletText:{ color: C.primary, fontFamily: FontFamily.bold, fontSize: 13, marginBottom: Spacing.one },
 
   raceList:            { gap: Spacing.two },
   raceItem:            { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, gap: Spacing.two, borderWidth: 1, borderColor: 'transparent' },
@@ -217,9 +228,13 @@ const styles = StyleSheet.create({
   riskChipSelected: { backgroundColor: C.secondaryContainer, borderColor: C.secondary },
   riskText: { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 12 },
   riskTextSelected: { color: C.onSecondaryContainer },
+  insufficientText: { color: C.error, fontFamily: FontFamily.medium, fontSize: 12, marginTop: Spacing.one },
 
   successBox:   { alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.six },
   successIcon:  { marginBottom: Spacing.two },
   successTitle: { color: C.tertiary, fontFamily: FontFamily.bold, fontSize: 22 },
   successSub:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 14, textAlign: 'center', lineHeight: 22 },
+
+  emptyBox:  { alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.six },
+  emptyText: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 14, textAlign: 'center' },
 });
