@@ -45,7 +45,10 @@ export function TournamentRaces({ tournamentId }: Props) {
           title={tournament?.name ?? 'Trận đấu'}
           contentContainerStyle={styles.scroll}
           leftAction={
-            <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={styles.backBtn}
+              onPress={() => router.push('/(app)/tournaments' as any)}
+              activeOpacity={0.7}>
               <ChevronLeft size={24} color={C.onSurface} />
             </TouchableOpacity>
           }>

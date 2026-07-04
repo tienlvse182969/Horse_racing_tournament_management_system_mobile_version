@@ -1,16 +1,18 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useSharedValue, useFrameCallback, runOnJS } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Ellipse } from 'react-native-svg';
+import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, Easing } from 'react-native-reanimated';
 import { X } from 'lucide-react-native';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import type { Race, RaceEntry } from '@/types/race';
 import { spectatorApi } from '@/api/spectator.api';
-import { mapSpectatorRace } from '@/api/mappers';
-import { RaceLaneTrack } from './race-lane-track';
-import { LiveStandings } from './live-standings';
-import { Commentary } from './commentary';
+import {
+  computeFrame, fmtClock, lengthsBehind, paceWeights,
+  type RaceFrame, type RaceSimHorse, type HorseFrame,
+} from '@/utils/raceSim';
 
 export type RaceState = 'waiting' | 'idle' | 'racing' | 'finished';
 
@@ -25,211 +27,107 @@ export type StandingEntry = {
 
 type Props = { race: Race; onClose: () => void };
 
-type LocalEntry = RaceEntry & { finishTimeSecs?: number };
-
-// laps / (SPEED_CONSTANT * 60000ms) ≈ 2 / (0.0000333 * 60000) = 1.0 → fastest finishes ~60s
-const SPEED_CONSTANT = 0.0000333;
-const MAX_HORSES = 10;
-
-function formatFinishTime(ms: number): string {
-  const totalSecs = ms / 1000;
-  const mins = Math.floor(totalSecs / 60);
-  const secs = (totalSecs % 60).toFixed(1).padStart(4, '0');
-  return `${mins}:${secs}`;
-}
+const DURATION_MS = 18000;
+const SPEEDS = [1, 2, 4] as const;
 
 export function LiveViewer({ race, onClose }: Props) {
   const insets = useSafeAreaInsets();
-  const initialState: RaceState =
-    race.status === 'live' ? 'idle' :
-    race.status === 'completed' ? 'finished' :
-    'waiting';
-  const [raceState, setRaceState] = useState<RaceState>(initialState);
-  const [standings, setStandings] = useState<StandingEntry[]>(() => {
-    const entries = race.entries.map((e, i) => ({
-      entry: e,
-      progress: 0,
-      rank: e.position ?? i + 1,
-      previousRank: e.position ?? i + 1,
-      finished: race.status === 'completed' && !!e.position,
-    }));
-    return race.status === 'completed'
-      ? [...entries].sort((a, b) => a.rank - b.rank)
-      : entries;
-  });
-  const [commentary, setCommentary] = useState<string[]>([]);
-  const [lapProgress, setLapProgress] = useState(0);
+  const [raceState, setRaceState] = useState<RaceState>('idle');
+  const [speed, setSpeed] = useState<number>(1);
+  const [frame, setFrame] = useState<RaceFrame | null>(null);
+  const [speedPct, setSpeedPct] = useState(0);
 
-  // JS-only refs (NOT captured by worklets)
-  const finishTimesRef = useRef<Record<string, string>>({});
-  const finishOrderRef = useRef<string[]>([]);
-  const prevRanksRef = useRef<Record<string, number>>({});
-  const commentaryTriggersRef = useRef<Set<string>>(new Set());
-  const raceFinishedRef = useRef(false);
-  const entriesRef = useRef<LocalEntry[]>(race.entries.slice(0, MAX_HORSES));
+  const horsesRef = useRef<RaceSimHorse[]>([]);
+  const weightsRef = useRef<Record<string, number[]>>({});
+  const elapsedRef = useRef(0);
+  const speedRef = useRef(1);
+  const lastTsRef = useRef<number | null>(null);
+  const prevLeadRef = useRef({ p: 0, t: 0 });
+  const startedRef = useRef(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // ── Progress shared values (10 horses, unconditional) ──────────────────────
-  const sv0 = useSharedValue(0); const sv1 = useSharedValue(0);
-  const sv2 = useSharedValue(0); const sv3 = useSharedValue(0);
-  const sv4 = useSharedValue(0); const sv5 = useSharedValue(0);
-  const sv6 = useSharedValue(0); const sv7 = useSharedValue(0);
-  const sv8 = useSharedValue(0); const sv9 = useSharedValue(0);
-  const progressSvs = [sv0, sv1, sv2, sv3, sv4, sv5, sv6, sv7, sv8, sv9];
+  useEffect(() => { speedRef.current = speed; }, [speed]);
 
-  // ── Speed shared values (one per horse slot) ───────────────────────────────
-  const sp0 = useSharedValue(0); const sp1 = useSharedValue(0);
-  const sp2 = useSharedValue(0); const sp3 = useSharedValue(0);
-  const sp4 = useSharedValue(0); const sp5 = useSharedValue(0);
-  const sp6 = useSharedValue(0); const sp7 = useSharedValue(0);
-  const sp8 = useSharedValue(0); const sp9 = useSharedValue(0);
-  const speedSvs = [sp0, sp1, sp2, sp3, sp4, sp5, sp6, sp7, sp8, sp9];
+  const startAnimation = useCallback((horses: RaceSimHorse[]) => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    horsesRef.current = horses;
+    weightsRef.current = Object.fromEntries(horses.map(h => [h.horseId, paceWeights(h.horseId)]));
+    elapsedRef.current = 0;
+    lastTsRef.current = null;
+    prevLeadRef.current = { p: 0, t: 0 };
+    setRaceState('racing');
 
-  // ── Jitter shared values ───────────────────────────────────────────────────
-  const jt0 = useSharedValue(0); const jt1 = useSharedValue(0);
-  const jt2 = useSharedValue(0); const jt3 = useSharedValue(0);
-  const jt4 = useSharedValue(0); const jt5 = useSharedValue(0);
-  const jt6 = useSharedValue(0); const jt7 = useSharedValue(0);
-  const jt8 = useSharedValue(0); const jt9 = useSharedValue(0);
-  const jitterSvs = [jt0, jt1, jt2, jt3, jt4, jt5, jt6, jt7, jt8, jt9];
+    // setInterval (not requestAnimationFrame) so playback keeps advancing even if the
+    // screen/tab is temporarily backgrounded — matches native RN behaviour more closely.
+    const tick = () => {
+      const ts = Date.now();
+      if (lastTsRef.current == null) lastTsRef.current = ts;
+      const rawDt = Math.min(200, ts - lastTsRef.current);
+      const dt = rawDt * speedRef.current;
+      lastTsRef.current = ts;
+      elapsedRef.current = Math.min(DURATION_MS, elapsedRef.current + dt);
 
-  // ── Worklet-safe state ─────────────────────────────────────────────────────
-  const isRacingSv      = useSharedValue(false);
-  const horseCountSv    = useSharedValue(race.entries.slice(0, MAX_HORSES).length);
-  const raceLapsSv      = useSharedValue(race.laps);
-  const finishedCountSv = useSharedValue(0);
-  const horseIdsSv      = useSharedValue<string[]>(race.entries.slice(0, MAX_HORSES).map(e => e.horse.id));
+      const f = computeFrame(horsesRef.current, weightsRef.current, elapsedRef.current, DURATION_MS);
+      setFrame(f);
 
-  // ── JS callbacks (called via runOnJS from worklet) ─────────────────────────
-  const addCommentary = useCallback((line: string) => {
-    setCommentary(prev => [...prev, line]);
+      const tSec = elapsedRef.current / 1000;
+      const dp = f.leaderProgress - prevLeadRef.current.p;
+      const dts = tSec - prevLeadRef.current.t;
+      if (dts > 0.05) {
+        const inst = (dp / dts) * (DURATION_MS / 1000);
+        setSpeedPct(Math.max(8, Math.min(100, Math.round(inst * 85))));
+        prevLeadRef.current = { p: f.leaderProgress, t: tSec };
+      }
+
+      if (elapsedRef.current >= DURATION_MS || f.done) {
+        setSpeedPct(0);
+        setRaceState('finished');
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        return;
+      }
+    };
+    intervalRef.current = setInterval(tick, 16);
   }, []);
 
-  const onHorseFinished = useCallback((horseId: string, timeMs: number) => {
-    finishTimesRef.current[horseId] = formatFinishTime(timeMs);
-    finishOrderRef.current.push(horseId);
-    const name = entriesRef.current.find(e => e.horse.id === horseId)?.horse.name ?? '';
-    const pos = finishOrderRef.current.length;
-    if (pos === 1) addCommentary(`🏆 ${name} về nhất! Thời gian ${finishTimesRef.current[horseId]}.`);
-    else if (pos === 2) addCommentary(`🥈 ${name} về nhì!`);
-    else if (pos === 3) addCommentary(`🥉 ${name} về ba!`);
-  }, [addCommentary]);
-
-  const onRaceComplete = useCallback(() => {
-    if (raceFinishedRef.current) return;
-    raceFinishedRef.current = true;
-    isRacingSv.value = false;
-    setRaceState('finished');
-  }, [isRacingSv]);
-
-
-  // ── Frame callback — only accesses shared values, no JS refs ──────────────
-  const frameCallback = useFrameCallback((fi) => {
-    if (!isRacingSv.value) return;
-    const dt = Math.min(fi.timeSincePreviousFrame ?? 16, 50);
-    const t = fi.timeSinceFirstFrame;
-    const n = horseCountSv.value;
-    const laps = raceLapsSv.value;
-    const ids = horseIdsSv.value;
-
-    for (let i = 0; i < n; i++) {
-      if (progressSvs[i].value >= laps) continue;
-      const speedVar = Math.sin(t * 0.004 + i * 2.3) * 0.00004;
-      const inc = Math.max(0, (speedSvs[i].value + jitterSvs[i].value + speedVar) * dt);
-      const next = progressSvs[i].value + inc;
-      if (next >= laps) {
-        progressSvs[i].value = laps;
-        finishedCountSv.value += 1;
-        runOnJS(onHorseFinished)(ids[i], t);
-        // Race ends when the FIRST horse crosses the finish line
-        if (finishedCountSv.value === 1) {
-          runOnJS(onRaceComplete)();
-        }
-      } else {
-        progressSvs[i].value = next;
-      }
-    }
-  }, false);
-
-  // ── Sync horse params into shared values when race changes ─────────────────
-  useEffect(() => {
-    const entries: LocalEntry[] = race.entries.slice(0, MAX_HORSES);
-    entriesRef.current = entries;
-    const minOdds = Math.min(...entries.map(e => e.odds));
-    const maxOdds = Math.max(...entries.map(e => e.odds));
-    const oddsRange = maxOdds - minOdds || 1;
-    entries.forEach((e, i) => {
-      if (e.finishTimeSecs) {
-        speedSvs[i].value  = race.laps / (e.finishTimeSecs * 1000);
-        jitterSvs[i].value = 0;
-      } else {
-        const normalized = 1 - 0.20 * (e.odds - minOdds) / oddsRange;
-        speedSvs[i].value  = SPEED_CONSTANT * normalized;
-        jitterSvs[i].value = (((i * 7 + 3) % 10) - 5) * 0.000004;
-      }
-    });
-    horseCountSv.value = entries.length;
-    raceLapsSv.value   = race.laps;
-    horseIdsSv.value   = entries.map(e => e.horse.id);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [race.id]);
-
-  // ── Auto-start if already live on mount ───────────────────────────────────
-  useEffect(() => {
-    if (race.status === 'live') startRace();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
   }, []);
 
-  // ── Poll backend every 3s for status changes ───────────────────────────────
+  // Poll backend every 3s to detect when the race has a simulated result
   useEffect(() => {
     let cancelled = false;
     const poll = async () => {
+      if (startedRef.current) return;
       try {
         const { race: dto } = await spectatorApi.getRace(race.id);
-        if (cancelled) return;
-        const updated = mapSpectatorRace(dto);
-
-        if (updated.status === 'live' && !isRacingSv.value && !raceFinishedRef.current) {
-          startRace();
+        if (cancelled || startedRef.current) return;
+        if (dto.status !== 'completed') {
+          setRaceState('waiting');
+          return;
         }
-
-        if (updated.status === 'completed') {
-          if (!raceFinishedRef.current && !isRacingSv.value) {
-            // Fetch finishTimes from dedicated simulation endpoint
-            const simData = await spectatorApi.getSimulation(race.id);
-
-            if (simData.available && simData.rankings.length > 0) {
-              // Update entries with real finishTimeSecs, recalculate speeds, then start animation
-              const updatedEntries: LocalEntry[] = entriesRef.current.map(e => {
-                const sim = simData.rankings.find(r => r.horseId === e.horse.id);
-                return sim ? { ...e, finishTimeSecs: sim.finishTime } : e;
-              });
-              entriesRef.current = updatedEntries;
-              const laps = race.laps;
-              updatedEntries.forEach((e, i) => {
-                if (e.finishTimeSecs) {
-                  speedSvs[i].value  = laps / (e.finishTimeSecs * 1000);
-                  jitterSvs[i].value = 0;
-                }
-              });
-              startRace();
-            } else {
-              // No simulation data yet — just stop
-              raceFinishedRef.current = true;
-              isRacingSv.value = false;
-              setRaceState('finished');
-            }
-          }
-
-          // Update standings with real rankings once result is published (runs regardless of animation state)
-          const rankings = dto.result?.rankings;
-          if (rankings && rankings.length > 0) {
-            setStandings(prev =>
-              [...prev.map(s => {
-                const real = rankings.find(r => r.horse.id === s.entry.horse.id);
-                return real ? { ...s, rank: real.rank, finished: true } : s;
-              })].sort((a, b) => a.rank - b.rank),
-            );
-          }
+        const simData = await spectatorApi.getSimulation(race.id);
+        if (cancelled || startedRef.current) return;
+        if (simData.available && simData.rankings.length > 0) {
+          const horses: RaceSimHorse[] = race.entries
+            .map(e => {
+              const sim = simData.rankings.find(r => r.horseId === e.horse.id);
+              if (!sim || !sim.finishTime) return null;
+              return {
+                horseId: e.horse.id,
+                horseName: e.horse.name,
+                jockeyName: e.jockeyName,
+                laneNumber: e.horse.number,
+                clothNumber: e.horse.number,
+                rank: sim.rank,
+                finishTime: sim.finishTime,
+              };
+            })
+            .filter((h): h is RaceSimHorse => h !== null);
+          if (horses.length > 0) startAnimation(horses);
+          else setRaceState('waiting');
+        } else {
+          setRaceState('waiting');
         }
       } catch {
         // ignore network errors between polls
@@ -241,162 +139,234 @@ export function LiveViewer({ race, onClose }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [race.id]);
 
-  // ── Standings + commentary update every 300ms ──────────────────────────────
-  useEffect(() => {
-    if (raceState !== 'racing') return;
-    const interval = setInterval(() => {
-      const entries = entriesRef.current;
-      const laps = race.laps;
-      const snapshots = entries.map((e, i) => ({
-        entry: e,
-        progress: progressSvs[i].value,
-        finished: progressSvs[i].value >= laps,
-        finishTime: finishTimesRef.current[e.horse.id],
-      }));
-      snapshots.sort((a, b) => b.progress - a.progress);
-      const newStandings = snapshots.map((s, idx) => ({
-        ...s,
-        rank: idx + 1,
-        previousRank: prevRanksRef.current[s.entry.horse.id] ?? idx + 1,
-      }));
-      newStandings.forEach(s => { prevRanksRef.current[s.entry.horse.id] = s.rank; });
-      setStandings(newStandings);
-
-      const leaderProgress = snapshots[0]?.progress ?? 0;
-      setLapProgress(Math.min(leaderProgress / laps, 1));
-
-      const leader = snapshots[0]?.entry.horse.name ?? '';
-      const chaser = snapshots[1]?.entry.horse.name ?? '';
-      const checkpoints: [number, string][] = [
-        [0.15, `${leader} tăng tốc ra khỏi vạch xuất phát!`],
-        [0.5,  `${leader} đang dẫn đầu, ${chaser} bám sát phía sau.`],
-        [1.0,  `Hoàn thành vòng 1! ${leader} tiếp tục giữ vị trí dẫn đầu.`],
-        [1.5,  `Đoạn nước rút! ${leader} toàn lực về đích!`],
-        [1.8,  `${chaser} đang rút ngắn khoảng cách với ${leader}!`],
-      ];
-      for (const [cp, msg] of checkpoints) {
-        const key = `cp-${cp}`;
-        if (!commentaryTriggersRef.current.has(key) && leaderProgress >= cp) {
-          commentaryTriggersRef.current.add(key);
-          addCommentary(msg);
-        }
-      }
-    }, 300);
-    return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [raceState, race.laps, addCommentary]);
-
-  // ── Start race ─────────────────────────────────────────────────────────────
-  const startRace = () => {
-    progressSvs.forEach(sv => { sv.value = 0; });
-    finishedCountSv.value = 0;
-    finishTimesRef.current = {};
-    finishOrderRef.current = [];
-    commentaryTriggersRef.current = new Set();
-    raceFinishedRef.current = false;
-    prevRanksRef.current = {};
-    setCommentary([`🚩 Cờ xuất phát! ${entriesRef.current.length} kỵ sĩ bắt đầu tranh tài!`]);
-    setLapProgress(0);
-    setRaceState('racing');
-    isRacingSv.value = true;
-    frameCallback.setActive(true);
-  };
-
-  const currentLap = Math.min(Math.floor(lapProgress * race.laps) + 1, race.laps);
-  const activeCount = race.entries.slice(0, MAX_HORSES).length;
+  const leader = frame?.leader ?? null;
+  const distRemaining = frame ? Math.max(0, Math.round((1 - frame.leaderProgress) * race.distance)) : race.distance;
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-          <X size={20} color={C.onSurface} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle} numberOfLines={1}>{race.name}</Text>
-        {raceState === 'racing' ? (
-          <View style={styles.liveBadge}>
-            <View style={styles.liveDot} />
-            <Text style={styles.liveBadgeText}>TRỰC TIẾP</Text>
-          </View>
-        ) : raceState === 'waiting' ? (
-          <View style={styles.waitingBadge}>
-            <Text style={styles.waitingBadgeText}>SẮP ĐUA</Text>
-          </View>
-        ) : (
-          <View style={styles.headerSpacer} />
-        )}
-      </View>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-      {/* Track */}
-      <RaceLaneTrack
-        entries={race.entries.slice(0, MAX_HORSES)}
-        progressSvs={progressSvs.slice(0, activeCount)}
-        laps={race.laps}
-      />
-
-      {/* Lap progress bar */}
-      {(raceState === 'racing' || raceState === 'finished') && (
-        <View style={styles.lapRow}>
-          <Text style={styles.lapText}>Vòng {currentLap} / {race.laps}</Text>
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${Math.round(lapProgress * 100)}%` as `${number}%` }]} />
-          </View>
-          <Text style={styles.lapPct}>{Math.round(lapProgress * 100)}%</Text>
-        </View>
-      )}
-
-      {/* Commentary */}
-      {commentary.length > 0 && <Commentary lines={commentary} />}
-
-      {/* Standings */}
-      <LiveStandings standings={standings} raceState={raceState} />
-
-      {/* Bottom CTA */}
-      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + Spacing.two }]}>
-        {raceState === 'waiting' && (
-          <View style={styles.racingIndicator}>
-            <ActivityIndicator size="small" color={C.tertiary} />
-            <Text style={styles.racingText}>Chờ trọng tài bắt đầu cuộc đua...</Text>
-          </View>
-        )}
-        {raceState === 'racing' && (
-          <View style={styles.racingIndicator}>
-            <View style={styles.racingDot} />
-            <Text style={styles.racingText}>Đang đua...</Text>
-          </View>
-        )}
-        {raceState === 'finished' && (
-          <TouchableOpacity style={styles.closeFullBtn} onPress={onClose} activeOpacity={0.85}>
-            <Text style={styles.closeFullBtnText}>Đóng</Text>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+            <X size={20} color={C.onSurface} />
           </TouchableOpacity>
+          <Text style={styles.headerTitle} numberOfLines={1}>{race.name}</Text>
+        </View>
+        <View style={styles.headerChips}>
+          <Text style={styles.headChip}><Text style={styles.headLabel}>ĐỊA ĐIỂM </Text>{race.location}</Text>
+          <Text style={styles.headChip}><Text style={styles.headLabel}>CỰ LY </Text>{race.distance}m</Text>
+          <Text style={styles.headChip}><Text style={styles.headLabel}>THỜI GIAN </Text>{fmtClock(frame?.raceTimeSec ?? 0)}</Text>
+          <Text style={styles.headChip}><Text style={styles.headLabel}>VÒNG </Text>1/{race.laps}</Text>
+        </View>
+
+        {/* Track */}
+        <View style={styles.trackWrap}>
+          {raceState === 'racing' && (
+            <View style={styles.speedCtrl}>
+              {SPEEDS.map(s => (
+                <TouchableOpacity
+                  key={s}
+                  style={[styles.speedBtn, speed === s && styles.speedBtnOn]}
+                  onPress={() => setSpeed(s)}
+                  activeOpacity={0.8}>
+                  <Text style={[styles.speedBtnText, speed === s && styles.speedBtnTextOn]}>{s}x</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          <LinearGradient colors={['#5bb24f', '#4a9b42']} style={styles.field}>
+            <Svg viewBox="0 0 100 100" preserveAspectRatio="none" width="100%" height="100%" style={StyleSheet.absoluteFill}>
+              <Ellipse cx={50} cy={50} rx={42} ry={38} fill="#c89a5e" />
+              <Ellipse cx={50} cy={50} rx={28} ry={20} fill="#57aa4c" stroke="#3c7a36" strokeWidth={0.8} />
+            </Svg>
+            <View style={styles.finishLine} />
+            <Text style={styles.finishFlag}>🏁</Text>
+
+            {frame?.horses.map(hf => (
+              <HorseMarker key={hf.horse.horseId} hf={hf} isLeader={leader?.horse.horseId === hf.horse.horseId} />
+            ))}
+          </LinearGradient>
+        </View>
+
+        {/* Waiting / racing status */}
+        {raceState === 'waiting' && (
+          <View style={styles.waitingBox}>
+            <ActivityIndicator size="small" color={C.tertiary} />
+            <Text style={styles.waitingText}>Chờ trọng tài bắt đầu cuộc đua...</Text>
+          </View>
         )}
+
+        {/* Leaderboard */}
+        {frame && frame.ranking.length > 0 && (
+          <View style={styles.board}>
+            <View style={styles.boardHead}>
+              <Text style={[styles.boardHeadText, { width: 28 }]}>HẠNG</Text>
+              <Text style={[styles.boardHeadText, { flex: 1 }]}>NGỰA</Text>
+              <Text style={[styles.boardHeadText, { width: 60, textAlign: 'right' }]}>K.CÁCH</Text>
+            </View>
+            {frame.ranking.map((hf, i) => (
+              <View key={hf.horse.horseId} style={styles.boardRow}>
+                <View style={[styles.posBadge, { backgroundColor: hf.color }]}>
+                  <Text style={styles.posBadgeText}>{i + 1}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.boardHorseName} numberOfLines={1}>{hf.horse.horseName}</Text>
+                  <Text style={styles.boardJockey} numberOfLines={1}>{hf.horse.jockeyName}</Text>
+                </View>
+                <Text style={styles.boardDist}>
+                  {i === 0 ? '—' : `${lengthsBehind(frame.leaderProgress, hf.progress, race.distance).toFixed(1)}L`}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Bottom stat panels */}
+        {frame && (
+          <View style={styles.statsRow}>
+            <View style={styles.statPanel}>
+              <Text style={styles.statLabel}>DẪN ĐẦU</Text>
+              {leader ? (
+                <View style={styles.leaderRow}>
+                  <View style={[styles.posBadge, { backgroundColor: leader.color }]}>
+                    <Text style={styles.posBadgeText}>{leader.horse.clothNumber}</Text>
+                  </View>
+                  <Text style={styles.leaderName} numberOfLines={1}>{leader.horse.horseName}</Text>
+                </View>
+              ) : <Text style={styles.statDash}>—</Text>}
+              <View style={styles.speedBarOuter}>
+                <View style={[styles.speedBarInner, { width: `${speedPct}%` as `${number}%` }]} />
+              </View>
+            </View>
+            <View style={styles.statPanel}>
+              <Text style={styles.statLabel}>CÒN LẠI</Text>
+              <Text style={styles.statValue}>{distRemaining}m</Text>
+            </View>
+            <View style={styles.statPanel}>
+              <Text style={styles.statLabel}>MẶT SÂN</Text>
+              <Text style={styles.statCondition}>🌱 {race.surface}</Text>
+            </View>
+          </View>
+        )}
+
+        {/* Finish overlay */}
+        {raceState === 'finished' && (
+          <View style={styles.finishCard}>
+            <Text style={styles.finishTitle}>🏆 Kết quả chung cuộc — {race.name}</Text>
+            <Text style={styles.finishSub}>Kết quả đã được lưu & công bố. Dự đoán đã được settle.</Text>
+            {horsesRef.current
+              .slice()
+              .sort((a, b) => a.rank - b.rank)
+              .map(h => (
+                <View key={h.horseId} style={styles.finishRow}>
+                  <Text style={styles.finishRank}>
+                    {h.rank === 1 ? '🥇' : h.rank === 2 ? '🥈' : h.rank === 3 ? '🥉' : h.rank}
+                  </Text>
+                  <Text style={styles.finishHorseName} numberOfLines={1}>{h.horseName}</Text>
+                  <Text style={styles.finishJockey} numberOfLines={1}>{h.jockeyName}</Text>
+                  <Text style={styles.finishTime}>{h.finishTime.toFixed(2)}s</Text>
+                </View>
+              ))}
+            <TouchableOpacity style={styles.doneBtn} onPress={onClose} activeOpacity={0.85}>
+              <Text style={styles.doneBtnText}>Xong</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+      </ScrollView>
+    </View>
+  );
+}
+
+function HorseMarker({ hf, isLeader }: { hf: HorseFrame; isLeader: boolean }) {
+  const bob = useSharedValue(0);
+
+  useEffect(() => {
+    bob.value = withRepeat(withTiming(1, { duration: 170, easing: Easing.inOut(Easing.quad) }), -1, true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const bobStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: bob.value * -3 }],
+  }));
+
+  return (
+    <View style={[styles.runner, { left: `${hf.pos.x}%` as `${number}%`, top: `${hf.pos.y}%` as `${number}%` }]}>
+      <Text style={[styles.crown, { opacity: isLeader ? 1 : 0 }]}>👑</Text>
+      <View style={[styles.numBadge, { backgroundColor: hf.color }]}>
+        <Text style={styles.numBadgeText}>{hf.horse.clothNumber}</Text>
       </View>
+      <Animated.View style={[{ transform: [{ scaleX: hf.facingLeft ? -1 : 1 }] }, bobStyle]}>
+        <Text style={styles.horseEmoji}>🏇</Text>
+      </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root:         { flex: 1, backgroundColor: SC.lowest },
-  header:       { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.two, paddingVertical: Spacing.two, backgroundColor: SC.high, gap: Spacing.two },
-  closeBtn:     { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
-  headerTitle:  { flex: 1, color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15 },
-  headerSpacer: { width: 60 },
-  liveBadge:     { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: `${C.error}30`, borderRadius: Shape.full, paddingHorizontal: 10, paddingVertical: 4 },
-  liveDot:       { width: 6, height: 6, borderRadius: 3, backgroundColor: C.error },
-  liveBadgeText: { color: C.error, fontFamily: FontFamily.bold, fontSize: 10, letterSpacing: 0.8 },
-  waitingBadge:  { backgroundColor: `${C.tertiary}30`, borderRadius: Shape.full, paddingHorizontal: 10, paddingVertical: 4 },
-  waitingBadgeText: { color: C.tertiary, fontFamily: FontFamily.bold, fontSize: 10, letterSpacing: 0.8 },
+  root:  { flex: 1, backgroundColor: SC.lowest },
+  scroll:{ paddingHorizontal: Spacing.three, paddingBottom: Spacing.five, gap: Spacing.two },
 
-  lapRow:        { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, paddingHorizontal: Spacing.three, paddingTop: Spacing.two },
-  lapText:       { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 11, width: 72 },
-  progressTrack: { flex: 1, height: 4, backgroundColor: SC.highest, borderRadius: Shape.full, overflow: 'hidden' },
-  progressFill:  { height: '100%', backgroundColor: C.tertiary, borderRadius: Shape.full },
-  lapPct:        { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 11, width: 30, textAlign: 'right' },
+  header:      { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, paddingTop: Spacing.two },
+  closeBtn:    { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
+  headerTitle: { flex: 1, color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 17 },
 
-  bottomBar:       { paddingHorizontal: Spacing.three, paddingTop: Spacing.two, backgroundColor: SC.high },
-  racingIndicator: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two, paddingVertical: 14 },
-  racingDot:       { width: 8, height: 8, borderRadius: 4, backgroundColor: C.error },
-  racingText:      { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 14 },
-  closeFullBtn:    { borderWidth: 1, borderColor: C.onSurfaceVariant, borderRadius: Shape.full, paddingVertical: 14, alignItems: 'center' },
-  closeFullBtnText:{ color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15 },
+  headerChips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
+  headChip:    { color: C.tertiary, fontFamily: FontFamily.bold, fontSize: 12 },
+  headLabel:   { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 10 },
+
+  trackWrap: { position: 'relative' },
+  speedCtrl: { position: 'absolute', top: 8, left: 8, zIndex: 2, gap: 4 },
+  speedBtn:  { backgroundColor: SC.high, borderRadius: Shape.small, width: 34, height: 26, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: SC.highest },
+  speedBtnOn:{ backgroundColor: '#ffd24a', borderColor: '#ffd24a' },
+  speedBtnText:  { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 11 },
+  speedBtnTextOn:{ color: '#161d26' },
+
+  field:   { width: '100%', aspectRatio: 3 / 2, borderRadius: Shape.large, overflow: 'hidden', position: 'relative' },
+  finishLine: { position: 'absolute', right: '8%', top: '44%', width: 4, height: '12%', backgroundColor: '#fff' },
+  finishFlag: { position: 'absolute', right: '3%', top: '42%', fontSize: 16 },
+
+  runner:     { position: 'absolute', alignItems: 'center', transform: [{ translateX: -18 }, { translateY: -45 }] },
+  crown:      { fontSize: 12, lineHeight: 14 },
+  numBadge:   { minWidth: 16, height: 16, paddingHorizontal: 3, borderRadius: 4, justifyContent: 'center', alignItems: 'center', marginBottom: 1 },
+  numBadgeText:{ color: '#fff', fontFamily: FontFamily.bold, fontSize: 9 },
+  horseEmoji: { fontSize: 26, lineHeight: 28 },
+
+  waitingBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two, paddingVertical: Spacing.three },
+  waitingText:{ color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 13 },
+
+  board:     { backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, gap: 2 },
+  boardHead: { flexDirection: 'row', gap: Spacing.two, paddingBottom: Spacing.one, borderBottomWidth: 1, borderBottomColor: SC.highest },
+  boardHeadText: { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 10 },
+  boardRow:  { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, paddingVertical: 5 },
+  boardHorseName: { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 13 },
+  boardJockey:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
+  boardDist: { width: 60, textAlign: 'right', color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 12 },
+
+  posBadge: { minWidth: 24, height: 24, borderRadius: Shape.small, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4 },
+  posBadgeText: { color: '#fff', fontFamily: FontFamily.bold, fontSize: 11 },
+
+  statsRow:   { flexDirection: 'row', gap: Spacing.two },
+  statPanel:  { flex: 1, backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, gap: 6 },
+  statLabel:  { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 9, letterSpacing: 0.5 },
+  statValue:  { color: '#ffd24a', fontFamily: FontFamily.bold, fontSize: 18 },
+  statDash:   { color: C.onSurfaceVariant, fontSize: 13 },
+  statCondition: { color: C.tertiary, fontFamily: FontFamily.bold, fontSize: 13 },
+  leaderRow:  { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  leaderName: { flex: 1, color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 12 },
+  speedBarOuter: { height: 8, backgroundColor: SC.lowest, borderRadius: Shape.full, overflow: 'hidden' },
+  speedBarInner: { height: '100%', backgroundColor: C.tertiary, borderRadius: Shape.full },
+
+  finishCard:  { backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.three, gap: Spacing.one },
+  finishTitle: { color: '#ffd24a', fontFamily: FontFamily.bold, fontSize: 16 },
+  finishSub:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12, marginBottom: Spacing.one },
+  finishRow:   { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, backgroundColor: SC.lowest, borderRadius: Shape.medium, padding: Spacing.two },
+  finishRank:  { width: 24, textAlign: 'center', fontSize: 14 },
+  finishHorseName: { flex: 1, color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 13 },
+  finishJockey:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
+  finishTime:      { width: 60, textAlign: 'right', color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 12 },
+  doneBtn:     { backgroundColor: C.primary, borderRadius: Shape.full, paddingVertical: 12, alignItems: 'center', marginTop: Spacing.one },
+  doneBtnText: { color: C.onPrimary, fontFamily: FontFamily.bold, fontSize: 15 },
 });
