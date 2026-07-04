@@ -87,7 +87,6 @@ export function PredictForm({ onSubmitted }: Props) {
     <View style={styles.root}>
       {/* Step 1: Race selection */}
       <Text style={styles.stepLabel}>Bước 1 — Chọn cuộc đua</Text>
-      <Text style={styles.walletText}>Số dư: {balance.toLocaleString('vi-VN')} điểm</Text>
       <View style={styles.raceList}>
         {predictableRaces.map(race => {
           const isSelected = selectedRaceId === race.id;
@@ -197,7 +196,6 @@ const styles = StyleSheet.create({
   root: { gap: Spacing.three },
 
   stepLabel: { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 12, letterSpacing: 0.5, marginBottom: Spacing.one },
-  walletText:{ color: C.primary, fontFamily: FontFamily.bold, fontSize: 13, marginBottom: Spacing.one },
 
   raceList:            { gap: Spacing.two },
   raceItem:            { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, gap: Spacing.two, borderWidth: 1, borderColor: 'transparent' },

@@ -50,9 +50,6 @@ export function mapSpectatorRace(dto: SpectatorRaceDto): Race {
     distance: dto.distance ?? 1600,
     laps: 2,
     purse: dto.viewingTicket.pricePoints * 1000,
-    canPredict: dto.canPredict,
-    hasPrediction: dto.hasPrediction,
-    predictionConfig: dto.predictionConfig,
     entries: dto.participants.map((p, i) => ({
       horse: { id: p.id, name: p.name, number: p.laneNumber, breed: '-', color: LANE_COLORS[(p.laneNumber - 1) % LANE_COLORS.length] },
       jockeyName: '-',
