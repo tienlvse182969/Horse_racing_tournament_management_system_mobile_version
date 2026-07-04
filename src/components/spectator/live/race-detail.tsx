@@ -151,6 +151,11 @@ export function RaceDetail({ race, onBack }: Props) {
             <Text style={styles.ticketBtnText}>Xem trực tiếp</Text>
           </TouchableOpacity>
         )}
+        {isCompleted && (
+          <TouchableOpacity style={styles.ticketBtn} onPress={() => setIsWatching(true)}>
+            <Text style={styles.ticketBtnText}>Xem lại mô phỏng đua</Text>
+          </TouchableOpacity>
+        )}
         {race.status === 'upcoming' && (
           <TouchableOpacity
             style={[styles.calendarBtn, addingToCalendar && styles.calendarBtnDisabled]}
