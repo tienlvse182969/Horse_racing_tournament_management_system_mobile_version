@@ -4,6 +4,7 @@ export type RaceEntry = {
   horse: { id: string; name: string; number: number; breed: string; color: string };
   jockeyName: string;
   odds: number;
+  ticketCount?: number;
   position?: number;
   finishTime?: string;
 };
@@ -25,5 +26,5 @@ export type Race = {
   tournamentId?: string;
   canPredict?: boolean;
   hasPrediction?: boolean;
-  predictionConfig?: { isEnabled: boolean; poolEnabled: boolean; entryFee: number; quickRiskMultipliers: number[] };
+  predictionConfig?: { isEnabled: boolean; poolEnabled: boolean; entryFee: number; ticketPrice: number; quickRiskMultipliers: number[] };
 };

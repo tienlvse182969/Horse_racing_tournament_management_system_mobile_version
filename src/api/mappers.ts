@@ -54,6 +54,7 @@ export function mapSpectatorRace(dto: SpectatorRaceDto): Race {
       horse: { id: p.id, name: p.name, number: p.laneNumber, breed: '-', color: LANE_COLORS[(p.laneNumber - 1) % LANE_COLORS.length] },
       jockeyName: '-',
       odds: 2 + i * 0.5,
+      ticketCount: p.ticketCount ?? 0,
       position: dto.result?.rankings.find((r) => r.horse.id === p.id)?.rank,
     })),
     tournamentId: dto.tournament.id,

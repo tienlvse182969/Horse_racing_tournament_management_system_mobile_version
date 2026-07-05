@@ -69,6 +69,7 @@ export function useSpectatorPredictions() {
           madeAt: p.createdAt,
           points: p.totalPoints,
           reward: p.totalPoints > 0 ? p.totalPoints : undefined,
+          ticketCount: p.ticketCount,
           riskMultiplier: p.riskMultiplier,
           contribution: p.contribution,
         })),

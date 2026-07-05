@@ -10,6 +10,7 @@ export type Prediction = {
   madeAt: string;
   reward?: number;
   points?: number;
+  ticketCount?: number;
   riskMultiplier?: number;
   contribution?: number;
   actualWinner?: string;

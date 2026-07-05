@@ -1,5 +1,8 @@
 import { apiGet, apiPatch, apiPost } from './client';
 
+const createTopUpRequest = (points: number) =>
+  apiPost<{ payment: PaymentTransactionDto; points: SpectatorPointsDto }>('/api/spectator/top-ups', { points });
+
 export const spectatorApi = {
   listTournaments: () => apiGet<{ tournaments: TournamentDto[] }>('/api/spectator/tournaments'),
   listRaces: (filter?: string) =>
@@ -9,16 +12,17 @@ export const spectatorApi = {
   createPrediction: (
     raceId: string,
     predictedRanks: Array<{ rank: number; horseId: string }>,
-    riskMultiplier = 1,
+    ticketCount = 1,
   ) =>
-    apiPost(`/api/spectator/predictions/${raceId}`, { raceId, predictedRanks, riskMultiplier }),
+    apiPost(`/api/spectator/predictions/${raceId}`, { raceId, predictedRanks, ticketCount }),
   cancelPrediction: (predictionId: string) =>
     apiPatch(`/api/spectator/predictions/${predictionId}/cancel`),
   getPoints: () => apiGet<{ points: SpectatorPointsDto }>('/api/spectator/points'),
-  topUpPoints: (points: number) =>
-    apiPost<{ payment: PaymentTransactionDto; points: SpectatorPointsDto }>('/api/spectator/top-ups', { points }),
+  createTopUp: createTopUpRequest,
+  topUpPoints: createTopUpRequest,
   createPayosTopUp: (points: number) =>
     apiPost<{ payment: PaymentTransactionDto; paymentUrl: string }>('/api/spectator/top-ups/payos', { points }),
+  listTopUps: () => apiGet<{ payments: PaymentTransactionDto[] }>('/api/spectator/top-ups'),
   listProducts: () => apiGet<{ products: ProductDto[] }>('/api/spectator/products'),
   redeem: (productId: string, quantity = 1) =>
     apiPost('/api/spectator/redemptions', { productId, quantity }),
@@ -48,12 +52,12 @@ export interface SpectatorRaceDto {
   status: string;
   distance?: number;
   tournament: { id: string; name: string };
-  participants: Array<{ id: string; name: string; laneNumber: number }>;
+  participants: Array<{ id: string; name: string; laneNumber: number; ticketCount: number }>;
   canPredict: boolean;
   hasPrediction: boolean;
   predictionOpenAt?: string | null;
   predictionCloseAt?: string | null;
-  predictionConfig: { isEnabled: boolean; poolEnabled: boolean; entryFee: number; quickRiskMultipliers: number[] };
+  predictionConfig: { isEnabled: boolean; poolEnabled: boolean; entryFee: number; ticketPrice: number; quickRiskMultipliers: number[] };
   viewingTicket: { requiresTicket: boolean; hasPass: boolean; canPurchase: boolean; pricePoints: number };
   streamUrl?: string;
   result?: { rankings: Array<{ rank: number; horse: { id: string; name: string }; jockey: { fullName: string } }> } | null;
@@ -66,6 +70,7 @@ export interface PredictionDto {
   tournamentName?: string;
   predictedRanks: Array<{ rank: number; horseId: string; horseName?: string }>;
   status: string;
+  ticketCount: number;
   riskMultiplier: number;
   contribution: number;
   pointsEarned: number;
@@ -94,19 +99,6 @@ export interface SpectatorPointsDto {
   totalPointsEarned: number;
   totalPointsSpent: number;
   transactions: Array<{ id: string; type: string; points: number; balanceAfter: number; note?: string; createdAt: string }>;
-}
-
-export interface PaymentTransactionDto {
-  id: string;
-  provider: string;
-  amountVnd: number;
-  points: number;
-  exchangeRateVndPerPoint: number;
-  status: string;
-  providerTransactionId?: string | null;
-  paidAt?: string | null;
-  expiredAt?: string | null;
-  createdAt: string;
 }
 
 export interface ProductDto {
