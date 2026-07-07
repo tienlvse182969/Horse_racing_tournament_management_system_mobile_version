@@ -26,5 +26,6 @@ export type Race = {
   tournamentId?: string;
   canPredict?: boolean;
   hasPrediction?: boolean;
+  resultPublished?: boolean;
   predictionConfig?: { isEnabled: boolean; poolEnabled: boolean; entryFee: number; ticketPrice: number; quickRiskMultipliers: number[] };
 };

@@ -12,16 +12,20 @@ export function useSpectatorRaces() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const reload = useCallback(() => {
-    setLoading(true);
+  const reload = useCallback((showLoading = true) => {
+    if (showLoading) setLoading(true);
     spectatorApi
       .listRaces()
       .then((res) => setRaces(res.races.map(mapSpectatorRace)))
       .catch((e) => setError(e instanceof Error ? e.message : 'Error'))
-      .finally(() => setLoading(false));
+      .finally(() => { if (showLoading) setLoading(false); });
   }, []);
 
-  useEffect(() => { reload(); }, [reload]);
+  useEffect(() => {
+    reload();
+    const interval = setInterval(() => reload(false), 8000);
+    return () => clearInterval(interval);
+  }, [reload]);
   return { races, loading, error, reload };
 }
 

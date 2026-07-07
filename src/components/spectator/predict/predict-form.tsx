@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert, TextInput } from 'react-native';
 import { CircleCheck, Circle, Target, Coins } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
@@ -7,6 +7,7 @@ import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFami
 import { formatCurrency, formatDate } from '@/mock-data';
 import { useSpectatorPoints, useSpectatorRaces } from '@/hooks/useSpectatorData';
 import { spectatorApi } from '@/api/spectator.api';
+import { NumberWheelPicker } from '@/components/ui/number-wheel-picker';
 
 type Props = { onSubmitted: () => void };
 
@@ -16,33 +17,35 @@ export function PredictForm({ onSubmitted }: Props) {
   const predictableRaces = races.filter(r => r.canPredict && !r.hasPrediction);
   const [selectedRaceId, setSelectedRaceId]   = useState<string | null>(null);
   const [selectedHorseId, setSelectedHorseId] = useState<string | null>(null);
-  const [riskMultiplier, setRiskMultiplier]   = useState(1);
+  const [ticketCountInput, setTicketCountInput] = useState('1');
   const [submitted, setSubmitted]             = useState(false);
   const [submitting, setSubmitting]           = useState(false);
 
   const selectedRace  = predictableRaces.find(r => r.id === selectedRaceId);
   const selectedHorse = selectedRace?.entries.find(e => e.horse.id === selectedHorseId);
-  const entryFee = selectedRace?.predictionConfig?.poolEnabled ? selectedRace.predictionConfig.entryFee : 0;
-  const cost = entryFee * riskMultiplier;
-  const riskOptions = selectedRace?.predictionConfig?.quickRiskMultipliers.length
-    ? selectedRace.predictionConfig.quickRiskMultipliers
-    : [1];
+  const ticketPrice = selectedRace?.predictionConfig?.poolEnabled ? selectedRace.predictionConfig.ticketPrice : 0;
+  const ticketCount = Math.max(0, parseInt(ticketCountInput, 10) || 0);
+  const cost = ticketPrice * ticketCount;
 
   const handleSelectRace = (id: string) => {
     setSelectedRaceId(id);
     setSelectedHorseId(null);
-    setRiskMultiplier(1);
+    setTicketCountInput('1');
   };
 
   const handleSubmit = async () => {
     if (!selectedRaceId || !selectedHorseId) return;
+    if (ticketCount <= 0) {
+      Alert.alert('Số phiếu không hợp lệ', 'Vui lòng nhập số phiếu lớn hơn 0.');
+      return;
+    }
     if (cost > balance) {
       Alert.alert('Không đủ điểm', `Bạn cần ${cost.toLocaleString('vi-VN')} điểm để gửi dự đoán này.`);
       return;
     }
     setSubmitting(true);
     try {
-      await spectatorApi.createPrediction(selectedRaceId, [{ rank: 1, horseId: selectedHorseId }], riskMultiplier);
+      await spectatorApi.createPrediction(selectedRaceId, [{ rank: 1, horseId: selectedHorseId }], ticketCount);
       reloadPoints();
       setSubmitted(true);
       setTimeout(onSubmitted, 1800);
@@ -142,7 +145,7 @@ export function PredictForm({ onSubmitted }: Props) {
                     <Text style={styles.jockeyName}>{entry.jockeyName}</Text>
                   </View>
                   <View style={styles.oddsBadge}>
-                    <Text style={styles.oddsText}>{entry.odds.toFixed(1)}x</Text>
+                    <Text style={styles.oddsText}>Đang có {entry.ticketCount ?? 0} phiếu</Text>
                   </View>
                   {isSelected && (
                     <CircleCheck size={20} color={C.primary} />
@@ -156,22 +159,33 @@ export function PredictForm({ onSubmitted }: Props) {
 
       {selectedRace && (
         <Animated.View entering={FadeInDown.duration(280)}>
-          <Text style={styles.stepLabel}>Bước 3 — Chọn hệ số rủi ro</Text>
-          <View style={styles.riskRow}>
-            {riskOptions.map((risk) => (
-              <TouchableOpacity
-                key={risk}
-                style={[styles.riskChip, riskMultiplier === risk && styles.riskChipSelected]}
-                onPress={() => setRiskMultiplier(risk)}
-                activeOpacity={0.85}>
-                <Text style={[styles.riskText, riskMultiplier === risk && styles.riskTextSelected]}>
-                  {risk}x · {(entryFee * risk).toLocaleString('vi-VN')} pts
-                </Text>
-              </TouchableOpacity>
-            ))}
+          <Text style={styles.stepLabel}>Bước 3 — Số phiếu đặt vào</Text>
+          <View style={styles.ticketRow}>
+            <NumberWheelPicker
+              min={1}
+              max={20}
+              value={Math.max(1, Math.min(20, ticketCount || 1))}
+              onChange={(n) => setTicketCountInput(String(n))}
+            />
+            <View style={styles.ticketSide}>
+              <TextInput
+                style={styles.ticketInput}
+                keyboardType="number-pad"
+                value={ticketCountInput}
+                onChangeText={setTicketCountInput}
+                placeholder="Số phiếu"
+                placeholderTextColor={C.onSurfaceVariant}
+              />
+              <Text style={styles.ticketPriceText}>
+                Giá 1 phiếu: {ticketPrice.toLocaleString('vi-VN')} điểm
+              </Text>
+            </View>
           </View>
-          {cost > balance && (
-            <Text style={styles.insufficientText}>Số dư không đủ để đặt hệ số rủi ro này</Text>
+          {ticketCount <= 0 && (
+            <Text style={styles.hintText}>Nhập số phiếu lớn hơn 0</Text>
+          )}
+          {ticketCount > 0 && cost > balance && (
+            <Text style={styles.insufficientText}>Không đủ điểm cho {ticketCount} phiếu này</Text>
           )}
         </Animated.View>
       )}
@@ -180,7 +194,7 @@ export function PredictForm({ onSubmitted }: Props) {
       {selectedRaceId && selectedHorseId && (
         <Animated.View entering={FadeIn.duration(250)}>
           <TouchableOpacity
-            style={[styles.submitBtn, cost > balance && styles.submitBtnDisabled]}
+            style={[styles.submitBtn, (ticketCount <= 0 || cost > balance) && styles.submitBtnDisabled]}
             onPress={handleSubmit}
             activeOpacity={0.85}>
             <Target size={18} color={C.onSecondary} />
@@ -223,11 +237,11 @@ const styles = StyleSheet.create({
   submitBtn:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two, backgroundColor: C.secondary, borderRadius: Shape.full, paddingVertical: 14, marginTop: Spacing.one },
   submitBtnDisabled: { opacity: 0.5 },
   submitText: { color: C.onSecondary, fontFamily: FontFamily.bold, fontSize: 16 },
-  riskRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
-  riskChip: { backgroundColor: SC.high, borderRadius: Shape.full, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: 'transparent' },
-  riskChipSelected: { backgroundColor: C.secondaryContainer, borderColor: C.secondary },
-  riskText: { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 12 },
-  riskTextSelected: { color: C.onSecondaryContainer },
+  ticketRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
+  ticketSide: { flex: 1, gap: Spacing.two },
+  ticketInput: { backgroundColor: SC.high, borderRadius: Shape.large, paddingHorizontal: 14, paddingVertical: 10, color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15, borderWidth: 1, borderColor: 'transparent' },
+  ticketPriceText: { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 12 },
+  hintText: { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 12, marginTop: Spacing.one },
   insufficientText: { color: C.error, fontFamily: FontFamily.medium, fontSize: 12, marginTop: Spacing.one },
 
   successBox:   { alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.six },

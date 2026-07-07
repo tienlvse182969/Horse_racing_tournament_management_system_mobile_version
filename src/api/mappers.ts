@@ -60,6 +60,7 @@ export function mapSpectatorRace(dto: SpectatorRaceDto): Race {
     tournamentId: dto.tournament.id,
     canPredict: dto.canPredict,
     hasPrediction: dto.hasPrediction,
+    resultPublished: !!dto.result,
     predictionConfig: dto.predictionConfig,
   };
 }
