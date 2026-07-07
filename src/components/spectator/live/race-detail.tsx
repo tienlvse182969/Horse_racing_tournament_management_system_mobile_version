@@ -26,6 +26,7 @@ export function RaceDetail({ race, onBack }: Props) {
 
   const isCompleted = race.status === 'completed';
   const isLive = race.status === 'live';
+  const isPendingReview = isCompleted && !race.resultPublished;
 
   async function addToCalendar() {
     setAddingToCalendar(true);
@@ -118,14 +119,23 @@ export function RaceDetail({ race, onBack }: Props) {
         {/* Entries */}
         <Animated.View entering={FadeInDown.delay(80).duration(320)}>
           <Text style={styles.sectionTitle}>
-            {isCompleted ? 'Kết quả chính thức' : 'Thứ hạng hiện tại'}
+            {isPendingReview ? 'Đang chờ trọng tài xác nhận' : isCompleted ? 'Kết quả chính thức' : 'Thứ hạng hiện tại'}
           </Text>
+          {isPendingReview && (
+            <Text style={styles.pendingReviewText}>
+              🏁 Cuộc đua đã kết thúc. Đang chờ trọng tài kiểm tra VAR và xác nhận kết quả trước khi công bố...
+            </Text>
+          )}
           {sortedEntries.map((entry, idx) => (
             <View key={entry.horse.id} style={styles.entryRow}>
               <View style={styles.entryRank}>
                 {entry.position && entry.position <= 3
                   ? <MedalIcon position={entry.position} size={18} />
-                  : <Text style={styles.rankNum}>{entry.position ?? idx + 1}</Text>}
+                  : entry.position
+                  ? <Text style={styles.rankNum}>{entry.position}</Text>
+                  : isCompleted
+                  ? <Text style={styles.rankDash}>—</Text>
+                  : <Text style={styles.rankNum}>{idx + 1}</Text>}
               </View>
               <View style={[styles.horseColor, { backgroundColor: entry.horse.color }]} />
               <View style={styles.entryInfo}>
@@ -207,9 +217,11 @@ const styles = StyleSheet.create({
 
   // Entries
   sectionTitle: { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15, marginBottom: Spacing.two },
+  pendingReviewText: { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 13, marginBottom: Spacing.two },
   entryRow:     { flexDirection: 'row', alignItems: 'center', backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, marginBottom: Spacing.two, gap: Spacing.two },
   entryRank:    { width: 32, alignItems: 'center' },
   rankNum:      { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 16 },
+  rankDash:     { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 16 },
   horseColor:   { width: 4, height: 40, borderRadius: 2 },
   entryInfo:    { flex: 1 },
   entryHorseName:{ color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 14 },

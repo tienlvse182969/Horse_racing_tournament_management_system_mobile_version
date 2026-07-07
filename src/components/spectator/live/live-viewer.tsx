@@ -14,7 +14,7 @@ import {
   type RaceFrame, type RaceSimHorse, type HorseFrame,
 } from '@/utils/raceSim';
 
-export type RaceState = 'waiting' | 'idle' | 'racing' | 'finished';
+export type RaceState = 'waiting' | 'pending-review' | 'idle' | 'racing' | 'finished';
 
 export type StandingEntry = {
   entry: RaceEntry;
@@ -36,6 +36,7 @@ export function LiveViewer({ race, onClose }: Props) {
   const [speed, setSpeed] = useState<number>(1);
   const [frame, setFrame] = useState<RaceFrame | null>(null);
   const [speedPct, setSpeedPct] = useState(0);
+  const [excludedEntries, setExcludedEntries] = useState<RaceEntry[]>([]);
 
   const horsesRef = useRef<RaceSimHorse[]>([]);
   const weightsRef = useRef<Record<string, number[]>>({});
@@ -106,6 +107,13 @@ export function LiveViewer({ race, onClose }: Props) {
           setRaceState('waiting');
           return;
         }
+        if (!dto.result) {
+          // Race has finished but the referee hasn't confirmed VAR / the result isn't published yet.
+          // (getSimulation below only checks that a Result document exists, not that it's published,
+          // so it can't be used alone to gate this — dto.result is the publish-gated signal.)
+          setRaceState('pending-review');
+          return;
+        }
         const simData = await spectatorApi.getSimulation(race.id);
         if (cancelled || startedRef.current) return;
         if (simData.available && simData.rankings.length > 0) {
@@ -124,10 +132,15 @@ export function LiveViewer({ race, onClose }: Props) {
               };
             })
             .filter((h): h is RaceSimHorse => h !== null);
-          if (horses.length > 0) startAnimation(horses);
-          else setRaceState('waiting');
+          if (horses.length > 0) {
+            setExcludedEntries(race.entries.filter(e => !simData.rankings.some(r => r.horseId === e.horse.id)));
+            startAnimation(horses);
+          } else {
+            setRaceState('pending-review');
+          }
         } else {
-          setRaceState('waiting');
+          // Race has finished but the referee hasn't confirmed VAR / result isn't published yet.
+          setRaceState('pending-review');
         }
       } catch {
         // ignore network errors between polls
@@ -195,6 +208,14 @@ export function LiveViewer({ race, onClose }: Props) {
           <View style={styles.waitingBox}>
             <ActivityIndicator size="small" color={C.tertiary} />
             <Text style={styles.waitingText}>Chờ trọng tài bắt đầu cuộc đua...</Text>
+          </View>
+        )}
+        {raceState === 'pending-review' && (
+          <View style={styles.waitingBox}>
+            <ActivityIndicator size="small" color={C.tertiary} />
+            <Text style={styles.waitingText}>
+              🏁 Cuộc đua đã kết thúc. Đang chờ trọng tài kiểm tra VAR và xác nhận kết quả trước khi công bố...
+            </Text>
           </View>
         )}
 
@@ -269,6 +290,13 @@ export function LiveViewer({ race, onClose }: Props) {
                   <Text style={styles.finishTime}>{h.finishTime.toFixed(2)}s</Text>
                 </View>
               ))}
+            {excludedEntries.map(e => (
+              <View key={e.horse.id} style={styles.excludedRow}>
+                <Text style={styles.excludedText} numberOfLines={1}>
+                  ⚠️ #{e.horse.number} {e.horse.name} không có trong kết quả chung cuộc.
+                </Text>
+              </View>
+            ))}
             <TouchableOpacity style={styles.doneBtn} onPress={onClose} activeOpacity={0.85}>
               <Text style={styles.doneBtnText}>Xong</Text>
             </TouchableOpacity>
@@ -367,6 +395,8 @@ const styles = StyleSheet.create({
   finishHorseName: { flex: 1, color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 13 },
   finishJockey:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
   finishTime:      { width: 60, textAlign: 'right', color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 12 },
+  excludedRow:  { backgroundColor: `${C.error}15`, borderRadius: Shape.medium, padding: Spacing.two },
+  excludedText: { color: C.error, fontFamily: FontFamily.medium, fontSize: 12 },
   doneBtn:     { backgroundColor: C.primary, borderRadius: Shape.full, paddingVertical: 12, alignItems: 'center', marginTop: Spacing.one },
   doneBtnText: { color: C.onPrimary, fontFamily: FontFamily.bold, fontSize: 15 },
 });
