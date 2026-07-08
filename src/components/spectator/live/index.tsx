@@ -23,13 +23,19 @@ const STATUS_LABELS: Record<RaceStatus, string> = {
 };
 
 export function SpectatorLive() {
-  const { races } = useSpectatorRaces();
+  const { races, reload } = useSpectatorRaces();
   const [tab, setTab]               = useState<MainTab>('races');
   const [filter, setFilter]         = useState<FilterStatus>('all');
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
   const [watchingRace, setWatchingRace] = useState<Race | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const handleBack = useCallback(() => setSelectedRace(null), []);
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await reload(false);
+    setRefreshing(false);
+  }, [reload]);
 
   if (watchingRace) {
     return <LiveViewer race={watchingRace} onClose={() => setWatchingRace(null)} />;
@@ -50,7 +56,12 @@ export function SpectatorLive() {
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <LargeHeaderScrollView title="Trực tiếp" contentContainerStyle={styles.scroll} rightAction={<HeaderActions />}>
+        <LargeHeaderScrollView
+          title="Trực tiếp"
+          contentContainerStyle={styles.scroll}
+          rightAction={<HeaderActions />}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}>
 
           {/* Tab switcher */}
           <View style={styles.tabSwitcher}>

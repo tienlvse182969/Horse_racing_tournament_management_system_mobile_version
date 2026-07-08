@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle, RefreshControl } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedScrollHandler,
@@ -20,10 +20,12 @@ type Props = {
   contentContainerStyle?: ViewStyle;
   leftAction?: React.ReactNode;
   rightAction?: React.ReactNode;
+  refreshing?: boolean;
+  onRefresh?: () => void;
   children: React.ReactNode;
 };
 
-export function LargeHeaderScrollView({ title, bangers = false, contentContainerStyle, leftAction, rightAction, children }: Props) {
+export function LargeHeaderScrollView({ title, bangers = false, contentContainerStyle, leftAction, rightAction, refreshing, onRefresh, children }: Props) {
   const scrollY = useSharedValue(0);
 
   const handler = useAnimatedScrollHandler(e => {
@@ -77,7 +79,17 @@ export function LargeHeaderScrollView({ title, bangers = false, contentContainer
         onScroll={handler}
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={contentContainerStyle}>
+        contentContainerStyle={contentContainerStyle}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl
+              refreshing={!!refreshing}
+              onRefresh={onRefresh}
+              tintColor={C.primary}
+              colors={[C.primary]}
+            />
+          ) : undefined
+        }>
 
         <Animated.View style={largeTitleAnim}>
           <Text style={bangers ? styles.largeBangers : styles.largeTitle}>

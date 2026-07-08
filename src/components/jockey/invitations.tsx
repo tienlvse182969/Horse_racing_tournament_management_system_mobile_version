@@ -7,6 +7,7 @@ import Animated, { FadeInDown, useSharedValue, withTiming, useAnimatedStyle } fr
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { JockeyAvatarButton } from '@/components/jockey-avatar-button';
+import { HorseBanBadge } from '@/components/jockey/horse-ban-badge';
 import type { Invitation, InvitationStatus } from '@/mock-data';
 import { formatCurrency, formatDate } from '@/mock-data';
 import { useJockeyInvitations } from '@/hooks/useJockeyData';
@@ -135,6 +136,7 @@ function InvitationCard({
               <Text style={[styles.statusText, { color: sc.color }]}>{sc.label}</Text>
             </View>
           </View>
+          <HorseBanBadge penaltyStatus={inv.horse.penaltyStatus} style={{ marginTop: 2 }} />
           <Text style={styles.raceName}>{inv.race.name}</Text>
           <View style={styles.raceMeta}>
             <Clock size={11} color={C.onSurfaceVariant} />

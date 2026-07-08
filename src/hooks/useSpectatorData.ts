@@ -14,7 +14,7 @@ export function useSpectatorRaces() {
 
   const reload = useCallback((showLoading = true) => {
     if (showLoading) setLoading(true);
-    spectatorApi
+    return spectatorApi
       .listRaces()
       .then((res) => setRaces(res.races.map(mapSpectatorRace)))
       .catch((e) => setError(e instanceof Error ? e.message : 'Error'))
@@ -127,7 +127,7 @@ export function useSpectatorTournaments() {
   const [loading, setLoading] = useState(true);
   const reload = useCallback(() => {
     setLoading(true);
-    spectatorApi.listTournaments()
+    return spectatorApi.listTournaments()
       .then(res => setTournaments(res.tournaments))
       .catch(() => {})
       .finally(() => setLoading(false));

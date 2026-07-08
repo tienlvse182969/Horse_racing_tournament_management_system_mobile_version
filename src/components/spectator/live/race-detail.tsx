@@ -119,11 +119,11 @@ export function RaceDetail({ race, onBack }: Props) {
         {/* Entries */}
         <Animated.View entering={FadeInDown.delay(80).duration(320)}>
           <Text style={styles.sectionTitle}>
-            {isPendingReview ? 'Đang chờ trọng tài xác nhận' : isCompleted ? 'Kết quả chính thức' : 'Thứ hạng hiện tại'}
+            {isPendingReview ? 'Kết quả tạm thời (chưa chính thức)' : isCompleted ? 'Kết quả chính thức' : 'Thứ hạng hiện tại'}
           </Text>
           {isPendingReview && (
             <Text style={styles.pendingReviewText}>
-              🏁 Cuộc đua đã kết thúc. Đang chờ trọng tài kiểm tra VAR và xác nhận kết quả trước khi công bố...
+              Cuộc đua đã kết thúc. Đang chờ trọng tài kiểm tra VAR và xác nhận kết quả trước khi công bố...
             </Text>
           )}
           {sortedEntries.map((entry, idx) => (

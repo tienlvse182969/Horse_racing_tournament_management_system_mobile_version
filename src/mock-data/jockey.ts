@@ -2,9 +2,15 @@
 
 export type InvitationStatus = 'pending' | 'accepted' | 'declined';
 
+export type PenaltyStatus = {
+  isBanned: boolean;
+  bannedUntil: string | null;
+  reason: string | null;
+};
+
 export type Invitation = {
   id: string;
-  horse: { name: string; breed: string; age: number; color: string };
+  horse: { name: string; breed: string; age: number; color: string; penaltyStatus?: PenaltyStatus };
   race: { id: string; name: string; date: string; time: string; location: string; distance: number; surface: string; purse: number };
   ownerName: string;
   message?: string;
@@ -60,6 +66,7 @@ export type JockeyRaceEntry = {
     age?: number;
     healthStatus?: string;
     registrationId?: string;
+    penaltyStatus?: PenaltyStatus;
   };
   odds: number;
   position?: number;

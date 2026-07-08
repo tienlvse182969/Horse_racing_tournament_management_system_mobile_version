@@ -9,6 +9,7 @@ import { JockeyAvatarButton } from '@/components/jockey-avatar-button';
 import { useJockeyRaces } from '@/hooks/useJockeyData';
 import { formatCurrency } from '@/mock-data';
 import type { JockeyRace } from '@/mock-data/jockey';
+import { HorseBanBadge } from '@/components/jockey/horse-ban-badge';
 
 const STATUS_CONFIG = {
   live:      { label: 'Đang đua',    color: C.tertiary,        bg: C.tertiaryContainer },
@@ -51,6 +52,8 @@ function RaceCard({ race, index }: { race: JockeyRace; index: number }) {
             <Text style={[styles.badgeText, { color: cfg.color }]}>{cfg.label}</Text>
           </View>
         </View>
+
+        <HorseBanBadge penaltyStatus={race.myEntry.horse.penaltyStatus} />
 
         {/* Detail grid */}
         <View style={styles.detailGrid}>

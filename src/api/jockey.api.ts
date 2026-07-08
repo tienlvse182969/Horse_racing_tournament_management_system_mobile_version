@@ -16,12 +16,18 @@ export const jockeyApi = {
   listNotifications: () => apiGet<{ notifications: NotificationDto[] }>('/api/jockey/notifications'),
 };
 
+export interface PenaltyStatusDto {
+  isBanned: boolean;
+  bannedUntil: string | null;
+  reason: string | null;
+}
+
 export interface InvitationDto {
   id: string;
   status: 'pending' | 'accepted' | 'declined';
   message?: string;
   createdAt: string;
-  horse: { id: string; name: string };
+  horse: { id: string; name: string; penaltyStatus: PenaltyStatusDto };
   race: { id: string; name: string; scheduledAt?: string; status: string };
   owner: { id: string; fullName: string };
 }
@@ -43,6 +49,7 @@ export interface JockeyRaceDto {
       color?: string;       // text name, e.g. "Chestnut", "Bay"
       healthStatus?: string;
       registrationId?: string;
+      penaltyStatus: PenaltyStatusDto;
     };
     owner: { id: string; fullName: string };
     laneNumber: number;

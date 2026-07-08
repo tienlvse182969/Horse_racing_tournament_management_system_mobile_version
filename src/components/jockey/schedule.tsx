@@ -10,6 +10,7 @@ import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { JockeyAvatarButton } from '@/components/jockey-avatar-button';
 import { useJockeyRaces } from '@/hooks/useJockeyData';
 import { formatCurrency } from '@/mock-data';
+import { HorseBanBadge } from '@/components/jockey/horse-ban-badge';
 
 const DAYS   = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 const MONTHS = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
@@ -173,6 +174,7 @@ export function JockeySchedule() {
                       <View>
                         <Text style={styles.myHorse}>{race.myEntry.horse.name} · #{race.myEntry.horse.number}</Text>
                         <Text style={styles.myOdds}>Tỷ lệ cược: {race.myEntry.odds}x</Text>
+                        <HorseBanBadge penaltyStatus={race.myEntry.horse.penaltyStatus} style={{ marginTop: 4 }} />
                       </View>
                     </View>
                   </TouchableOpacity>

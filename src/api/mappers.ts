@@ -69,7 +69,7 @@ export function mapInvitation(dto: InvitationDto): Invitation {
   const dt = dto.race.scheduledAt ? new Date(dto.race.scheduledAt) : new Date();
   return {
     id: dto.id,
-    horse: { name: dto.horse.name, breed: '-', age: 4, color: '#72D79A' },
+    horse: { name: dto.horse.name, breed: '-', age: 4, color: '#72D79A', penaltyStatus: dto.horse.penaltyStatus },
     race: {
       id: dto.race.id,
       name: dto.race.name,
@@ -115,6 +115,7 @@ export function mapJockeyRace(dto: JockeyRaceDto): JockeyRace {
         age: dto.participant.horse.age,
         healthStatus: dto.participant.horse.healthStatus,
         registrationId: dto.participant.horse.registrationId,
+        penaltyStatus: dto.participant.horse.penaltyStatus,
       },
       odds: 2.5,
       position: myRank?.rank,
