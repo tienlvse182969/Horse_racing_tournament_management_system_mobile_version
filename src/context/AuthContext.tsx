@@ -10,6 +10,7 @@ interface AuthContextValue {
   error: string | null;
   login: (email: string, password: string) => Promise<AuthUser>;
   registerSpectator: (email: string, password: string, fullName: string) => Promise<AuthUser>;
+  updateProfile: (input: { fullName?: string; phone?: string }) => Promise<AuthUser>;
   logout: () => Promise<void>;
   clearError: () => void;
 }
@@ -53,6 +54,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return me;
   }, []);
 
+  const updateProfile = useCallback(async (input: { fullName?: string; phone?: string }) => {
+    setError(null);
+    const { user: me } = await authApi.updateProfile(input);
+    setUser(me);
+    return me;
+  }, []);
+
   const logout = useCallback(async () => {
     await authApi.logout();
     setUser(null);
@@ -65,10 +73,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       error,
       login,
       registerSpectator,
+      updateProfile,
       logout,
       clearError: () => setError(null),
     }),
-    [user, loading, error, login, registerSpectator, logout],
+    [user, loading, error, login, registerSpectator, updateProfile, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

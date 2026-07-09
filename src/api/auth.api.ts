@@ -1,4 +1,4 @@
-import { apiGet, apiPost, setStoredToken } from './client';
+import { apiGet, apiPatch, apiPost, setStoredToken } from './client';
 import type { PenaltyStatus } from '@/mock-data';
 
 export type UserRole = 'spectator' | 'jockey' | 'horse_owner' | 'referee' | 'admin';
@@ -8,7 +8,11 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   fullName: string;
+  phone?: string;
+  avatarUrl?: string;
   penaltyStatus?: PenaltyStatus | null;
+  licenseNumber?: string;
+  licenseExpiry?: string | null;
 }
 
 export interface AuthResponse {
@@ -38,4 +42,8 @@ export async function logout(): Promise<void> {
 
 export async function changePassword(oldPassword: string, newPassword: string): Promise<{ message: string }> {
   return apiPost<{ message: string }>('/api/auth/change-password', { oldPassword, newPassword });
+}
+
+export async function updateProfile(input: { fullName?: string; phone?: string }): Promise<{ user: AuthUser }> {
+  return apiPatch<{ user: AuthUser }>('/api/auth/me', input);
 }
