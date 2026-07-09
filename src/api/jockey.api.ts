@@ -14,6 +14,7 @@ export const jockeyApi = {
   listRaces: () => apiGet<{ races: JockeyRaceDto[] }>('/api/jockey/races'),
   getRace: (id: string) => apiGet<{ race: JockeyRaceDto }>(`/api/jockey/races/${id}`),
   listNotifications: () => apiGet<{ notifications: NotificationDto[] }>('/api/jockey/notifications'),
+  getPenaltyDetail: () => apiGet<{ penalty: PenaltyDetailDto }>('/api/jockey/penalty-detail'),
 };
 
 export interface PenaltyStatusDto {
@@ -68,4 +69,25 @@ export interface NotificationDto {
   message: string;
   isRead: boolean;
   createdAt: string;
+}
+
+export interface PenaltyDetailDto {
+  target: 'horse' | 'jockey' | 'both';
+  description: string;
+  penaltyApplied: string | null;
+  recordedAt: string;
+  bannedUntil: string | null;
+  rule: {
+    code: string;
+    name: string;
+    description: string;
+    category: string;
+    severity: string;
+    banDurationDays: number;
+  } | null;
+  race: {
+    id: string;
+    name: string;
+    scheduledAt: string;
+  } | null;
 }

@@ -2,6 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import * as authApi from '@/api/auth.api';
 import type { AuthUser } from '@/api/auth.api';
 
+const PENALTY_POLL_INTERVAL_MS = 8000;
+
 interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
@@ -26,6 +28,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
   }, []);
+
+  // Poll for account status changes (e.g. an admin/referee publishing a suspension)
+  // while logged in, so the suspension banner appears without needing to re-login.
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(() => {
+      authApi.getMe().then(({ user: me }) => setUser(me)).catch(() => {});
+    }, PENALTY_POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [user?.id]);
 
   const login = useCallback(async (email: string, password: string) => {
     setError(null);

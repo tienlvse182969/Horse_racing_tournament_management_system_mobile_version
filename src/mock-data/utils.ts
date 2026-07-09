@@ -9,3 +9,8 @@ export function formatDate(dateStr: string): string {
   const [, month, day] = dateStr.split('-');
   return `${day}/${month}`;
 }
+
+export function isBeforeBanEnd(date: string, time: string, bannedUntil?: string | null): boolean {
+  if (!bannedUntil) return false;
+  return new Date(`${date}T${time}:00`) < new Date(bannedUntil);
+}

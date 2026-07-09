@@ -1,4 +1,5 @@
 import { apiGet, apiPost, setStoredToken } from './client';
+import type { PenaltyStatus } from '@/mock-data';
 
 export type UserRole = 'spectator' | 'jockey' | 'horse_owner' | 'referee' | 'admin';
 
@@ -7,6 +8,7 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   fullName: string;
+  penaltyStatus?: PenaltyStatus | null;
 }
 
 export interface AuthResponse {
