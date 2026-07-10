@@ -1,5 +1,13 @@
 export type RaceStatus = 'live' | 'upcoming' | 'completed';
 
+export type RaceViolation = {
+  horseId: string | null;
+  horseName: string | null;
+  type: string;
+  description: string;
+  penaltyApplied: string | null;
+};
+
 export type RaceEntry = {
   horse: { id: string; name: string; number: number; breed: string; color: string };
   jockeyName: string;
@@ -7,6 +15,7 @@ export type RaceEntry = {
   ticketCount?: number;
   position?: number;
   finishTime?: string;
+  isDisqualified?: boolean;
 };
 
 export type Race = {
@@ -28,4 +37,5 @@ export type Race = {
   hasPrediction?: boolean;
   resultPublished?: boolean;
   predictionConfig?: { isEnabled: boolean; poolEnabled: boolean; entryFee: number; ticketPrice: number; quickRiskMultipliers: number[] };
+  violations?: RaceViolation[];
 };

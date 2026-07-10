@@ -35,13 +35,22 @@ function mapStatus(status: string): RaceStatus {
   return 'upcoming';
 }
 
+// Spectator-only: 'ready' (referee đã bắt đầu điều hành nhưng chưa chạy đua) cũng hiển thị là
+// 'live' để spectator vào xem và thấy màn hình chờ trọng tài. Không dùng cho jockey (mapStatus)
+// vì jockey race-day có luồng live riêng, tự chạy animation ngay khi status là 'live'.
+function mapSpectatorStatus(status: string): RaceStatus {
+  if (status === 'ready' || status === 'ongoing') return 'live';
+  if (status === 'completed') return 'completed';
+  return 'upcoming';
+}
+
 export function mapSpectatorRace(dto: SpectatorRaceDto): Race {
   const dt = new Date(dto.scheduledAt);
   return {
     id: dto.id,
     name: dto.name,
     number: dto.round,
-    status: mapStatus(dto.status),
+    status: mapSpectatorStatus(dto.status),
     date: dt.toISOString().slice(0, 10),
     time: dt.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
     location: dto.tournament.name,
@@ -56,12 +65,14 @@ export function mapSpectatorRace(dto: SpectatorRaceDto): Race {
       odds: 2 + i * 0.5,
       ticketCount: p.ticketCount ?? 0,
       position: dto.result?.rankings.find((r) => r.horse.id === p.id)?.rank,
+      isDisqualified: dto.result?.rankings.find((r) => r.horse.id === p.id)?.isDisqualified ?? false,
     })),
     tournamentId: dto.tournament.id,
     canPredict: dto.canPredict,
     hasPrediction: dto.hasPrediction,
     resultPublished: !!dto.result,
     predictionConfig: dto.predictionConfig,
+    violations: dto.result?.violations ?? [],
   };
 }
 

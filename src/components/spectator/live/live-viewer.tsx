@@ -40,7 +40,7 @@ type DisplayResult = {
 /** Kết quả chính thức (đã công bố) — chỉ có rank, không có finishTime từ backend nên tra lại từ kết quả mô phỏng tạm thời nếu có. */
 function buildOfficialResult(
   entries: RaceEntry[],
-  rankingByHorse: Map<string, { rank: number }>,
+  rankingByHorse: Map<string, { rank: number; isDisqualified?: boolean }>,
   provisionalHorses: RaceSimHorse[],
 ): { horses: DisplayResult[]; excluded: RaceEntry[] } {
   const provisionalByHorse = new Map(provisionalHorses.map(h => [h.horseId, h]));
@@ -48,7 +48,7 @@ function buildOfficialResult(
   const excluded: RaceEntry[] = [];
   for (const e of entries) {
     const r = rankingByHorse.get(e.horse.id);
-    if (!r) {
+    if (!r || r.isDisqualified) {
       excluded.push(e);
       continue;
     }
@@ -373,13 +373,17 @@ export function LiveViewer({ race, onClose }: Props) {
                   <Text style={styles.finishTime}>{h.finishTime != null ? `${h.finishTime.toFixed(2)}s` : '—'}</Text>
                 </View>
               ))}
-            {finishExcluded.map(e => (
-              <View key={e.horse.id} style={styles.excludedRow}>
-                <Text style={styles.excludedText} numberOfLines={1}>
-                  ⚠️ #{e.horse.number} {e.horse.name} không có trong kết quả chung cuộc.
-                </Text>
-              </View>
-            ))}
+            {finishExcluded.map(e => {
+              const violation = race.violations?.find(v => v.horseId === e.horse.id);
+              return (
+                <View key={e.horse.id} style={styles.excludedRow}>
+                  <Text style={styles.excludedText} numberOfLines={2}>
+                    ⚠️ #{e.horse.number} {e.horse.name}{' '}
+                    {violation ? `bị loại: ${violation.description}` : 'đã vi phạm lỗi nghiêm trọng trong kết quả chung cuộc.'}
+                  </Text>
+                </View>
+              );
+            })}
             <TouchableOpacity style={styles.doneBtn} onPress={onClose} activeOpacity={0.85}>
               <Text style={styles.doneBtnText}>Xong</Text>
             </TouchableOpacity>
