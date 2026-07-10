@@ -14,7 +14,10 @@ import {
   type RaceFrame, type RaceSimHorse, type HorseFrame,
 } from '@/utils/raceSim';
 
-export type RaceState = 'waiting' | 'pending-review' | 'idle' | 'racing' | 'finished';
+// 'idle' is unused by this component but kept for jockey/race-day.tsx, which imports this
+// type and has its own separate 'idle' initial state for its own (unrelated) simulation view.
+export type RaceState = 'idle' | 'waiting' | 'racing' | 'finished';
+type WaitingReason = 'not-started' | 'loading-live';
 
 export type StandingEntry = {
   entry: RaceEntry;
@@ -25,6 +28,55 @@ export type StandingEntry = {
   finishTime?: string;
 };
 
+type DisplayResult = {
+  horseId: string;
+  horseName: string;
+  jockeyName: string;
+  clothNumber: number;
+  rank: number;
+  finishTime?: number;
+};
+
+/** Kết quả chính thức (đã công bố) — chỉ có rank, không có finishTime từ backend nên tra lại từ kết quả mô phỏng tạm thời nếu có. */
+function buildOfficialResult(
+  entries: RaceEntry[],
+  rankingByHorse: Map<string, { rank: number; isDisqualified?: boolean }>,
+  provisionalHorses: RaceSimHorse[],
+): { horses: DisplayResult[]; excluded: RaceEntry[] } {
+  const provisionalByHorse = new Map(provisionalHorses.map(h => [h.horseId, h]));
+  const horses: DisplayResult[] = [];
+  const excluded: RaceEntry[] = [];
+  for (const e of entries) {
+    const r = rankingByHorse.get(e.horse.id);
+    if (!r || r.isDisqualified) {
+      excluded.push(e);
+      continue;
+    }
+    horses.push({
+      horseId: e.horse.id,
+      horseName: e.horse.name,
+      jockeyName: e.jockeyName,
+      clothNumber: e.horse.number,
+      rank: r.rank,
+      finishTime: provisionalByHorse.get(e.horse.id)?.finishTime,
+    });
+  }
+  return { horses, excluded };
+}
+
+/** So sánh thứ tự về đích + danh sách bị loại giữa 2 bộ kết quả — dùng để báo "kết quả đã cập nhật". */
+function resultsDiffer(
+  a: DisplayResult[], aExcluded: RaceEntry[],
+  b: DisplayResult[], bExcluded: RaceEntry[],
+): boolean {
+  const orderA = [...a].sort((x, y) => x.rank - y.rank).map(h => h.horseId).join(',');
+  const orderB = [...b].sort((x, y) => x.rank - y.rank).map(h => h.horseId).join(',');
+  if (orderA !== orderB) return true;
+  const excA = aExcluded.map(e => e.horse.id).sort().join(',');
+  const excB = bExcluded.map(e => e.horse.id).sort().join(',');
+  return excA !== excB;
+}
+
 type Props = { race: Race; onClose: () => void };
 
 const DURATION_MS = 18000;
@@ -32,11 +84,14 @@ const SPEEDS = [1, 2, 4] as const;
 
 export function LiveViewer({ race, onClose }: Props) {
   const insets = useSafeAreaInsets();
-  const [raceState, setRaceState] = useState<RaceState>('idle');
+  const [raceState, setRaceState] = useState<RaceState>('waiting');
+  const [waitingReason, setWaitingReason] = useState<WaitingReason>('not-started');
   const [speed, setSpeed] = useState<number>(1);
   const [frame, setFrame] = useState<RaceFrame | null>(null);
   const [speedPct, setSpeedPct] = useState(0);
   const [excludedEntries, setExcludedEntries] = useState<RaceEntry[]>([]);
+  const [isOfficial, setIsOfficial] = useState(false);
+  const [officialResult, setOfficialResult] = useState<{ horses: DisplayResult[]; excluded: RaceEntry[] } | null>(null);
 
   const horsesRef = useRef<RaceSimHorse[]>([]);
   const weightsRef = useRef<Record<string, number[]>>({});
@@ -95,25 +150,33 @@ export function LiveViewer({ race, onClose }: Props) {
     if (intervalRef.current) clearInterval(intervalRef.current);
   }, []);
 
-  // Poll backend every 3s to detect when the race has a simulated result
+  // Poll backend every 3s. The provisional simulation starts playing as soon as the race is
+  // 'ongoing' (referee started it); polling never stops afterwards so we can detect the moment
+  // the referee confirms VAR and publishes the official result (dto.result), and update the
+  // displayed result live if it changes (e.g. a horse gets disqualified for a violation).
   useEffect(() => {
     let cancelled = false;
     const poll = async () => {
-      if (startedRef.current) return;
       try {
         const { race: dto } = await spectatorApi.getRace(race.id);
-        if (cancelled || startedRef.current) return;
-        if (dto.status !== 'completed') {
+        if (cancelled) return;
+
+        setIsOfficial(!!dto.result);
+        if (dto.result) {
+          const rankingByHorse = new Map(dto.result.rankings.map(r => [r.horse.id, r]));
+          setOfficialResult(buildOfficialResult(race.entries, rankingByHorse, horsesRef.current));
+        } else {
+          setOfficialResult(null);
+        }
+
+        if (startedRef.current) return; // animation already started/finished — nothing left to gate
+
+        if (dto.status !== 'ongoing' && dto.status !== 'completed') {
+          setWaitingReason('not-started');
           setRaceState('waiting');
           return;
         }
-        if (!dto.result) {
-          // Race has finished but the referee hasn't confirmed VAR / the result isn't published yet.
-          // (getSimulation below only checks that a Result document exists, not that it's published,
-          // so it can't be used alone to gate this — dto.result is the publish-gated signal.)
-          setRaceState('pending-review');
-          return;
-        }
+
         const simData = await spectatorApi.getSimulation(race.id);
         if (cancelled || startedRef.current) return;
         if (simData.available && simData.rankings.length > 0) {
@@ -136,11 +199,12 @@ export function LiveViewer({ race, onClose }: Props) {
             setExcludedEntries(race.entries.filter(e => !simData.rankings.some(r => r.horseId === e.horse.id)));
             startAnimation(horses);
           } else {
-            setRaceState('pending-review');
+            setWaitingReason('loading-live');
+            setRaceState('waiting');
           }
         } else {
-          // Race has finished but the referee hasn't confirmed VAR / result isn't published yet.
-          setRaceState('pending-review');
+          setWaitingReason('loading-live');
+          setRaceState('waiting');
         }
       } catch {
         // ignore network errors between polls
@@ -154,6 +218,12 @@ export function LiveViewer({ race, onClose }: Props) {
 
   const leader = frame?.leader ?? null;
   const distRemaining = frame ? Math.max(0, Math.round((1 - frame.leaderProgress) * race.distance)) : race.distance;
+
+  const showOfficial = isOfficial && officialResult !== null;
+  const finishHorses: DisplayResult[] = showOfficial ? officialResult!.horses : horsesRef.current;
+  const finishExcluded: RaceEntry[] = showOfficial ? officialResult!.excluded : excludedEntries;
+  const resultUpdated = raceState === 'finished' && showOfficial
+    && resultsDiffer(horsesRef.current, excludedEntries, officialResult!.horses, officialResult!.excluded);
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
@@ -207,14 +277,10 @@ export function LiveViewer({ race, onClose }: Props) {
         {raceState === 'waiting' && (
           <View style={styles.waitingBox}>
             <ActivityIndicator size="small" color={C.tertiary} />
-            <Text style={styles.waitingText}>Chờ trọng tài bắt đầu cuộc đua...</Text>
-          </View>
-        )}
-        {raceState === 'pending-review' && (
-          <View style={styles.waitingBox}>
-            <ActivityIndicator size="small" color={C.tertiary} />
             <Text style={styles.waitingText}>
-              🏁 Cuộc đua đã kết thúc. Đang chờ trọng tài kiểm tra VAR và xác nhận kết quả trước khi công bố...
+              {waitingReason === 'not-started'
+                ? 'Chờ trọng tài bắt đầu cuộc đua...'
+                : 'Đang tải dữ liệu đua trực tiếp...'}
             </Text>
           </View>
         )}
@@ -222,6 +288,14 @@ export function LiveViewer({ race, onClose }: Props) {
         {/* Leaderboard */}
         {frame && frame.ranking.length > 0 && (
           <View style={styles.board}>
+            <View style={styles.boardTitleRow}>
+              <Text style={styles.boardTitle}>BẢNG XẾP HẠNG</Text>
+              {!isOfficial && (
+                <View style={styles.tempBadge}>
+                  <Text style={styles.tempBadgeText}>TẠM THỜI</Text>
+                </View>
+              )}
+            </View>
             <View style={styles.boardHead}>
               <Text style={[styles.boardHeadText, { width: 28 }]}>HẠNG</Text>
               <Text style={[styles.boardHeadText, { flex: 1 }]}>NGỰA</Text>
@@ -275,9 +349,18 @@ export function LiveViewer({ race, onClose }: Props) {
         {/* Finish overlay */}
         {raceState === 'finished' && (
           <View style={styles.finishCard}>
-            <Text style={styles.finishTitle}>🏆 Kết quả chung cuộc — {race.name}</Text>
-            <Text style={styles.finishSub}>Kết quả đã được lưu & công bố. Dự đoán đã được settle.</Text>
-            {horsesRef.current
+            <Text style={styles.finishTitle}>
+              {showOfficial ? `🏆 Kết quả chính thức — ${race.name}` : `🏁 Kết quả tạm thời — ${race.name}`}
+            </Text>
+            <Text style={styles.finishSub}>
+              {showOfficial
+                ? 'Kết quả đã được lưu & công bố. Dự đoán đã được settle.'
+                : 'Đây là kết quả tạm thời từ mô phỏng. Đang chờ trọng tài kiểm tra VAR và xác nhận trước khi công bố kết quả chính thức.'}
+            </Text>
+            {resultUpdated && (
+              <Text style={styles.updatedNotice}>⚠️ Kết quả đã được cập nhật sau khi trọng tài xác nhận VAR.</Text>
+            )}
+            {finishHorses
               .slice()
               .sort((a, b) => a.rank - b.rank)
               .map(h => (
@@ -287,16 +370,20 @@ export function LiveViewer({ race, onClose }: Props) {
                   </Text>
                   <Text style={styles.finishHorseName} numberOfLines={1}>{h.horseName}</Text>
                   <Text style={styles.finishJockey} numberOfLines={1}>{h.jockeyName}</Text>
-                  <Text style={styles.finishTime}>{h.finishTime.toFixed(2)}s</Text>
+                  <Text style={styles.finishTime}>{h.finishTime != null ? `${h.finishTime.toFixed(2)}s` : '—'}</Text>
                 </View>
               ))}
-            {excludedEntries.map(e => (
-              <View key={e.horse.id} style={styles.excludedRow}>
-                <Text style={styles.excludedText} numberOfLines={1}>
-                  ⚠️ #{e.horse.number} {e.horse.name} không có trong kết quả chung cuộc.
-                </Text>
-              </View>
-            ))}
+            {finishExcluded.map(e => {
+              const violation = race.violations?.find(v => v.horseId === e.horse.id);
+              return (
+                <View key={e.horse.id} style={styles.excludedRow}>
+                  <Text style={styles.excludedText} numberOfLines={2}>
+                    ⚠️ #{e.horse.number} {e.horse.name}{' '}
+                    {violation ? `bị loại: ${violation.description}` : 'đã vi phạm lỗi nghiêm trọng trong kết quả chung cuộc.'}
+                  </Text>
+                </View>
+              );
+            })}
             <TouchableOpacity style={styles.doneBtn} onPress={onClose} activeOpacity={0.85}>
               <Text style={styles.doneBtnText}>Xong</Text>
             </TouchableOpacity>
@@ -366,6 +453,10 @@ const styles = StyleSheet.create({
   waitingText:{ color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 13 },
 
   board:     { backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, gap: 2 },
+  boardTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
+  boardTitle:    { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 10, letterSpacing: 0.5 },
+  tempBadge:     { backgroundColor: `${C.tertiary}22`, borderRadius: Shape.full, paddingHorizontal: 8, paddingVertical: 2 },
+  tempBadgeText: { color: C.tertiary, fontFamily: FontFamily.bold, fontSize: 9, letterSpacing: 0.5 },
   boardHead: { flexDirection: 'row', gap: Spacing.two, paddingBottom: Spacing.one, borderBottomWidth: 1, borderBottomColor: SC.highest },
   boardHeadText: { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 10 },
   boardRow:  { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, paddingVertical: 5 },
@@ -390,6 +481,7 @@ const styles = StyleSheet.create({
   finishCard:  { backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.three, gap: Spacing.one },
   finishTitle: { color: '#ffd24a', fontFamily: FontFamily.bold, fontSize: 16 },
   finishSub:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12, marginBottom: Spacing.one },
+  updatedNotice: { color: C.tertiary, fontFamily: FontFamily.medium, fontSize: 12, backgroundColor: `${C.tertiary}15`, borderRadius: Shape.medium, padding: Spacing.two, marginBottom: Spacing.one },
   finishRow:   { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, backgroundColor: SC.lowest, borderRadius: Shape.medium, padding: Spacing.two },
   finishRank:  { width: 24, textAlign: 'center', fontSize: 14 },
   finishHorseName: { flex: 1, color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 13 },

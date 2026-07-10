@@ -13,6 +13,16 @@ import { formatCurrency, formatDate } from '@/utils/format';
 import { spectatorApi } from '@/api/spectator.api';
 import { MedalIcon } from '@/components/ui/medal-icon';
 
+const PENALTY_LABELS: Record<string, string> = {
+  warning: 'Cảnh cáo',
+  demote: 'Tụt hạng',
+  disqualify: 'Truất quyền thi đấu',
+  disqualification: 'Truất quyền thi đấu',
+  restart: 'Đua lại',
+  time_ban: 'Cấm thi đấu có thời hạn',
+  permanent_ban: 'Cấm thi đấu vĩnh viễn',
+};
+
 type Props = { race: Race; onBack: () => void };
 
 export function RaceDetail({ race, onBack }: Props) {
@@ -72,12 +82,16 @@ export function RaceDetail({ race, onBack }: Props) {
       setAddingToCalendar(false);
     }
   }
-  const sortedEntries = [...race.entries].sort((a, b) => {
+  const visibleEntries = isCompleted && race.resultPublished
+    ? race.entries.filter((e) => !e.isDisqualified)
+    : race.entries;
+  const sortedEntries = [...visibleEntries].sort((a, b) => {
     if (a.position && b.position) return a.position - b.position;
     if (a.position) return -1;
     if (b.position) return 1;
     return a.odds - b.odds;
   });
+  const showViolations = race.resultPublished && (race.violations?.length ?? 0) > 0;
 
   return (
     <Animated.View entering={FadeIn.duration(200)} style={styles.root}>
@@ -119,11 +133,11 @@ export function RaceDetail({ race, onBack }: Props) {
         {/* Entries */}
         <Animated.View entering={FadeInDown.delay(80).duration(320)}>
           <Text style={styles.sectionTitle}>
-            {isPendingReview ? 'Đang chờ trọng tài xác nhận' : isCompleted ? 'Kết quả chính thức' : 'Thứ hạng hiện tại'}
+            {isPendingReview ? 'Kết quả tạm thời (chưa chính thức)' : isCompleted ? 'Kết quả chính thức' : 'Thứ hạng hiện tại'}
           </Text>
           {isPendingReview && (
             <Text style={styles.pendingReviewText}>
-              🏁 Cuộc đua đã kết thúc. Đang chờ trọng tài kiểm tra VAR và xác nhận kết quả trước khi công bố...
+              Cuộc đua đã kết thúc. Đang chờ trọng tài kiểm tra VAR và xác nhận kết quả trước khi công bố...
             </Text>
           )}
           {sortedEntries.map((entry, idx) => (
@@ -155,6 +169,21 @@ export function RaceDetail({ race, onBack }: Props) {
             </View>
           ))}
         </Animated.View>
+
+        {showViolations && (
+          <Animated.View entering={FadeInDown.delay(120).duration(320)}>
+            <Text style={styles.sectionTitle}>Vi phạm ghi nhận</Text>
+            {race.violations!.map((v, idx) => (
+              <View key={idx} style={styles.violationRow}>
+                <Text style={styles.violationHorse}>{v.horseName ?? 'Không rõ'}</Text>
+                <Text style={styles.violationDesc}>{v.description}</Text>
+                {v.penaltyApplied && (
+                  <Text style={styles.violationPenalty}>{PENALTY_LABELS[v.penaltyApplied] ?? v.penaltyApplied}</Text>
+                )}
+              </View>
+            ))}
+          </Animated.View>
+        )}
 
         {isLive && (
           <TouchableOpacity style={styles.ticketBtn} onPress={() => setIsWatching(true)}>
@@ -230,6 +259,10 @@ const styles = StyleSheet.create({
   oddsBadge:    { backgroundColor: C.primaryContainer, borderRadius: Shape.full, paddingHorizontal: 8, paddingVertical: 3 },
   oddsText:     { color: C.onPrimaryContainer, fontFamily: FontFamily.bold, fontSize: 12 },
   finishTime:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
+  violationRow:     { backgroundColor: `${C.error}15`, borderRadius: Shape.large, padding: Spacing.two, marginBottom: Spacing.two, gap: 2 },
+  violationHorse:   { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 13 },
+  violationDesc:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
+  violationPenalty: { color: C.error, fontFamily: FontFamily.bold, fontSize: 11 },
   ticketBtn:          { backgroundColor: C.primary, borderRadius: Shape.full, paddingVertical: 14, alignItems: 'center' },
   ticketBtnText:      { color: C.onPrimary, fontFamily: FontFamily.bold, fontSize: 14 },
   calendarBtn:        { backgroundColor: C.primary, borderRadius: Shape.full, paddingVertical: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: Spacing.two },

@@ -22,6 +22,7 @@ export default function JockeyLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="race/[id]" />
+      <Stack.Screen name="penalty-detail" />
     </Stack>
   );
 }

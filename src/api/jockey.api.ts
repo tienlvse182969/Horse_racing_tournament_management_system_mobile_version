@@ -14,14 +14,21 @@ export const jockeyApi = {
   listRaces: () => apiGet<{ races: JockeyRaceDto[] }>('/api/jockey/races'),
   getRace: (id: string) => apiGet<{ race: JockeyRaceDto }>(`/api/jockey/races/${id}`),
   listNotifications: () => apiGet<{ notifications: NotificationDto[] }>('/api/jockey/notifications'),
+  getPenaltyDetail: () => apiGet<{ penalty: PenaltyDetailDto }>('/api/jockey/penalty-detail'),
 };
+
+export interface PenaltyStatusDto {
+  isBanned: boolean;
+  bannedUntil: string | null;
+  reason: string | null;
+}
 
 export interface InvitationDto {
   id: string;
   status: 'pending' | 'accepted' | 'declined';
   message?: string;
   createdAt: string;
-  horse: { id: string; name: string };
+  horse: { id: string; name: string; penaltyStatus: PenaltyStatusDto };
   race: { id: string; name: string; scheduledAt?: string; status: string };
   owner: { id: string; fullName: string };
 }
@@ -43,6 +50,7 @@ export interface JockeyRaceDto {
       color?: string;       // text name, e.g. "Chestnut", "Bay"
       healthStatus?: string;
       registrationId?: string;
+      penaltyStatus: PenaltyStatusDto;
     };
     owner: { id: string; fullName: string };
     laneNumber: number;
@@ -61,4 +69,25 @@ export interface NotificationDto {
   message: string;
   isRead: boolean;
   createdAt: string;
+}
+
+export interface PenaltyDetailDto {
+  target: 'horse' | 'jockey' | 'both';
+  description: string;
+  penaltyApplied: string | null;
+  recordedAt: string;
+  bannedUntil: string | null;
+  rule: {
+    code: string;
+    name: string;
+    description: string;
+    category: string;
+    severity: string;
+    banDurationDays: number;
+  } | null;
+  race: {
+    id: string;
+    name: string;
+    scheduledAt: string;
+  } | null;
 }

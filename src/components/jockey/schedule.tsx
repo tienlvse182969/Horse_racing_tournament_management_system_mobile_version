@@ -9,7 +9,9 @@ import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFami
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { JockeyAvatarButton } from '@/components/jockey-avatar-button';
 import { useJockeyRaces } from '@/hooks/useJockeyData';
-import { formatCurrency } from '@/mock-data';
+import { formatCurrency, isBeforeBanEnd } from '@/mock-data';
+import { JockeySuspensionBanner } from '@/components/jockey/jockey-suspension-banner';
+import { useAuth } from '@/context/AuthContext';
 
 const DAYS   = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 const MONTHS = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
@@ -40,6 +42,7 @@ function buildWeeks(year: number, month: number) {
 
 export function JockeySchedule() {
   const { races: jockeyRaces } = useJockeyRaces();
+  const { user } = useAuth();
   const today = new Date();
   const [viewYear,    setViewYear]    = useState(today.getFullYear());
   const [viewMonth,   setViewMonth]   = useState(today.getMonth());
@@ -73,6 +76,8 @@ export function JockeySchedule() {
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <LargeHeaderScrollView title="Lịch thi đấu" contentContainerStyle={styles.scroll} rightAction={<JockeyAvatarButton />}>
+
+          <JockeySuspensionBanner />
 
           {/* Calendar card */}
           <View style={styles.calCard}>
@@ -138,11 +143,14 @@ export function JockeySchedule() {
                 <Text style={styles.emptyText}>Không có cuộc đua nào</Text>
               </View>
             ) : (
-              selectedRaces.map((race, i) => (
+              selectedRaces.map((race, i) => {
+                const locked = isBeforeBanEnd(race.date, race.time, user?.penaltyStatus?.bannedUntil);
+                return (
                 <Animated.View key={race.id} entering={FadeInDown.delay(i * 60).duration(280)}>
                   <TouchableOpacity
-                    style={[styles.raceCard, race.status === 'live' && styles.raceCardLive]}
+                    style={[styles.raceCard, race.status === 'live' && styles.raceCardLive, locked && styles.cardLocked]}
                     onPress={() => router.push(`/jockey/race/${race.id}` as any)}
+                    disabled={locked}
                     activeOpacity={0.85}>
                     <View style={styles.raceCardTop}>
                       <View style={styles.raceCardLeft}>
@@ -177,7 +185,8 @@ export function JockeySchedule() {
                     </View>
                   </TouchableOpacity>
                 </Animated.View>
-              ))
+                );
+              })
             )}
           </View>
 
@@ -217,6 +226,7 @@ const styles = StyleSheet.create({
   emptyText:   { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 14 },
   raceCard:    { backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, gap: Spacing.two },
   raceCardLive:{ borderWidth: 1.5, borderColor: C.tertiary },
+  cardLocked:  { opacity: 0.45 },
   raceCardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.two },
   raceCardLeft:{ flex: 1, gap: 4 },
   raceStatusRow:{ flexDirection: 'row', alignItems: 'center', gap: 5 },

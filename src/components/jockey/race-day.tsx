@@ -16,6 +16,7 @@ import { LiveStandings } from '@/components/spectator/live/live-standings';
 import type { StandingEntry, RaceState } from '@/components/spectator/live/live-viewer';
 import type { JockeyRace } from '@/mock-data/jockey';
 import type { Race, RaceEntry } from '@/mock-data/races';
+import { HorseBanBadge } from '@/components/jockey/horse-ban-badge';
 
 // ─── Animation constants (same as LiveViewer) ─────────────────────────────────
 const SPEED_CONSTANT = 0.0000333;
@@ -148,6 +149,7 @@ function PreRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRac
               <Text style={styles.horseMeta}>Số #{horse.number}  ·  Odds {odds}x</Text>
             </View>
           </View>
+          <HorseBanBadge penaltyStatus={horse.penaltyStatus} style={{ marginTop: Spacing.one }} />
           {/* Extra horse details from backend */}
           <View style={styles.horseDetailsGrid}>
             {horse.breed ? (

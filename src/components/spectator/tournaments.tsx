@@ -1,3 +1,4 @@
+import { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MapPin, Calendar, Trophy } from 'lucide-react-native';
@@ -55,7 +56,14 @@ function TournamentCard({ t, index, onPress }: { t: TournamentDto; index: number
 }
 
 export function SpectatorTournaments() {
-  const { tournaments, loading } = useSpectatorTournaments();
+  const { tournaments, loading, reload } = useSpectatorTournaments();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await reload();
+    setRefreshing(false);
+  }, [reload]);
 
   const live      = tournaments.filter(t => t.status === 'ongoing');
   const open      = tournaments.filter(t => t.status === 'published');
@@ -66,7 +74,9 @@ export function SpectatorTournaments() {
         <LargeHeaderScrollView
           title="Giải đấu"
           contentContainerStyle={styles.scroll}
-          rightAction={<HeaderActions />}>
+          rightAction={<HeaderActions />}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}>
 
           {loading && (
             <ActivityIndicator color={C.primary} style={{ marginVertical: Spacing.three }} />

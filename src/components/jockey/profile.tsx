@@ -1,14 +1,17 @@
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Zap, Trophy, ChartBar, Banknote, ChevronRight, LogOut, UserPen, Bell, Lock, CircleQuestionMark, Star, Target } from 'lucide-react-native';
+import { ArrowLeft, Zap, Trophy, ChartBar, Banknote, ChevronRight, LogOut, UserPen, Lock, Info, X, Star, Target } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
+import { useAuth } from '@/context/AuthContext';
 import { currentJockey, formatCurrency } from '@/mock-data';
 import type { AchievementType } from '@/mock-data';
+import { APP_VERSION } from '@/constants/version';
 
 const ACHIEVEMENT_CONFIG: Record<AchievementType, { bg: string; border: string; label: string }> = {
   gold:    { bg: C.secondaryContainer,  border: C.secondary,         label: 'Vàng' },
@@ -27,19 +30,25 @@ const ACHIEVEMENT_ICONS: Record<string, AchIconComp> = {
   'lightning-bolt':  Zap,
 };
 
-type SettingItem = { Icon: AchIconComp; label: string };
-const SETTINGS: SettingItem[] = [
-  { Icon: UserPen,            label: 'Chỉnh sửa hồ sơ' },
-  { Icon: Bell,               label: 'Cài đặt thông báo' },
-  { Icon: Lock,               label: 'Bảo mật' },
-  { Icon: CircleQuestionMark, label: 'Trợ giúp & Hỗ trợ' },
-];
+type SettingItem = { Icon: AchIconComp; label: string; onPress: () => void };
 
 export function JockeyProfile() {
+  const { user, logout } = useAuth();
+  const [aboutVisible, setAboutVisible] = useState(false);
+
+  const displayName = user?.fullName ?? 'Jockey';
+  const initials = displayName.split(' ').map(w => w[0]).join('').slice(-2).toUpperCase();
+
+  const SETTINGS: SettingItem[] = [
+    { Icon: UserPen, label: 'Chỉnh sửa hồ sơ', onPress: () => router.push('/edit-profile' as never) },
+    { Icon: Lock,    label: 'Đổi mật khẩu',     onPress: () => router.push('/change-password' as never) },
+    { Icon: Info,    label: 'Về ứng dụng',      onPress: () => setAboutVisible(true) },
+  ];
+
   const handleLogout = () =>
     Alert.alert('Đăng xuất', 'Bạn có chắc muốn đăng xuất?', [
       { text: 'Hủy', style: 'cancel' },
-      { text: 'Đăng xuất', style: 'destructive', onPress: () => router.replace('/(auth)/auth' as never) },
+      { text: 'Đăng xuất', style: 'destructive', onPress: async () => { await logout(); router.replace('/(auth)/auth' as never); } },
     ]);
 
   type StatCard = { label: string; value: string | number; Icon: AchIconComp; color: string };
@@ -74,18 +83,24 @@ export function JockeyProfile() {
               <View style={styles.heroBg} />
               <View style={styles.heroRow}>
                 <View style={styles.heroAvatar}>
-                  <Text style={styles.heroInitials}>{currentJockey.initials}</Text>
+                  <Text style={styles.heroInitials}>{initials}</Text>
                 </View>
                 <View style={styles.heroInfo}>
                   <View style={styles.heroRoleRow}>
                     <Zap size={11} color="rgba(255,217,180,0.7)" />
                     <Text style={styles.heroRole}>Jockey Chuyên Nghiệp</Text>
                   </View>
-                  <Text style={styles.heroName}>{currentJockey.name}</Text>
-                  <Text style={styles.heroNationality}>
-                    🇻🇳 {currentJockey.nationality} · {currentJockey.age} tuổi
+                  <Text style={styles.heroName}>{displayName}</Text>
+                  {user?.email && <Text style={styles.heroContact}>{user.email}</Text>}
+                  {user?.phone && <Text style={styles.heroContact}>{user.phone}</Text>}
+                  <Text style={styles.heroLicense}>
+                    Giấy phép: {user?.licenseNumber || 'Chưa cập nhật'}
                   </Text>
-                  <Text style={styles.heroLicense}>{currentJockey.licenseNumber}</Text>
+                  {user?.licenseExpiry && (
+                    <Text style={styles.heroLicense}>
+                      Hạn: {new Date(user.licenseExpiry).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                    </Text>
+                  )}
                 </View>
               </View>
             </LinearGradient>
@@ -139,7 +154,7 @@ export function JockeyProfile() {
           <Animated.View entering={FadeInDown.delay(440).duration(320)} style={styles.section}>
             <Text style={styles.sectionTitle}>Cài đặt</Text>
             {SETTINGS.map(s => (
-              <TouchableOpacity key={s.label} style={styles.settingRow} activeOpacity={0.75}>
+              <TouchableOpacity key={s.label} style={styles.settingRow} activeOpacity={0.75} onPress={s.onPress}>
                 <View style={styles.settingIconWrap}>
                   <s.Icon size={20} color={C.onSurfaceVariant} />
                 </View>
@@ -157,6 +172,22 @@ export function JockeyProfile() {
 
         </LargeHeaderScrollView>
       </SafeAreaView>
+
+      <Modal
+        visible={aboutVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setAboutVisible(false)}>
+        <Pressable style={styles.modalBackdrop} onPress={() => setAboutVisible(false)}>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setAboutVisible(false)} activeOpacity={0.7}>
+              <X size={20} color={C.onSurfaceVariant} />
+            </TouchableOpacity>
+            <Text style={styles.modalAppName}>RaceTrack VN</Text>
+            <Text style={styles.modalVersion}>Phiên bản {APP_VERSION}</Text>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -178,7 +209,7 @@ const styles = StyleSheet.create({
   heroRoleRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   heroRole:    { color: 'rgba(255,217,180,0.7)', fontFamily: FontFamily.medium, fontSize: 11 },
   heroName:    { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 20, letterSpacing: -0.3 },
-  heroNationality: { color: 'rgba(255,217,180,0.6)', fontFamily: FontFamily.regular, fontSize: 12 },
+  heroContact: { color: 'rgba(255,217,180,0.6)', fontFamily: FontFamily.regular, fontSize: 12 },
   heroLicense: { color: 'rgba(255,217,180,0.45)', fontFamily: FontFamily.regular, fontSize: 11 },
 
   // Stats
@@ -208,4 +239,11 @@ const styles = StyleSheet.create({
   // Logout
   logoutBtn:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two, borderRadius: Shape.full, paddingVertical: 14, borderWidth: 1, borderColor: C.error },
   logoutText:  { color: C.error, fontFamily: FontFamily.bold, fontSize: 15 },
+
+  // About modal
+  modalBackdrop:  { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', alignItems: 'center', padding: Spacing.three },
+  modalCard:      { width: '100%', maxWidth: 320, backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.four, alignItems: 'center', gap: Spacing.one },
+  modalCloseBtn:  { position: 'absolute', top: Spacing.two, right: Spacing.two, width: 32, height: 32, borderRadius: Shape.full, backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center' },
+  modalAppName:   { color: C.primary, fontFamily: FontFamily.bangers, fontSize: 28, letterSpacing: 2, marginTop: Spacing.two },
+  modalVersion:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 13 },
 });

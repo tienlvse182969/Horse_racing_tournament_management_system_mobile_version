@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MailX, Zap, Clock, CircleCheck, CircleX, MapPin, ArrowLeftRight, Trophy, Handshake, Calendar, MessageSquare, X, Check } from 'lucide-react-native';
@@ -7,8 +7,10 @@ import Animated, { FadeInDown, useSharedValue, withTiming, useAnimatedStyle } fr
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { JockeyAvatarButton } from '@/components/jockey-avatar-button';
+import { JockeySuspensionBanner } from '@/components/jockey/jockey-suspension-banner';
 import type { Invitation, InvitationStatus } from '@/mock-data';
-import { formatCurrency, formatDate } from '@/mock-data';
+import { formatCurrency, formatDate, isBeforeBanEnd } from '@/mock-data';
+import { useAuth } from '@/context/AuthContext';
 import { useJockeyInvitations } from '@/hooks/useJockeyData';
 import { ActivityIndicator } from 'react-native';
 
@@ -29,9 +31,10 @@ const STATUS_CONFIG: Record<InvitationStatus, { label: string; color: string; bg
 };
 
 export function JockeyInvitations() {
-  const { invitations: items, loading, respond } = useJockeyInvitations();
+  const { invitations: items, loading, reload, respond } = useJockeyInvitations();
   const [filter, setFilter] = useState<FilterType>('all');
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const filtered = filter === 'all' ? items : items.filter(i => i.status === filter);
 
@@ -40,10 +43,23 @@ export function JockeyInvitations() {
     setExpanded(null);
   };
 
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await reload(false);
+    setRefreshing(false);
+  }, [reload]);
+
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <LargeHeaderScrollView title="Lời mời" contentContainerStyle={styles.scroll} rightAction={<JockeyAvatarButton />}>
+        <LargeHeaderScrollView
+          title="Lời mời"
+          contentContainerStyle={styles.scroll}
+          rightAction={<JockeyAvatarButton />}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}>
+
+          <JockeySuspensionBanner />
 
           {loading && <ActivityIndicator color={C.primary} style={{ marginBottom: Spacing.two }} />}
 
@@ -107,6 +123,8 @@ function InvitationCard({
   onDecline: () => void;
 }) {
   const sc = STATUS_CONFIG[inv.status];
+  const { user } = useAuth();
+  const locked = isBeforeBanEnd(inv.race.date, inv.race.time, user?.penaltyStatus?.bannedUntil);
 
   type DetailRow = { Icon: React.ComponentType<{ size?: number; color?: string }>; label: string; value: string };
   const detailRows: DetailRow[] = [
@@ -121,9 +139,9 @@ function InvitationCard({
   ];
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, locked && styles.cardLocked]}>
       {/* Header row */}
-      <TouchableOpacity style={styles.cardHeader} onPress={onToggle} activeOpacity={0.85}>
+      <TouchableOpacity style={styles.cardHeader} onPress={onToggle} disabled={locked} activeOpacity={0.85}>
         <View style={[styles.horseIcon, { backgroundColor: `${inv.horse.color}22`, borderColor: `${inv.horse.color}55` }]}>
           <Zap size={22} color={inv.horse.color} />
         </View>
@@ -203,6 +221,7 @@ const styles = StyleSheet.create({
   emptyText: { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 14 },
 
   card:        { backgroundColor: SC.high, borderRadius: Shape.large, overflow: 'hidden', marginBottom: 0 },
+  cardLocked:  { opacity: 0.45 },
   cardHeader:  { flexDirection: 'row', alignItems: 'flex-start', padding: Spacing.two, gap: Spacing.two },
   horseIcon:   { width: 48, height: 48, borderRadius: Shape.medium, borderWidth: 2, justifyContent: 'center', alignItems: 'center', flexShrink: 0 },
   cardInfo:    { flex: 1, gap: 3 },

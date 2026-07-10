@@ -1,3 +1,4 @@
+import { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Flag, User, MapPin, Ruler, Calendar, Hash } from 'lucide-react-native';
@@ -7,8 +8,10 @@ import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFami
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { JockeyAvatarButton } from '@/components/jockey-avatar-button';
 import { useJockeyRaces } from '@/hooks/useJockeyData';
-import { formatCurrency } from '@/mock-data';
+import { formatCurrency, isBeforeBanEnd } from '@/mock-data';
 import type { JockeyRace } from '@/mock-data/jockey';
+import { JockeySuspensionBanner } from '@/components/jockey/jockey-suspension-banner';
+import { useAuth } from '@/context/AuthContext';
 
 const STATUS_CONFIG = {
   live:      { label: 'Đang đua',    color: C.tertiary,        bg: C.tertiaryContainer },
@@ -40,10 +43,12 @@ function rankBg(rank: number): string {
 function RaceCard({ race, index }: { race: JockeyRace; index: number }) {
   const cfg = STATUS_CONFIG[race.status] ?? STATUS_CONFIG.upcoming;
   const hasResult = race.status === 'completed' && race.myEntry.position !== undefined;
+  const { user } = useAuth();
+  const locked = isBeforeBanEnd(race.date, race.time, user?.penaltyStatus?.bannedUntil);
 
   return (
     <Animated.View entering={FadeInDown.delay(index * 50).duration(280)}>
-      <View style={styles.card}>
+      <View style={[styles.card, locked && styles.cardLocked]}>
         {/* Header */}
         <View style={styles.cardHeader}>
           <Text style={styles.cardName} numberOfLines={2}>{race.name}</Text>
@@ -123,11 +128,18 @@ function RaceGroup({ title, races, offset }: { title: string; races: JockeyRace[
 }
 
 export function JockeyAssignedRaces() {
-  const { races, loading } = useJockeyRaces();
+  const { races, loading, reload } = useJockeyRaces();
+  const [refreshing, setRefreshing] = useState(false);
 
   const live      = races.filter(r => r.status === 'live');
   const upcoming  = races.filter(r => r.status === 'upcoming');
   const completed = races.filter(r => r.status === 'completed');
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await reload(false);
+    setRefreshing(false);
+  }, [reload]);
 
   return (
     <View style={styles.root}>
@@ -135,7 +147,11 @@ export function JockeyAssignedRaces() {
         <LargeHeaderScrollView
           title="Cuộc đua"
           contentContainerStyle={styles.scroll}
-          rightAction={<JockeyAvatarButton />}>
+          rightAction={<JockeyAvatarButton />}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}>
+
+          <JockeySuspensionBanner />
 
           {loading && (
             <ActivityIndicator color={C.primary} style={{ marginVertical: Spacing.three }} />
@@ -201,6 +217,7 @@ const styles = StyleSheet.create({
 
   // Race card
   card:       { backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.three, gap: Spacing.two, marginBottom: 2 },
+  cardLocked: { opacity: 0.45 },
   cardHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.two },
   cardName:   { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15, flex: 1, lineHeight: 22 },
   badge:      { borderRadius: Shape.full, paddingHorizontal: 10, paddingVertical: 3, flexShrink: 0 },

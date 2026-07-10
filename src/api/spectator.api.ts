@@ -60,7 +60,21 @@ export interface SpectatorRaceDto {
   predictionConfig: { isEnabled: boolean; poolEnabled: boolean; entryFee: number; ticketPrice: number; quickRiskMultipliers: number[] };
   viewingTicket: { requiresTicket: boolean; hasPass: boolean; canPurchase: boolean; pricePoints: number };
   streamUrl?: string;
-  result?: { rankings: Array<{ rank: number; horse: { id: string; name: string }; jockey: { fullName: string } }> } | null;
+  result?: {
+    rankings: Array<{
+      rank: number;
+      horse: { id: string; name: string };
+      jockey: { fullName: string };
+      isDisqualified?: boolean;
+    }>;
+    violations: Array<{
+      horseId: string | null;
+      horseName: string | null;
+      type: string;
+      description: string;
+      penaltyApplied: string | null;
+    }>;
+  } | null;
 }
 
 export interface PredictionDto {

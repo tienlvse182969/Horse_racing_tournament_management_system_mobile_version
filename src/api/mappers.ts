@@ -35,13 +35,22 @@ function mapStatus(status: string): RaceStatus {
   return 'upcoming';
 }
 
+// Spectator-only: 'ready' (referee đã bắt đầu điều hành nhưng chưa chạy đua) cũng hiển thị là
+// 'live' để spectator vào xem và thấy màn hình chờ trọng tài. Không dùng cho jockey (mapStatus)
+// vì jockey race-day có luồng live riêng, tự chạy animation ngay khi status là 'live'.
+function mapSpectatorStatus(status: string): RaceStatus {
+  if (status === 'ready' || status === 'ongoing') return 'live';
+  if (status === 'completed') return 'completed';
+  return 'upcoming';
+}
+
 export function mapSpectatorRace(dto: SpectatorRaceDto): Race {
   const dt = new Date(dto.scheduledAt);
   return {
     id: dto.id,
     name: dto.name,
     number: dto.round,
-    status: mapStatus(dto.status),
+    status: mapSpectatorStatus(dto.status),
     date: dt.toISOString().slice(0, 10),
     time: dt.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
     location: dto.tournament.name,
@@ -56,12 +65,14 @@ export function mapSpectatorRace(dto: SpectatorRaceDto): Race {
       odds: 2 + i * 0.5,
       ticketCount: p.ticketCount ?? 0,
       position: dto.result?.rankings.find((r) => r.horse.id === p.id)?.rank,
+      isDisqualified: dto.result?.rankings.find((r) => r.horse.id === p.id)?.isDisqualified ?? false,
     })),
     tournamentId: dto.tournament.id,
     canPredict: dto.canPredict,
     hasPrediction: dto.hasPrediction,
     resultPublished: !!dto.result,
     predictionConfig: dto.predictionConfig,
+    violations: dto.result?.violations ?? [],
   };
 }
 
@@ -69,7 +80,7 @@ export function mapInvitation(dto: InvitationDto): Invitation {
   const dt = dto.race.scheduledAt ? new Date(dto.race.scheduledAt) : new Date();
   return {
     id: dto.id,
-    horse: { name: dto.horse.name, breed: '-', age: 4, color: '#72D79A' },
+    horse: { name: dto.horse.name, breed: '-', age: 4, color: '#72D79A', penaltyStatus: dto.horse.penaltyStatus },
     race: {
       id: dto.race.id,
       name: dto.race.name,
@@ -115,6 +126,7 @@ export function mapJockeyRace(dto: JockeyRaceDto): JockeyRace {
         age: dto.participant.horse.age,
         healthStatus: dto.participant.horse.healthStatus,
         registrationId: dto.participant.horse.registrationId,
+        penaltyStatus: dto.participant.horse.penaltyStatus,
       },
       odds: 2.5,
       position: myRank?.rank,
