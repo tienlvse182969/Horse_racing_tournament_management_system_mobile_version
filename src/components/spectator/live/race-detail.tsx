@@ -159,9 +159,6 @@ export function RaceDetail({ race, onBack }: Props) {
                 <Text style={styles.entryJockey}>{entry.jockeyName}</Text>
               </View>
               <View style={styles.entryRight}>
-                <View style={styles.oddsBadge}>
-                  <Text style={styles.oddsText}>{entry.odds.toFixed(1)}x</Text>
-                </View>
                 {entry.finishTime && (
                   <Text style={styles.finishTime}>{entry.finishTime}</Text>
                 )}
