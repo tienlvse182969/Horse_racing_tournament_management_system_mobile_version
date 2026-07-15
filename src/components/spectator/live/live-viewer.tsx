@@ -35,12 +35,13 @@ type DisplayResult = {
   clothNumber: number;
   rank: number;
   finishTime?: number;
+  isDisqualified?: boolean;
 };
 
-/** Kết quả chính thức (đã công bố) — chỉ có rank, không có finishTime từ backend nên tra lại từ kết quả mô phỏng tạm thời nếu có. */
+/** Kết quả chính thức (đã công bố) — ưu tiên finishTime thật đã lưu ở backend, dự phòng bằng kết quả mô phỏng tạm thời nếu có. */
 function buildOfficialResult(
   entries: RaceEntry[],
-  rankingByHorse: Map<string, { rank: number; isDisqualified?: boolean }>,
+  rankingByHorse: Map<string, { rank: number; isDisqualified?: boolean; finishTime?: number }>,
   provisionalHorses: RaceSimHorse[],
 ): { horses: DisplayResult[]; excluded: RaceEntry[] } {
   const provisionalByHorse = new Map(provisionalHorses.map(h => [h.horseId, h]));
@@ -48,18 +49,17 @@ function buildOfficialResult(
   const excluded: RaceEntry[] = [];
   for (const e of entries) {
     const r = rankingByHorse.get(e.horse.id);
-    if (!r || r.isDisqualified) {
-      excluded.push(e);
-      continue;
-    }
+    const isDisqualified = !r || !!r.isDisqualified;
     horses.push({
       horseId: e.horse.id,
       horseName: e.horse.name,
       jockeyName: e.jockeyName,
       clothNumber: e.horse.number,
-      rank: r.rank,
-      finishTime: provisionalByHorse.get(e.horse.id)?.finishTime,
+      rank: r?.rank ?? Number.MAX_SAFE_INTEGER,
+      finishTime: r?.finishTime ?? provisionalByHorse.get(e.horse.id)?.finishTime,
+      isDisqualified,
     });
+    if (isDisqualified) excluded.push(e);
   }
   return { horses, excluded };
 }
@@ -179,6 +179,7 @@ export function LiveViewer({ race, onClose }: Props) {
 
         const simData = await spectatorApi.getSimulation(race.id);
         if (cancelled || startedRef.current) return;
+
         if (simData.available && simData.rankings.length > 0) {
           const horses: RaceSimHorse[] = race.entries
             .map(e => {
@@ -198,10 +199,18 @@ export function LiveViewer({ race, onClose }: Props) {
           if (horses.length > 0) {
             setExcludedEntries(race.entries.filter(e => !simData.rankings.some(r => r.horseId === e.horse.id)));
             startAnimation(horses);
+          } else if (dto.result) {
+            // Không có dữ liệu mô phỏng thật để animate — kết quả chính thức đã có, nên bỏ
+            // qua animation, vào thẳng bảng kết quả cuối thay vì treo màn hình chờ.
+            startedRef.current = true;
+            setRaceState('finished');
           } else {
             setWaitingReason('loading-live');
             setRaceState('waiting');
           }
+        } else if (dto.result) {
+          startedRef.current = true;
+          setRaceState('finished');
         } else {
           setWaitingReason('loading-live');
           setRaceState('waiting');
@@ -222,7 +231,7 @@ export function LiveViewer({ race, onClose }: Props) {
   const showOfficial = isOfficial && officialResult !== null;
   const finishHorses: DisplayResult[] = showOfficial ? officialResult!.horses : horsesRef.current;
   const finishExcluded: RaceEntry[] = showOfficial ? officialResult!.excluded : excludedEntries;
-  const resultUpdated = raceState === 'finished' && showOfficial
+  const resultUpdated = raceState === 'finished' && showOfficial && horsesRef.current.length > 0
     && resultsDiffer(horsesRef.current, excludedEntries, officialResult!.horses, officialResult!.excluded);
 
   return (
@@ -362,11 +371,14 @@ export function LiveViewer({ race, onClose }: Props) {
             )}
             {finishHorses
               .slice()
-              .sort((a, b) => a.rank - b.rank)
+              .sort((a, b) => {
+                if (!!a.isDisqualified !== !!b.isDisqualified) return a.isDisqualified ? 1 : -1;
+                return a.rank - b.rank;
+              })
               .map(h => (
                 <View key={h.horseId} style={styles.finishRow}>
                   <Text style={styles.finishRank}>
-                    {h.rank === 1 ? '🥇' : h.rank === 2 ? '🥈' : h.rank === 3 ? '🥉' : h.rank}
+                    {h.isDisqualified ? '—' : h.rank === 1 ? '🥇' : h.rank === 2 ? '🥈' : h.rank === 3 ? '🥉' : h.rank}
                   </Text>
                   <Text style={styles.finishHorseName} numberOfLines={1}>{h.horseName}</Text>
                   <Text style={styles.finishJockey} numberOfLines={1}>{h.jockeyName}</Text>

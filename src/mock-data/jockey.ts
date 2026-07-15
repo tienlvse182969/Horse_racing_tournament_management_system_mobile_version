@@ -94,17 +94,6 @@ export type JockeyRace = {
   meetingDate?: string;
 };
 
-export type JockeyLeaderEntry = {
-  rank: number;
-  name: string;
-  wins: number;
-  races: number;
-  winRate: number;
-  earnings: number;
-  change: number;
-  isMe?: boolean;
-};
-
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
 export const currentJockey: JockeyUser = {
@@ -281,12 +270,3 @@ export const personalResults: PersonalResult[] = [
   { raceId: 'pr5', raceName: 'Cúp Mùa Xuân 2026',      date: '2026-04-26', horse: 'Long Thần',      position: 1, time: '1:20.2', earnings: 90_000_000 },
 ];
 
-export const jockeyRankings: JockeyLeaderEntry[] = [
-  { rank: 1, name: 'Nguyễn Minh Tuấn', wins: 38, races: 124, winRate: 30.6, earnings: 4_800_000_000, change: 0,  isMe: true },
-  { rank: 2, name: 'Trần Anh Hùng',    wins: 33, races: 118, winRate: 27.9, earnings: 4_200_000_000, change: 1  },
-  { rank: 3, name: 'Lê Văn Khoa',      wins: 29, races: 115, winRate: 25.2, earnings: 3_800_000_000, change: -1 },
-  { rank: 4, name: 'Vũ Quang Huy',     wins: 24, races: 110, winRate: 21.8, earnings: 3_200_000_000, change: 2  },
-  { rank: 5, name: 'Phạm Bình Nam',    wins: 21, races: 105, winRate: 20.0, earnings: 2_900_000_000, change: -1 },
-  { rank: 6, name: 'Đỗ Hải Long',      wins: 18, races: 98,  winRate: 18.4, earnings: 2_400_000_000, change: 0  },
-  { rank: 7, name: 'Hoàng Văn Mạnh',   wins: 15, races: 92,  winRate: 16.3, earnings: 2_100_000_000, change: 3  },
-];

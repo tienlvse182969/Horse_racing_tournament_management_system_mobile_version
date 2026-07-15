@@ -66,6 +66,7 @@ export interface SpectatorRaceDto {
       horse: { id: string; name: string };
       jockey: { fullName: string };
       isDisqualified?: boolean;
+      finishTime?: number;
     }>;
     violations: Array<{
       horseId: string | null;

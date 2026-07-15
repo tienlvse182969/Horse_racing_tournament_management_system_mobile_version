@@ -2,14 +2,15 @@ import { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Zap, Trophy, Award, TrendingUp, TrendingDown, Minus, Timer } from 'lucide-react-native';
+import { Zap, Trophy, Award, Timer } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { JockeyAvatarButton } from '@/components/jockey-avatar-button';
 import { useJockeyRaces } from '@/hooks/useJockeyData';
-import { jockeyRankings, formatCurrency } from '@/mock-data';
+import { useHorseLeaderboard } from '@/hooks/useHorseLeaderboard';
+import { formatCurrency } from '@/mock-data';
 import { MedalIcon } from '@/components/ui/medal-icon';
 
 type Tab = 'personal' | 'leaderboard';
@@ -149,68 +150,40 @@ function PersonalContent() {
 }
 
 function LeaderboardContent() {
-  const me = jockeyRankings.find(j => j.isMe);
+  const { entries, loading } = useHorseLeaderboard(20);
 
   return (
     <>
-      {/* My rank highlight */}
-      {me && (
-        <LinearGradient colors={['#C07A00', '#3B1A00']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.myRankCard}>
-          <View style={styles.myRankLeft}>
-            <View style={styles.myRankNumWrap}>
-              <Text style={styles.myRankNum}>#{me.rank}</Text>
-            </View>
-            <View>
-              <Text style={styles.myRankMeta}>Xếp hạng của bạn</Text>
-              <Text style={styles.myRankName}>{me.name}</Text>
-              <Text style={styles.myRankStats}>
-                {me.wins} thắng · {me.winRate}% · {formatCurrency(me.earnings)}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.myRankBadge}>
-            <Trophy size={12} color="#FFD9B4" />
-            <Text style={styles.myRankBadgeText}>Top 1</Text>
-          </View>
-        </LinearGradient>
+      <Text style={styles.historyTitle}>Bảng xếp hạng ngựa</Text>
+
+      {!loading && entries.length === 0 && (
+        <Text style={styles.emptyText}>Chưa có dữ liệu xếp hạng</Text>
       )}
 
-      <Text style={styles.historyTitle}>Bảng xếp hạng Jockey</Text>
-
-      {jockeyRankings.map((j, i) => {
+      {entries.map((horse, i) => {
         return (
-          <Animated.View key={j.rank} entering={FadeInDown.delay(i * 50).duration(260)}>
-            <View style={[styles.rankRow, j.isMe && styles.rankRowMe]}>
+          <Animated.View key={horse.horseId} entering={FadeInDown.delay(i * 50).duration(260)}>
+            <View style={styles.rankRow}>
               <View style={styles.rankIcon}>
-                {j.rank <= 3 ? (
-                  <MedalIcon position={j.rank} size={22} />
+                {horse.rank <= 3 ? (
+                  <MedalIcon position={horse.rank} size={22} />
                 ) : (
-                  <Text style={styles.rankNum}>{j.rank}</Text>
+                  <Text style={styles.rankNum}>{horse.rank}</Text>
                 )}
               </View>
               <View style={styles.rankInfo}>
-                <View style={styles.rankNameRow}>
-                  <Text style={[styles.rankName, j.isMe && { color: C.primary }]}>{j.name}</Text>
-                  {j.isMe && (
-                    <View style={styles.meBadge}>
-                      <Text style={styles.meBadgeText}>BẠN</Text>
-                    </View>
-                  )}
-                </View>
+                <Text style={styles.rankName}>{horse.horseName}</Text>
                 <Text style={styles.rankStats}>
-                  {j.wins} thắng / {j.races} đua · {j.winRate}%
+                  {horse.firstPlaceWins} thắng / {horse.totalPublishedRaces} đua · {horse.winRate}%
                 </Text>
               </View>
               <View style={styles.rankRight}>
-                <Text style={styles.rankEarnings}>{formatCurrency(j.earnings)}</Text>
-                <View style={styles.rankChange}>
-                  {j.change > 0
-                    ? <><TrendingUp size={10} color={C.tertiary} /><Text style={[styles.changeText, { color: C.tertiary }]}>+{j.change}</Text></>
-                    : j.change < 0
-                    ? <><TrendingDown size={10} color={C.error} /><Text style={[styles.changeText, { color: C.error }]}>{j.change}</Text></>
-                    : <><Minus size={10} color={C.onSurfaceVariant} /><Text style={[styles.changeText, { color: C.onSurfaceVariant }]}>0</Text></>
-                  }
-                </View>
+                <Text style={styles.rankWinRate}>{horse.winRate.toFixed(0)}%</Text>
+                {(horse.ownerName ?? horse.latestRaceName) && (
+                  <Text style={styles.rankSubtitle} numberOfLines={1}>
+                    {horse.ownerName ? `Chủ: ${horse.ownerName}` : horse.latestRaceName}
+                  </Text>
+                )}
               </View>
             </View>
           </Animated.View>
@@ -257,30 +230,15 @@ const styles = StyleSheet.create({
   resultPos:      { fontFamily: FontFamily.bold, fontSize: 14 },
   resultEarnings: { color: C.secondary, fontFamily: FontFamily.bold, fontSize: 12 },
 
-  // My rank card
-  myRankCard:     { borderRadius: Shape.large, padding: Spacing.three, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  myRankLeft:     { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  myRankNumWrap:  { width: 48, height: 48, borderRadius: Shape.medium, backgroundColor: 'rgba(255,217,180,0.2)', justifyContent: 'center', alignItems: 'center' },
-  myRankNum:      { color: '#FFD9B4', fontFamily: FontFamily.bold, fontSize: 20 },
-  myRankMeta:     { color: 'rgba(255,217,180,0.7)', fontFamily: FontFamily.regular, fontSize: 11 },
-  myRankName:     { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 16 },
-  myRankStats:    { color: 'rgba(255,217,180,0.65)', fontFamily: FontFamily.regular, fontSize: 11 },
-  myRankBadge:    { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(255,217,180,0.2)', borderRadius: Shape.full, paddingHorizontal: 10, paddingVertical: 5 },
-  myRankBadgeText:{ color: '#FFD9B4', fontFamily: FontFamily.bold, fontSize: 12 },
-
   // Leaderboard rows
   rankRow:        { flexDirection: 'row', alignItems: 'center', backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, gap: Spacing.two, marginBottom: Spacing.two },
-  rankRowMe:      { backgroundColor: C.primaryContainer, borderWidth: 1.5, borderColor: `${C.primary}60` },
   rankIcon:       { width: 36, height: 36, borderRadius: Shape.medium, backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center' },
   rankNum:        { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 14 },
   rankInfo:       { flex: 1, gap: 3 },
-  rankNameRow:    { flexDirection: 'row', alignItems: 'center', gap: 6 },
   rankName:       { color: C.onSurface, fontFamily: FontFamily.medium, fontSize: 14 },
-  meBadge:        { backgroundColor: C.primary, borderRadius: Shape.full, paddingHorizontal: 6, paddingVertical: 1 },
-  meBadgeText:    { color: C.onPrimary, fontFamily: FontFamily.bold, fontSize: 9 },
   rankStats:      { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
-  rankRight:      { alignItems: 'flex-end', gap: 2 },
-  rankEarnings:   { color: C.secondary, fontFamily: FontFamily.bold, fontSize: 13 },
-  rankChange:     { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  changeText:     { fontFamily: FontFamily.medium, fontSize: 10 },
+  rankRight:      { alignItems: 'flex-end', gap: 2, maxWidth: 110 },
+  rankWinRate:    { color: C.secondary, fontFamily: FontFamily.bold, fontSize: 13 },
+  rankSubtitle:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 10 },
+  emptyText:      { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 13, textAlign: 'center', paddingVertical: Spacing.four },
 });
