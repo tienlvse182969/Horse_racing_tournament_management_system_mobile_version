@@ -9,6 +9,7 @@ import { router } from 'expo-router';
 import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { JockeyAvatarButton } from '@/components/jockey-avatar-button';
+import { JockeySuspensionBanner } from '@/components/jockey/jockey-suspension-banner';
 import { useAuth } from '@/context/AuthContext';
 import { useJockeyDashboard, useJockeyInvitations, useJockeyRaces } from '@/hooks/useJockeyData';
 import { formatCurrency, formatDate } from '@/mock-data';
@@ -97,6 +98,8 @@ export function JockeyHome() {
               </View>
             </LinearGradient>
           </Animated.View>
+
+          <JockeySuspensionBanner />
 
           {/* Pending invitations alert */}
           {pendingCount > 0 && (

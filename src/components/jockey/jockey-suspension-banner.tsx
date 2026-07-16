@@ -10,9 +10,11 @@ export function JockeySuspensionBanner() {
   const { user } = useAuth();
   const penalty = user?.penaltyStatus;
 
-  if (!penalty?.isBanned || !penalty.bannedUntil) return null;
+  if (!penalty?.isBanned) return null;
 
-  const label = `Bạn đang bị đình chỉ thi đấu đến ngày ${formatBanDate(penalty.bannedUntil)}`;
+  const label = penalty.bannedUntil
+    ? `Bạn đang bị đình chỉ thi đấu đến ngày ${formatBanDate(penalty.bannedUntil)}`
+    : 'Bạn đang bị đình chỉ thi đấu đến ngày ...';
 
   return (
     <View style={styles.banner}>
