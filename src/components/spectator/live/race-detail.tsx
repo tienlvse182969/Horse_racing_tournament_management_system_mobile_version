@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Platform, Alert } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Platform, Alert, BackHandler } from 'react-native';
 import * as Calendar from 'expo-calendar/legacy';
 import { LiveViewer } from './live-viewer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -32,6 +32,14 @@ export function RaceDetail({ race, onBack }: Props) {
   const insets = useSafeAreaInsets();
   const [isWatching, setIsWatching] = useState(false);
   const [addingToCalendar, setAddingToCalendar] = useState(false);
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      onBack();
+      return true;
+    });
+    return () => sub.remove();
+  }, [onBack]);
 
   if (isWatching) {
     return <LiveViewer race={race} onClose={() => setIsWatching(false)} />;
