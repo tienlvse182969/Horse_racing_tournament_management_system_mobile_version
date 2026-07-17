@@ -59,14 +59,17 @@ export function mapSpectatorRace(dto: SpectatorRaceDto): Race {
     distance: dto.distance ?? 1600,
     laps: 2,
     purse: dto.viewingTicket.pricePoints * 1000,
-    entries: dto.participants.map((p, i) => ({
-      horse: { id: p.id, name: p.name, number: p.laneNumber, breed: '-', color: LANE_COLORS[(p.laneNumber - 1) % LANE_COLORS.length] },
-      jockeyName: '-',
-      odds: 2 + i * 0.5,
-      ticketCount: p.ticketCount ?? 0,
-      position: dto.result?.rankings.find((r) => r.horse.id === p.id)?.rank,
-      isDisqualified: dto.result?.rankings.find((r) => r.horse.id === p.id)?.isDisqualified ?? false,
-    })),
+    entries: (() => {
+      const jockeyByHorseId = new Map(dto.result?.rankings.map((r) => [r.horse.id, r.jockey.fullName]));
+      return dto.participants.map((p, i) => ({
+        horse: { id: p.id, name: p.name, number: p.laneNumber, breed: '-', color: LANE_COLORS[(p.laneNumber - 1) % LANE_COLORS.length] },
+        jockeyName: jockeyByHorseId.get(p.id) ?? '',
+        odds: 2 + i * 0.5,
+        ticketCount: p.ticketCount ?? 0,
+        position: dto.result?.rankings.find((r) => r.horse.id === p.id)?.rank,
+        isDisqualified: dto.result?.rankings.find((r) => r.horse.id === p.id)?.isDisqualified ?? false,
+      }));
+    })(),
     tournamentId: dto.tournament.id,
     canPredict: dto.canPredict,
     hasPrediction: dto.hasPrediction,

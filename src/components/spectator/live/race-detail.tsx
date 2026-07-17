@@ -11,8 +11,6 @@ import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import type { Race } from '@/types/race';
 import { formatCurrency, formatDate } from '@/utils/format';
-import { spectatorApi } from '@/api/spectator.api';
-import { MedalIcon } from '@/components/ui/medal-icon';
 
 const PENALTY_LABELS: Record<string, string> = {
   warning: 'Cảnh cáo',
@@ -25,6 +23,8 @@ const PENALTY_LABELS: Record<string, string> = {
 };
 
 type Props = { race: Race; onBack: () => void };
+
+const MEDAL_COLORS = ['#C9971C', '#C0C0C0', '#CD7F32'];
 
 export function RaceDetail({ race, onBack }: Props) {
   const { C, SC } = useAppColors();
@@ -86,10 +86,8 @@ export function RaceDetail({ race, onBack }: Props) {
       setAddingToCalendar(false);
     }
   }
-  const visibleEntries = isCompleted && race.resultPublished
-    ? race.entries.filter((e) => !e.isDisqualified)
-    : race.entries;
-  const sortedEntries = [...visibleEntries].sort((a, b) => {
+  const sortedEntries = [...race.entries].sort((a, b) => {
+    if (!!a.isDisqualified !== !!b.isDisqualified) return a.isDisqualified ? 1 : -1;
     if (a.position && b.position) return a.position - b.position;
     if (a.position) return -1;
     if (b.position) return 1;
@@ -148,28 +146,30 @@ export function RaceDetail({ race, onBack }: Props) {
             </Text>
           )}
           {sortedEntries.map((entry, idx) => (
-            <View key={entry.horse.id} style={styles.entryRow}>
+            <View key={entry.horse.id} style={[styles.entryRow, entry.isDisqualified && styles.entryRowDisqualified]}>
               <View style={styles.entryRank}>
-                {entry.position && entry.position <= 3
-                  ? <MedalIcon position={entry.position} size={18} />
+                {entry.isDisqualified
+                  ? <Text style={styles.entryTextDisqualified}>—</Text>
                   : entry.position
-                  ? <Text style={styles.rankNum}>{entry.position}</Text>
+                  ? <Text style={[styles.rankNum, entry.position <= 3 && { color: MEDAL_COLORS[entry.position - 1] }]}>#{entry.position}</Text>
                   : isCompleted
                   ? <Text style={styles.rankDash}>—</Text>
                   : isUpcoming
                   ? null
-                  : <Text style={styles.rankNum}>{idx + 1}</Text>}
+                  : <Text style={[styles.rankNum, idx < 3 && { color: MEDAL_COLORS[idx] }]}>#{idx + 1}</Text>}
               </View>
               <View style={[styles.horseColor, { backgroundColor: entry.horse.color }]} />
               <View style={styles.entryInfo}>
-                <Text style={styles.entryHorseName}>
-                  {isUpcoming ? entry.horse.name : `#${entry.horse.number} ${entry.horse.name}`}
+                <Text style={[styles.entryHorseName, entry.isDisqualified && styles.entryTextDisqualified]}>
+                  {entry.horse.name}
                 </Text>
-                <Text style={styles.entryJockey}>{entry.jockeyName}</Text>
+                {!!entry.jockeyName && (
+                  <Text style={[styles.entryJockey, entry.isDisqualified && styles.entryTextDisqualified]}>{entry.jockeyName}</Text>
+                )}
               </View>
               <View style={styles.entryRight}>
                 {entry.finishTime && (
-                  <Text style={styles.finishTime}>{entry.finishTime}</Text>
+                  <Text style={[styles.finishTime, entry.isDisqualified && styles.entryTextDisqualified]}>{entry.finishTime}</Text>
                 )}
               </View>
             </View>
@@ -256,6 +256,8 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   sectionTitle: { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15, marginBottom: Spacing.two },
   pendingReviewText: { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 13, marginBottom: Spacing.two },
   entryRow:     { flexDirection: 'row', alignItems: 'center', backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, marginBottom: Spacing.two, gap: Spacing.two },
+  entryRowDisqualified: { backgroundColor: `${C.error}15` },
+  entryTextDisqualified: { color: C.error },
   entryRank:    { width: 32, alignItems: 'center' },
   rankNum:      { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 16 },
   rankDash:     { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 16 },

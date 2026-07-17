@@ -82,6 +82,7 @@ type Props = { race: Race; onClose: () => void };
 
 const DURATION_MS = 18000;
 const SPEEDS = [1, 2, 4] as const;
+const MEDAL_COLORS = ['#C9971C', '#C0C0C0', '#CD7F32'];
 
 export function LiveViewer({ race, onClose }: Props) {
   const { C } = useAppColors();
@@ -300,14 +301,13 @@ export function LiveViewer({ race, onClose }: Props) {
         {/* Leaderboard */}
         {frame && frame.ranking.length > 0 && (
           <View style={styles.board}>
-            <View style={styles.boardTitleRow}>
-              <Text style={styles.boardTitle}>BẢNG XẾP HẠNG</Text>
-              {!isOfficial && (
+            {!isOfficial && (
+              <View style={styles.boardTitleRow}>
                 <View style={styles.tempBadge}>
                   <Text style={styles.tempBadgeText}>TẠM THỜI</Text>
                 </View>
-              )}
-            </View>
+              </View>
+            )}
             <View style={styles.boardHead}>
               <Text style={[styles.boardHeadText, { width: 28 }]}>HẠNG</Text>
               <Text style={[styles.boardHeadText, { flex: 1 }]}>NGỰA</Text>
@@ -320,7 +320,9 @@ export function LiveViewer({ race, onClose }: Props) {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.boardHorseName} numberOfLines={1}>{hf.horse.horseName}</Text>
-                  <Text style={styles.boardJockey} numberOfLines={1}>{hf.horse.jockeyName}</Text>
+                  {!!hf.horse.jockeyName && (
+                    <Text style={styles.boardJockey} numberOfLines={1}>{hf.horse.jockeyName}</Text>
+                  )}
                 </View>
                 <Text style={styles.boardDist}>
                   {i === 0 ? '—' : `${lengthsBehind(frame.leaderProgress, hf.progress, race.distance).toFixed(1)}L`}
@@ -353,7 +355,7 @@ export function LiveViewer({ race, onClose }: Props) {
             </View>
             <View style={styles.statPanel}>
               <Text style={styles.statLabel}>MẶT SÂN</Text>
-              <Text style={styles.statCondition}>🌱 {race.surface}</Text>
+              <Text style={styles.statCondition}>{race.surface}</Text>
             </View>
           </View>
         )}
@@ -370,7 +372,7 @@ export function LiveViewer({ race, onClose }: Props) {
                 : 'Đây là kết quả tạm thời từ mô phỏng. Đang chờ trọng tài kiểm tra VAR và xác nhận trước khi công bố kết quả chính thức.'}
             </Text>
             {resultUpdated && (
-              <Text style={styles.updatedNotice}>⚠️ Kết quả đã được cập nhật sau khi trọng tài xác nhận VAR.</Text>
+              <Text style={styles.updatedNotice}>Kết quả đã được cập nhật sau khi trọng tài xác nhận VAR.</Text>
             )}
             {finishHorses
               .slice()
@@ -379,13 +381,19 @@ export function LiveViewer({ race, onClose }: Props) {
                 return a.rank - b.rank;
               })
               .map(h => (
-                <View key={h.horseId} style={styles.finishRow}>
-                  <Text style={styles.finishRank}>
-                    {h.isDisqualified ? '—' : h.rank === 1 ? '🥇' : h.rank === 2 ? '🥈' : h.rank === 3 ? '🥉' : h.rank}
+                <View key={h.horseId} style={[styles.finishRow, h.isDisqualified && styles.finishRowDisqualified]}>
+                  <Text style={[
+                    styles.finishRank,
+                    !h.isDisqualified && h.rank <= 3 && { color: MEDAL_COLORS[h.rank - 1] },
+                    h.isDisqualified && styles.finishTextDisqualified,
+                  ]}>
+                    {h.isDisqualified ? '—' : `#${h.rank}`}
                   </Text>
-                  <Text style={styles.finishHorseName} numberOfLines={1}>{h.horseName}</Text>
-                  <Text style={styles.finishJockey} numberOfLines={1}>{h.jockeyName}</Text>
-                  <Text style={styles.finishTime}>{h.finishTime != null ? `${h.finishTime.toFixed(2)}s` : '—'}</Text>
+                  <Text style={[styles.finishHorseName, h.isDisqualified && styles.finishTextDisqualified]} numberOfLines={1}>{h.horseName}</Text>
+                  {!!h.jockeyName && (
+                    <Text style={[styles.finishJockey, h.isDisqualified && styles.finishTextDisqualified]} numberOfLines={1}>{h.jockeyName}</Text>
+                  )}
+                  <Text style={[styles.finishTime, h.isDisqualified && styles.finishTextDisqualified]}>{h.finishTime != null ? `${h.finishTime.toFixed(2)}s` : '—'}</Text>
                 </View>
               ))}
             {finishExcluded.map(e => {
@@ -393,8 +401,8 @@ export function LiveViewer({ race, onClose }: Props) {
               return (
                 <View key={e.horse.id} style={styles.excludedRow}>
                   <Text style={styles.excludedText} numberOfLines={2}>
-                    ⚠️ #{e.horse.number} {e.horse.name}{' '}
-                    {violation ? `bị loại: ${violation.description}` : 'đã vi phạm lỗi nghiêm trọng trong kết quả chung cuộc.'}
+                    #{e.horse.number} {e.horse.name}{' '}
+                    {violation ? `bị tước quyền thi đấu: ${violation.description}` : 'đã vi phạm lỗi nghiêm trọng trong kết quả chung cuộc.'}
                   </Text>
                 </View>
               );
@@ -470,8 +478,7 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   waitingText:{ color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 13 },
 
   board:     { backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, gap: 2 },
-  boardTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
-  boardTitle:    { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 10, letterSpacing: 0.5 },
+  boardTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 4 },
   tempBadge:     { backgroundColor: `${C.tertiary}22`, borderRadius: Shape.full, paddingHorizontal: 8, paddingVertical: 2 },
   tempBadgeText: { color: C.tertiary, fontFamily: FontFamily.bold, fontSize: 9, letterSpacing: 0.5 },
   boardHead: { flexDirection: 'row', gap: Spacing.two, paddingBottom: Spacing.one, borderBottomWidth: 1, borderBottomColor: SC.highest },
@@ -500,10 +507,12 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   finishSub:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12, marginBottom: Spacing.one },
   updatedNotice: { color: C.tertiary, fontFamily: FontFamily.medium, fontSize: 12, backgroundColor: `${C.tertiary}15`, borderRadius: Shape.medium, padding: Spacing.two, marginBottom: Spacing.one },
   finishRow:   { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, backgroundColor: SC.lowest, borderRadius: Shape.medium, padding: Spacing.two },
+  finishRowDisqualified: { backgroundColor: `${C.error}15` },
   finishRank:  { width: 24, textAlign: 'center', fontSize: 14 },
   finishHorseName: { flex: 1, color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 13 },
   finishJockey:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
   finishTime:      { width: 60, textAlign: 'right', color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 12 },
+  finishTextDisqualified: { color: C.error },
   excludedRow:  { backgroundColor: `${C.error}15`, borderRadius: Shape.medium, padding: Spacing.two },
   excludedText: { color: C.error, fontFamily: FontFamily.medium, fontSize: 12 },
   doneBtn:     { backgroundColor: C.primary, borderRadius: Shape.full, paddingVertical: 12, alignItems: 'center', marginTop: Spacing.one },

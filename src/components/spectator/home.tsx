@@ -12,7 +12,8 @@ import { formatCurrency, formatDate } from '@/mock-data';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useSpectatorRaces, useSpectatorPredictions } from '@/hooks/useSpectatorData';
 import { ActivityIndicator } from 'react-native';
-import { MedalIcon } from '@/components/ui/medal-icon';
+
+const MEDAL_COLORS = ['#C9971C', '#C0C0C0', '#CD7F32'];
 
 export function SpectatorHome() {
   const { C } = useAppColors();
@@ -178,11 +179,11 @@ export function SpectatorHome() {
                   .map((entry, i) => (
                     <View key={entry.horse.id} style={styles.resultRow}>
                       <View style={styles.resultMedalWrap}>
-                        <MedalIcon position={i + 1} size={18} />
+                        <Text style={[styles.resultRankLabel, { color: MEDAL_COLORS[i] }]}>#{i + 1}</Text>
                       </View>
                       <View style={[styles.resultColorDot, { backgroundColor: entry.horse.color }]} />
                       <Text style={styles.resultHorseName}>
-                        #{entry.horse.number} {entry.horse.name}
+                        {entry.horse.name}
                       </Text>
                       <Text style={styles.resultTime}>{entry.finishTime}</Text>
                     </View>
@@ -256,6 +257,7 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   resultDate:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
   resultRow:       { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   resultMedalWrap: { width: 26, alignItems: 'center' },
+  resultRankLabel: { fontFamily: FontFamily.bold, fontSize: 13 },
   resultColorDot:{ width: 10, height: 10, borderRadius: 5 },
   resultHorseName:{ color: C.onSurface, fontFamily: FontFamily.medium, fontSize: 13, flex: 1 },
   resultTime:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },

@@ -145,7 +145,7 @@ export function PredictForm({ onSubmitted }: Props) {
                     <Text style={[styles.horseName, isSelected && styles.horseNameSelected]}>
                       {entry.horse.name}
                     </Text>
-                    <Text style={styles.jockeyName}>{entry.jockeyName}</Text>
+                    {!!entry.jockeyName && <Text style={styles.jockeyName}>{entry.jockeyName}</Text>}
                   </View>
                   <View style={styles.oddsBadge}>
                     <Text style={styles.oddsText}>Đang có {entry.ticketCount ?? 0} phiếu</Text>

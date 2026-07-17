@@ -40,7 +40,9 @@ function StandingRow({ s }: { s: StandingEntry }) {
         <Text style={styles.horseName} numberOfLines={1}>
           #{s.entry.horse.number} {s.entry.horse.name}
         </Text>
-        <Text style={styles.jockeyName} numberOfLines={1}>{s.entry.jockeyName}</Text>
+        {!!s.entry.jockeyName && (
+          <Text style={styles.jockeyName} numberOfLines={1}>{s.entry.jockeyName}</Text>
+        )}
       </View>
       <View style={styles.right}>
         {s.finishTime
