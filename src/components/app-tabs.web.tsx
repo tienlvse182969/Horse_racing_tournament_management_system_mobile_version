@@ -13,7 +13,8 @@ import { ExternalLink } from './external-link';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
-import { HorseRacingDark, MaxContentWidth, Spacing } from '@/constants/theme';
+import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { useAppColors } from '@/hooks/use-theme';
 
 export default function AppTabs() {
   return (
@@ -57,6 +58,7 @@ export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps
 }
 
 export function CustomTabList(props: TabListProps) {
+  const { C } = useAppColors();
   return (
     <View {...props} style={styles.tabListContainer}>
       <ThemedView type="surfaceVariant" style={styles.innerContainer}>
@@ -70,7 +72,7 @@ export function CustomTabList(props: TabListProps) {
           <Pressable style={styles.externalPressable}>
             <ThemedText type="link">Docs</ThemedText>
             <SymbolView
-              tintColor={HorseRacingDark.onSurface}
+              tintColor={C.onSurface}
               name={{ ios: 'arrow.up.right.square', web: 'link' }}
               size={12}
             />

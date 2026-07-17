@@ -4,7 +4,8 @@ import { TextInput } from 'react-native-paper';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { Zap, Users, User, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
 
-import { HorseRacingDark as C, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import type { RegisterRole } from './types';
 
 type Props = {
@@ -28,6 +29,8 @@ export function RegisterForm({
   onEmailChange,
   onPasswordChange,
 }: Props) {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const [pwVisible, setPwVisible] = useState(false);
 
   const isJockey       = registerRole === 'jockey';
@@ -100,12 +103,14 @@ export function RegisterForm({
   );
 }
 
-const styles = StyleSheet.create({
-  form: { gap: Spacing.two, marginBottom: Spacing.two },
-  roleBadgeRow:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.one },
-  roleBadge:      { flexDirection: 'row', alignItems: 'center', gap: Spacing.one, paddingVertical: 6, paddingHorizontal: Spacing.two, borderRadius: Shape.full },
-  roleBadgeLabel: { fontFamily: FontFamily.medium, fontSize: 13 },
-  changeRoleBtn:  { paddingVertical: 6, paddingHorizontal: Spacing.one },
-  changeRoleText: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 13, textDecorationLine: 'underline' },
-  notice: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 13, marginBottom: Spacing.one },
-});
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
+    form: { gap: Spacing.two, marginBottom: Spacing.two },
+    roleBadgeRow:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.one },
+    roleBadge:      { flexDirection: 'row', alignItems: 'center', gap: Spacing.one, paddingVertical: 6, paddingHorizontal: Spacing.two, borderRadius: Shape.full },
+    roleBadgeLabel: { fontFamily: FontFamily.medium, fontSize: 13 },
+    changeRoleBtn:  { paddingVertical: 6, paddingHorizontal: Spacing.one },
+    changeRoleText: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 13, textDecorationLine: 'underline' },
+    notice: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 13, marginBottom: Spacing.one },
+  });
+}

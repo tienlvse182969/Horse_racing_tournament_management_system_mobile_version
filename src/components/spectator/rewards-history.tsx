@@ -5,9 +5,10 @@ import { Gift, Wallet, PiggyBank, ChevronLeft, Plus, X } from 'lucide-react-nati
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { AvatarTabButton } from '@/components/avatar-tab-button';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useSpectatorPoints } from '@/hooks/useSpectatorData';
 import { spectatorApi } from '@/api/spectator.api';
 
@@ -33,6 +34,8 @@ const TX_LABEL: Record<string, string> = {
 };
 
 export function SpectatorRewardsHistory() {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const { balance, totalEarned, totalSpent, transactions, reload } = useSpectatorPoints();
   const [topUpPoints, setTopUpPoints] = useState('100');
   const [submitting, setSubmitting] = useState(false);
@@ -192,7 +195,8 @@ export function SpectatorRewardsHistory() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   root:    { flex: 1, backgroundColor: SC.lowest },
   safeArea:{ flex: 1 },
   scroll:  { paddingHorizontal: Spacing.three, gap: Spacing.two, paddingBottom: Spacing.five },
@@ -233,4 +237,5 @@ const styles = StyleSheet.create({
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', alignItems: 'center', padding: Spacing.three },
   modalCard:     { width: '100%', maxWidth: 360, backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.three, gap: 4 },
   modalCloseBtn: { position: 'absolute', top: Spacing.two, right: Spacing.two, width: 32, height: 32, borderRadius: Shape.full, backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center', zIndex: 1 },
-});
+  });
+}

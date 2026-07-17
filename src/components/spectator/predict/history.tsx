@@ -2,23 +2,29 @@ import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
 import { Ban, CircleCheck, CircleX, CircleDashed, Clock } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { formatDate } from '@/mock-data';
 import type { Prediction } from '@/mock-data/predictions';
 
 type StatusIcon = React.ComponentType<{ size?: number; color?: string }>;
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; Icon: StatusIcon }> = {
-  won:     { label: 'Đúng',        color: C.tertiary,  bg: C.tertiaryContainer,  Icon: CircleCheck },
-  partial: { label: 'Đúng một phần', color: C.primary, bg: C.primaryContainer,  Icon: CircleDashed },
-  lost:    { label: 'Sai',         color: C.error,     bg: C.errorContainer,     Icon: CircleX     },
-  pending: { label: 'Đang chờ',    color: C.secondary, bg: C.secondaryContainer, Icon: Clock       },
-  cancelled: { label: 'Đã hủy',    color: C.onSurfaceVariant, bg: SC.high, Icon: Ban },
-};
+function statusConfig(C: AppColors, SC: SurfaceColors): Record<string, { label: string; color: string; bg: string; Icon: StatusIcon }> {
+  return {
+    won:     { label: 'Đúng',        color: C.tertiary,  bg: C.tertiaryContainer,  Icon: CircleCheck },
+    partial: { label: 'Đúng một phần', color: C.primary, bg: C.primaryContainer,  Icon: CircleDashed },
+    lost:    { label: 'Sai',         color: C.error,     bg: C.errorContainer,     Icon: CircleX     },
+    pending: { label: 'Đang chờ',    color: C.secondary, bg: C.secondaryContainer, Icon: Clock       },
+    cancelled: { label: 'Đã hủy',    color: C.onSurfaceVariant, bg: SC.high, Icon: Ban },
+  };
+}
 
 type Props = { predictions: Prediction[]; onCancel?: (predictionId: string) => void };
 
 export function PredictionHistory({ predictions, onCancel }: Props) {
+  const { C, SC } = useAppColors();
+  const styles = useThemedStyles(createStyles);
+  const STATUS_CONFIG = statusConfig(C, SC);
   const handleCancel = (predictionId: string) => {
     Alert.alert(
       'Hủy dự đoán',
@@ -90,6 +96,7 @@ export function PredictionHistory({ predictions, onCancel }: Props) {
 }
 
 function StatCard({ label, value, color }: { label: string; value: string | number; color: string }) {
+  const styles = useThemedStyles(createStyles);
   return (
     <View style={[styles.statCard, { borderColor: `${color}40` }]}>
       <Text style={[styles.statValue, { color }]}>{value}</Text>
@@ -98,7 +105,8 @@ function StatCard({ label, value, color }: { label: string; value: string | numb
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   root:        { gap: Spacing.two },
   statsRow:    { flexDirection: 'row', gap: Spacing.one, marginBottom: Spacing.two },
   statCard:    { flex: 1, alignItems: 'center', padding: Spacing.two, borderRadius: Shape.medium, borderWidth: 1, backgroundColor: SC.low },
@@ -119,4 +127,5 @@ const styles = StyleSheet.create({
   cardReward:  { color: C.primary, fontFamily: FontFamily.bold, fontSize: 14 },
   cancelBtn:   { alignSelf: 'flex-start', borderRadius: Shape.full, borderWidth: 1, borderColor: C.error, paddingHorizontal: 12, paddingVertical: 6, marginTop: 2 },
   cancelText:  { color: C.error, fontFamily: FontFamily.medium, fontSize: 12 },
-});
+  });
+}

@@ -4,7 +4,8 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, BellRing, CalendarDays, CheckCircle, Share2 } from 'lucide-react-native';
 
-import { FontFamily, HorseRacingDark as C, Shape, Spacing, SurfaceContainers as SC } from '@/constants/theme';
+import { FontFamily, Shape, Spacing, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import type { Race } from '@/types/race';
 import { formatDate } from '@/utils/format';
 
@@ -29,6 +30,8 @@ function useCountdown(date: string, time: string): TimeLeft {
 }
 
 export function TicketConfirmation({ race, onBack, onWatch }: Props) {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const timeLeft = useCountdown(race.date, race.time);
   const isStarted = timeLeft === null;
@@ -134,6 +137,7 @@ export function TicketConfirmation({ race, onBack, onWatch }: Props) {
 }
 
 function CountUnit({ value, unit }: { value: number; unit: string }) {
+  const styles = useThemedStyles(createStyles);
   return (
     <View style={styles.countUnit}>
       <Text style={styles.countNum}>{String(value).padStart(2, '0')}</Text>
@@ -143,6 +147,7 @@ function CountUnit({ value, unit }: { value: number; unit: string }) {
 }
 
 function TicketCell({ label, value }: { label: string; value: string }) {
+  const styles = useThemedStyles(createStyles);
   return (
     <View style={styles.ticketCell}>
       <Text style={styles.ticketCellLabel}>{label}</Text>
@@ -151,7 +156,8 @@ function TicketCell({ label, value }: { label: string; value: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   root:   { flex: 1, backgroundColor: SC.lowest },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -208,4 +214,5 @@ const styles = StyleSheet.create({
     paddingVertical: 12, paddingHorizontal: Spacing.three,
   },
   secondaryBtnText: { color: C.onSurface, fontFamily: FontFamily.medium, fontSize: 14 },
-});
+  });
+}

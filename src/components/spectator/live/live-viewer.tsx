@@ -6,7 +6,8 @@ import Svg, { Ellipse } from 'react-native-svg';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, Easing } from 'react-native-reanimated';
 import { X } from 'lucide-react-native';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import type { Race, RaceEntry } from '@/types/race';
 import { spectatorApi } from '@/api/spectator.api';
 import {
@@ -83,6 +84,8 @@ const DURATION_MS = 18000;
 const SPEEDS = [1, 2, 4] as const;
 
 export function LiveViewer({ race, onClose }: Props) {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const [raceState, setRaceState] = useState<RaceState>('waiting');
   const [waitingReason, setWaitingReason] = useState<WaitingReason>('not-started');
@@ -408,6 +411,7 @@ export function LiveViewer({ race, onClose }: Props) {
 }
 
 function HorseMarker({ hf, isLeader }: { hf: HorseFrame; isLeader: boolean }) {
+  const styles = useThemedStyles(createStyles);
   const bob = useSharedValue(0);
 
   useEffect(() => {
@@ -432,7 +436,8 @@ function HorseMarker({ hf, isLeader }: { hf: HorseFrame; isLeader: boolean }) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   root:  { flex: 1, backgroundColor: SC.lowest },
   scroll:{ paddingHorizontal: Spacing.three, paddingBottom: Spacing.five, gap: Spacing.two },
 
@@ -482,7 +487,7 @@ const styles = StyleSheet.create({
   statsRow:   { flexDirection: 'row', gap: Spacing.two },
   statPanel:  { flex: 1, backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, gap: 6 },
   statLabel:  { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 9, letterSpacing: 0.5 },
-  statValue:  { color: '#ffd24a', fontFamily: FontFamily.bold, fontSize: 18 },
+  statValue:  { color: C.secondary, fontFamily: FontFamily.bold, fontSize: 18 },
   statDash:   { color: C.onSurfaceVariant, fontSize: 13 },
   statCondition: { color: C.tertiary, fontFamily: FontFamily.bold, fontSize: 13 },
   leaderRow:  { flexDirection: 'row', alignItems: 'center', gap: 6 },
@@ -491,7 +496,7 @@ const styles = StyleSheet.create({
   speedBarInner: { height: '100%', backgroundColor: C.tertiary, borderRadius: Shape.full },
 
   finishCard:  { backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.three, gap: Spacing.one },
-  finishTitle: { color: '#ffd24a', fontFamily: FontFamily.bold, fontSize: 16 },
+  finishTitle: { color: C.secondary, fontFamily: FontFamily.bold, fontSize: 16 },
   finishSub:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12, marginBottom: Spacing.one },
   updatedNotice: { color: C.tertiary, fontFamily: FontFamily.medium, fontSize: 12, backgroundColor: `${C.tertiary}15`, borderRadius: Shape.medium, padding: Spacing.two, marginBottom: Spacing.one },
   finishRow:   { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, backgroundColor: SC.lowest, borderRadius: Shape.medium, padding: Spacing.two },
@@ -503,4 +508,5 @@ const styles = StyleSheet.create({
   excludedText: { color: C.error, fontFamily: FontFamily.medium, fontSize: 12 },
   doneBtn:     { backgroundColor: C.primary, borderRadius: Shape.full, paddingVertical: 12, alignItems: 'center', marginTop: Spacing.one },
   doneBtnText: { color: C.onPrimary, fontFamily: FontFamily.bold, fontSize: 15 },
-});
+  });
+}

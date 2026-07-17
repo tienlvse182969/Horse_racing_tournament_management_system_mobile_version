@@ -3,7 +3,8 @@ import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator
 import { CircleCheck, Circle, Target, Coins } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { formatCurrency, formatDate } from '@/mock-data';
 import { useSpectatorPoints, useSpectatorRaces } from '@/hooks/useSpectatorData';
 import { spectatorApi } from '@/api/spectator.api';
@@ -12,6 +13,8 @@ import { NumberWheelPicker } from '@/components/ui/number-wheel-picker';
 type Props = { onSubmitted: () => void };
 
 export function PredictForm({ onSubmitted }: Props) {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const { races, loading } = useSpectatorRaces();
   const { balance, reload: reloadPoints } = useSpectatorPoints();
   const predictableRaces = races.filter(r => r.canPredict && !r.hasPrediction);
@@ -206,7 +209,8 @@ export function PredictForm({ onSubmitted }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   root: { gap: Spacing.three },
 
   stepLabel: { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 12, letterSpacing: 0.5, marginBottom: Spacing.one },
@@ -251,4 +255,5 @@ const styles = StyleSheet.create({
 
   emptyBox:  { alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.six },
   emptyText: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 14, textAlign: 'center' },
-});
+  });
+}

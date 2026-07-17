@@ -11,11 +11,11 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { Zap, Users } from 'lucide-react-native';
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { AuthHeader } from '@/components/auth/auth-header';
 import { AuthTabSwitcher } from '@/components/auth/auth-tab-switcher';
 import { LoginForm } from '@/components/auth/login-form';
@@ -37,6 +37,8 @@ function redirectForRole(role: string) {
 
 export default function AuthScreen() {
   const { login, registerSpectator } = useAuth();
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const [activeTab, setActiveTab] = useState<Tab>('login');
   const [registerRole, setRegisterRole] = useState<RegisterRole | null>(null);
   const [email, setEmail] = useState('spectator@demo.local');
@@ -101,7 +103,6 @@ export default function AuthScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light" />
       <SafeAreaView style={styles.safeArea}>
         <AuthHeader />
         <KeyboardAvoidingView
@@ -206,7 +207,8 @@ export default function AuthScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   container:   { flex: 1, backgroundColor: SC.low },
   safeArea:    { flex: 1 },
   flex:        { flex: 1 },
@@ -223,4 +225,5 @@ const styles = StyleSheet.create({
   demoText:         { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 13 },
   demoTextJockey:   { color: C.primary },
   versionText:      { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12, textAlign: 'center', marginTop: Spacing.two },
-});
+  });
+}

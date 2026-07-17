@@ -3,7 +3,8 @@ import { Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { TextInput } from 'react-native-paper';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
-import { HorseRacingDark as C, Spacing, FontFamily } from '@/constants/theme';
+import { Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useThemedStyles } from '@/hooks/use-theme';
 
 type Props = {
   email: string;
@@ -13,6 +14,7 @@ type Props = {
 };
 
 export function LoginForm({ email, password, onEmailChange, onPasswordChange }: Props) {
+  const styles = useThemedStyles(createStyles);
   const [pwVisible, setPwVisible] = useState(false);
 
   return (
@@ -47,8 +49,10 @@ export function LoginForm({ email, password, onEmailChange, onPasswordChange }: 
   );
 }
 
-const styles = StyleSheet.create({
-  form:       { gap: Spacing.two, marginBottom: Spacing.two },
-  forgotBtn:  { alignSelf: 'flex-end', paddingVertical: Spacing.one },
-  forgotText: { color: C.primary, fontFamily: FontFamily.medium, fontSize: 13 },
-});
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
+    form:       { gap: Spacing.two, marginBottom: Spacing.two },
+    forgotBtn:  { alignSelf: 'flex-end', paddingVertical: Spacing.one },
+    forgotText: { color: C.primary, fontFamily: FontFamily.medium, fontSize: 13 },
+  });
+}

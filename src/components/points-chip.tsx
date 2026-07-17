@@ -2,10 +2,13 @@ import { Pressable, Text, StyleSheet } from 'react-native';
 import { Award } from 'lucide-react-native';
 import { router } from 'expo-router';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, FontFamily } from '@/constants/theme';
+import { Shape, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useSpectatorPoints } from '@/hooks/useSpectatorData';
 
 export function PointsChip() {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const { balance } = useSpectatorPoints();
   return (
     <Pressable
@@ -18,7 +21,9 @@ export function PointsChip() {
   );
 }
 
-const styles = StyleSheet.create({
-  chip:     { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: SC.highest, borderRadius: Shape.full, paddingHorizontal: 10, paddingVertical: 7, overflow: 'hidden' },
-  chipText: { color: C.tertiary, fontFamily: FontFamily.bold, fontSize: 12 },
-});
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
+    chip:     { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: SC.highest, borderRadius: Shape.full, paddingHorizontal: 10, paddingVertical: 7, overflow: 'hidden' },
+    chipText: { color: C.tertiary, fontFamily: FontFamily.bold, fontSize: 12 },
+  });
+}

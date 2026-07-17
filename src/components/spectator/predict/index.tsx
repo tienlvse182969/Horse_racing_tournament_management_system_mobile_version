@@ -3,9 +3,10 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Star, Gift } from 'lucide-react-native';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { HeaderActions } from '@/components/header-actions';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useSpectatorPoints, useSpectatorPredictions } from '@/hooks/useSpectatorData';
 import { PredictForm } from './predict-form';
 import { PredictionHistory } from './history';
@@ -13,6 +14,8 @@ import { PredictionHistory } from './history';
 type Tab = 'predict' | 'history';
 
 export function SpectatorPredict() {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const [tab, setTab] = useState<Tab>('predict');
   const { balance } = useSpectatorPoints();
   const { predictions, reload, cancelPrediction } = useSpectatorPredictions();
@@ -72,7 +75,8 @@ export function SpectatorPredict() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   root:    { flex: 1, backgroundColor: SC.lowest },
   safeArea:{ flex: 1 },
   scroll:  { paddingHorizontal: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.five },
@@ -93,4 +97,5 @@ const styles = StyleSheet.create({
   tabBtnActive:    { backgroundColor: C.secondary },
   tabBtnText:      { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 14 },
   tabBtnTextActive:{ color: C.onSecondary },
-});
+  });
+}

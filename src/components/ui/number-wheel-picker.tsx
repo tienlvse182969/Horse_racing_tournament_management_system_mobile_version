@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { View, Text, ScrollView, StyleSheet, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, FontFamily } from '@/constants/theme';
+import { Shape, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useThemedStyles } from '@/hooks/use-theme';
 
 type Props = { min: number; max: number; value: number; onChange: (value: number) => void };
 
@@ -15,6 +16,7 @@ const SIDE_PADDING = ITEM_HEIGHT * Math.floor(VISIBLE_ITEMS / 2);
 const DRAG_SETTLE_MS = 80;
 
 export function NumberWheelPicker({ min, max, value, onChange }: Props) {
+  const styles = useThemedStyles(createStyles);
   const scrollRef = useRef<ScrollView>(null);
   const lastScrolledValue = useRef<number | null>(null);
   const isInteracting = useRef(false);
@@ -93,7 +95,8 @@ export function NumberWheelPicker({ min, max, value, onChange }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   root: { height: CONTAINER_HEIGHT, width: 90 },
   highlight: {
     position: 'absolute',
@@ -107,4 +110,5 @@ const styles = StyleSheet.create({
   item: { height: ITEM_HEIGHT, justifyContent: 'center', alignItems: 'center' },
   itemText: { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 16 },
   itemTextSelected: { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 18 },
-});
+  });
+}

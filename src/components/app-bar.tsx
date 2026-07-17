@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet } from 'react-native';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Spacing, FontFamily } from '@/constants/theme';
+import { Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useThemedStyles } from '@/hooks/use-theme';
 
 type AppBarProps = {
   title: string;
@@ -8,6 +9,7 @@ type AppBarProps = {
 };
 
 export function AppBar({ title, bangers = false }: AppBarProps) {
+  const styles = useThemedStyles(createStyles);
   return (
     <View style={styles.container}>
       <Text style={bangers ? styles.titleBangers : styles.titleNormal}>
@@ -17,23 +19,25 @@ export function AppBar({ title, bangers = false }: AppBarProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: SC.lowest,
-    paddingHorizontal: Spacing.three,
-    paddingTop: Spacing.six,
-    paddingBottom: Spacing.three,
-  },
-  titleNormal: {
-    color: C.onSurface,
-    fontFamily: FontFamily.bold,
-    fontSize: 34,
-    letterSpacing: -0.5,
-  },
-  titleBangers: {
-    color: C.primary,
-    fontFamily: FontFamily.bangers,
-    fontSize: 40,
-    letterSpacing: 3,
-  },
-});
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
+    container: {
+      backgroundColor: SC.lowest,
+      paddingHorizontal: Spacing.three,
+      paddingTop: Spacing.six,
+      paddingBottom: Spacing.three,
+    },
+    titleNormal: {
+      color: C.onSurface,
+      fontFamily: FontFamily.bold,
+      fontSize: 34,
+      letterSpacing: -0.5,
+    },
+    titleBangers: {
+      color: C.primary,
+      fontFamily: FontFamily.bangers,
+      fontSize: 40,
+      letterSpacing: 3,
+    },
+  });
+}

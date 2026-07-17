@@ -2,7 +2,8 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Zap, Clock, MapPin, Route, Trophy, User } from 'lucide-react-native';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import type { Race } from '@/types/race';
 import { formatCurrency, formatDate } from '@/utils/format';
 import { MedalIcon } from '@/components/ui/medal-icon';
@@ -10,6 +11,7 @@ import { MedalIcon } from '@/components/ui/medal-icon';
 type Props = { race: Race; onPress: () => void };
 
 export function RaceCard({ race, onPress }: Props) {
+  const styles = useThemedStyles(createStyles);
   const leader = race.entries.find(e => e.position === 1);
 
   if (race.status === 'live') {
@@ -103,6 +105,8 @@ export function RaceCard({ race, onPress }: Props) {
 }
 
 function MetaChip({ Icon, text }: { Icon: React.ComponentType<{ size?: number; color?: string }>; text: string }) {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   return (
     <View style={styles.metaChip}>
       <Icon size={11} color={C.onSurfaceVariant} />
@@ -111,7 +115,8 @@ function MetaChip({ Icon, text }: { Icon: React.ComponentType<{ size?: number; c
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   // Live
   liveCard:      { borderRadius: Shape.large, padding: Spacing.three, gap: Spacing.two },
   liveCardName:  { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 16 },
@@ -149,4 +154,5 @@ const styles = StyleSheet.create({
   metaRow:    { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.one },
   metaChip:   { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: `${C.onSurfaceVariant}15`, borderRadius: Shape.full, paddingHorizontal: 8, paddingVertical: 3 },
   metaChipText:{ color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
-});
+  });
+}

@@ -3,11 +3,14 @@ import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import Animated, { FadeInLeft } from 'react-native-reanimated';
 import { MessageCircle } from 'lucide-react-native';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 
 type Props = { lines: string[] };
 
 export function Commentary({ lines }: Props) {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const scrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -35,7 +38,8 @@ export function Commentary({ lines }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   container: {
     marginHorizontal: Spacing.three,
     marginTop: Spacing.two,
@@ -49,4 +53,5 @@ const styles = StyleSheet.create({
   scroll:     { flex: 1 },
   lineWrap:   { marginBottom: 2 },
   line:       { color: C.onSurface, fontFamily: FontFamily.regular, fontSize: 12, lineHeight: 18 },
-});
+  });
+}

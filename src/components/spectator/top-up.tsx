@@ -7,8 +7,9 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useSpectatorPoints, useSpectatorTopUps } from '@/hooks/useSpectatorData';
 import { spectatorApi } from '@/api/spectator.api';
 import { ApiError } from '@/api/client';
@@ -17,15 +18,20 @@ const QUICK_AMOUNTS = [100, 500, 1000, 5000];
 const MIN_POINTS = 100;
 const VND_PER_POINT = 1000;
 
-const STATUS_LABEL: Record<string, { label: string; color: string }> = {
-  paid:      { label: 'Đã nạp',   color: C.tertiary },
-  pending:   { label: 'Chờ thanh toán', color: C.secondary },
-  failed:    { label: 'Thất bại', color: C.error },
-  expired:   { label: 'Hết hạn',  color: C.onSurfaceVariant },
-  cancelled: { label: 'Đã hủy',   color: C.onSurfaceVariant },
-};
+function statusLabel(C: AppColors): Record<string, { label: string; color: string }> {
+  return {
+    paid:      { label: 'Đã nạp',   color: C.tertiary },
+    pending:   { label: 'Chờ thanh toán', color: C.secondary },
+    failed:    { label: 'Thất bại', color: C.error },
+    expired:   { label: 'Hết hạn',  color: C.onSurfaceVariant },
+    cancelled: { label: 'Đã hủy',   color: C.onSurfaceVariant },
+  };
+}
 
 export function TopUp() {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
+  const STATUS_LABEL = statusLabel(C);
   const { balance, reload: reloadPoints } = useSpectatorPoints();
   const { topUps, reload: reloadTopUps } = useSpectatorTopUps();
   const [points, setPoints] = useState('500');
@@ -183,7 +189,8 @@ export function TopUp() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   root:    { flex: 1, backgroundColor: SC.lowest },
   safeArea:{ flex: 1 },
   scroll:  { paddingHorizontal: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.five },
@@ -227,4 +234,5 @@ const styles = StyleSheet.create({
   txPoints: { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 14 },
   txMeta:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
   txStatus: { fontFamily: FontFamily.bold, fontSize: 12 },
-});
+  });
+}

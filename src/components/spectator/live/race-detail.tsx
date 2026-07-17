@@ -7,7 +7,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, CalendarPlus } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import type { Race } from '@/types/race';
 import { formatCurrency, formatDate } from '@/utils/format';
 import { spectatorApi } from '@/api/spectator.api';
@@ -26,6 +27,8 @@ const PENALTY_LABELS: Record<string, string> = {
 type Props = { race: Race; onBack: () => void };
 
 export function RaceDetail({ race, onBack }: Props) {
+  const { C, SC } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const [isWatching, setIsWatching] = useState(false);
   const [addingToCalendar, setAddingToCalendar] = useState(false);
@@ -36,6 +39,7 @@ export function RaceDetail({ race, onBack }: Props) {
 
   const isCompleted = race.status === 'completed';
   const isLive = race.status === 'live';
+  const isUpcoming = race.status === 'upcoming';
   const isPendingReview = isCompleted && !race.resultPublished;
 
   async function addToCalendar() {
@@ -108,7 +112,7 @@ export function RaceDetail({ race, onBack }: Props) {
         {/* Banner */}
         <Animated.View entering={FadeInDown.duration(320)}>
           <LinearGradient
-            colors={isLive ? ['#003520', '#1A5C3A'] : ['#1C1409', '#302015']}
+            colors={isLive ? ['#003520', '#1A5C3A'] : [SC.base, SC.high]}
             style={styles.banner}>
             {isLive && (
               <View style={styles.liveRow}>
@@ -133,7 +137,10 @@ export function RaceDetail({ race, onBack }: Props) {
         {/* Entries */}
         <Animated.View entering={FadeInDown.delay(80).duration(320)}>
           <Text style={styles.sectionTitle}>
-            {isPendingReview ? 'Kết quả tạm thời (chưa chính thức)' : isCompleted ? 'Kết quả chính thức' : 'Thứ hạng hiện tại'}
+            {isPendingReview ? 'Kết quả tạm thời (chưa chính thức)'
+              : isCompleted ? 'Kết quả chính thức'
+              : isUpcoming ? 'Ngựa tham gia'
+              : 'Thứ hạng hiện tại'}
           </Text>
           {isPendingReview && (
             <Text style={styles.pendingReviewText}>
@@ -149,12 +156,14 @@ export function RaceDetail({ race, onBack }: Props) {
                   ? <Text style={styles.rankNum}>{entry.position}</Text>
                   : isCompleted
                   ? <Text style={styles.rankDash}>—</Text>
+                  : isUpcoming
+                  ? null
                   : <Text style={styles.rankNum}>{idx + 1}</Text>}
               </View>
               <View style={[styles.horseColor, { backgroundColor: entry.horse.color }]} />
               <View style={styles.entryInfo}>
                 <Text style={styles.entryHorseName}>
-                  #{entry.horse.number} {entry.horse.name}
+                  {isUpcoming ? entry.horse.name : `#${entry.horse.number} ${entry.horse.name}`}
                 </Text>
                 <Text style={styles.entryJockey}>{entry.jockeyName}</Text>
               </View>
@@ -210,6 +219,7 @@ export function RaceDetail({ race, onBack }: Props) {
 }
 
 function InfoCell({ label, value, light }: { label: string; value: string; light?: boolean }) {
+  const styles = useThemedStyles(createStyles);
   return (
     <View style={styles.infoCell}>
       <Text style={[styles.infoCellLabel, light && styles.infoCellLabelLight]}>{label}</Text>
@@ -218,7 +228,8 @@ function InfoCell({ label, value, light }: { label: string; value: string; light
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   root:   { flex: 1, backgroundColor: SC.lowest },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -265,4 +276,5 @@ const styles = StyleSheet.create({
   calendarBtn:        { backgroundColor: C.primary, borderRadius: Shape.full, paddingVertical: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: Spacing.two },
   calendarBtnDisabled:{ opacity: 0.6 },
   calendarBtnText:    { color: C.onPrimary, fontFamily: FontFamily.bold, fontSize: 14 },
-});
+  });
+}

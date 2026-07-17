@@ -1,24 +1,19 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Zap, Trophy, ChartBar, Banknote, ChevronRight, LogOut, UserPen, Lock, Info, X, Star, Target } from 'lucide-react-native';
+import { ArrowLeft, Zap, Trophy, ChartBar, Banknote, ChevronRight, LogOut, UserPen, Lock, Info, X, Star, Target, SunMoon } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
+import { ThemeModeSheet } from '@/components/theme-mode-sheet';
 import { useAuth } from '@/context/AuthContext';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { currentJockey, formatCurrency } from '@/mock-data';
 import type { AchievementType } from '@/mock-data';
 import { APP_VERSION } from '@/constants/version';
-
-const ACHIEVEMENT_CONFIG: Record<AchievementType, { bg: string; border: string; label: string }> = {
-  gold:    { bg: C.secondaryContainer,  border: C.secondary,         label: 'Vàng' },
-  silver:  { bg: SC.high,               border: C.onSurfaceVariant,  label: 'Bạc' },
-  bronze:  { bg: '#3A2010',             border: '#FFAB60',           label: 'Đồng' },
-  special: { bg: C.primaryContainer,    border: C.primary,           label: 'Đặc biệt' },
-};
 
 type AchIconComp = React.ComponentType<{ size?: number; color?: string }>;
 const ACHIEVEMENT_ICONS: Record<string, AchIconComp> = {
@@ -34,7 +29,17 @@ type SettingItem = { Icon: AchIconComp; label: string; onPress: () => void };
 
 export function JockeyProfile() {
   const { user, logout } = useAuth();
+  const { C, SC } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const [aboutVisible, setAboutVisible] = useState(false);
+  const [themeVisible, setThemeVisible] = useState(false);
+
+  const ACHIEVEMENT_CONFIG: Record<AchievementType, { bg: string; border: string; label: string }> = useMemo(() => ({
+    gold:    { bg: C.secondaryContainer,  border: C.secondary,         label: 'Vàng' },
+    silver:  { bg: SC.high,               border: C.onSurfaceVariant,  label: 'Bạc' },
+    bronze:  { bg: '#3A2010',             border: '#FFAB60',           label: 'Đồng' },
+    special: { bg: C.primaryContainer,    border: C.primary,           label: 'Đặc biệt' },
+  }), [C, SC]);
 
   const displayName = user?.fullName ?? 'Jockey';
   const initials = displayName.split(' ').map(w => w[0]).join('').slice(-2).toUpperCase();
@@ -42,6 +47,7 @@ export function JockeyProfile() {
   const SETTINGS: SettingItem[] = [
     { Icon: UserPen, label: 'Chỉnh sửa hồ sơ', onPress: () => router.push('/edit-profile' as never) },
     { Icon: Lock,    label: 'Đổi mật khẩu',     onPress: () => router.push('/change-password' as never) },
+    { Icon: SunMoon, label: 'Giao diện',        onPress: () => setThemeVisible(true) },
     { Icon: Info,    label: 'Về ứng dụng',      onPress: () => setAboutVisible(true) },
   ];
 
@@ -188,11 +194,14 @@ export function JockeyProfile() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      <ThemeModeSheet visible={themeVisible} onClose={() => setThemeVisible(false)} />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   root:    { flex: 1, backgroundColor: SC.lowest },
   safeArea:{ flex: 1 },
   scroll:  { paddingHorizontal: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.five },
@@ -246,4 +255,5 @@ const styles = StyleSheet.create({
   modalCloseBtn:  { position: 'absolute', top: Spacing.two, right: Spacing.two, width: 32, height: 32, borderRadius: Shape.full, backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center' },
   modalAppName:   { color: C.primary, fontFamily: FontFamily.bangers, fontSize: 28, letterSpacing: 2, marginTop: Spacing.two },
   modalVersion:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 13 },
-});
+  });
+}

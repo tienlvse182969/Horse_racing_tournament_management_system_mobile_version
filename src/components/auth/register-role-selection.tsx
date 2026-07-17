@@ -3,12 +3,15 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { Users } from 'lucide-react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import type { RegisterRole } from './types';
 
 type Props = { onSelect: (role: RegisterRole) => void };
 
 export function RegisterRoleSelection({ onSelect }: Props) {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   return (
     <Animated.View entering={FadeIn.duration(220)}>
       <Animated.View entering={FadeInDown.duration(300)} style={styles.section}>
@@ -50,7 +53,8 @@ export function RegisterRoleSelection({ onSelect }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   section:      { gap: Spacing.two, marginBottom: Spacing.two },
   hint:         { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 13, letterSpacing: 0.3, marginBottom: Spacing.one },
   card:         { flexDirection: 'row', backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.three, alignItems: 'center', gap: Spacing.two, borderWidth: 1 },
@@ -59,4 +63,5 @@ const styles = StyleSheet.create({
   cardTitle:    { fontFamily: FontFamily.bold, fontSize: 16 },
   cardDesc:     { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12, lineHeight: 17 },
   cardChevron:  { color: C.onSurfaceVariant, fontSize: 22 },
-});
+  });
+}

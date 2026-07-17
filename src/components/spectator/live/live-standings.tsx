@@ -2,13 +2,15 @@ import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react-native';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { MedalIcon } from '@/components/ui/medal-icon';
 import type { StandingEntry, RaceState } from './live-viewer';
 
 type Props = { standings: StandingEntry[]; raceState: RaceState };
 
 export function LiveStandings({ standings, raceState }: Props) {
+  const styles = useThemedStyles(createStyles);
   if (raceState === 'finished') {
     return <FinishedPodium standings={standings} />;
   }
@@ -26,6 +28,7 @@ export function LiveStandings({ standings, raceState }: Props) {
 }
 
 function StandingRow({ s }: { s: StandingEntry }) {
+  const styles = useThemedStyles(createStyles);
   const delta = s.previousRank - s.rank;
   return (
     <Animated.View entering={FadeInDown.duration(200)} style={styles.row}>
@@ -50,12 +53,15 @@ function StandingRow({ s }: { s: StandingEntry }) {
 }
 
 function TrendIcon({ delta }: { delta: number }) {
+  const { C } = useAppColors();
   if (delta > 0) return <TrendingUp size={12} color={C.tertiary} />;
   if (delta < 0) return <TrendingDown size={12} color={C.error} />;
   return <Minus size={12} color={C.onSurfaceVariant} />;
 }
 
 function FinishedPodium({ standings }: { standings: StandingEntry[] }) {
+  const { SC } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   // Sort by progress desc so partial-finishers are ranked correctly
   const sorted = [...standings].sort((a, b) => b.progress - a.progress);
   const top3 = sorted.slice(0, 3);
@@ -97,7 +103,8 @@ function FinishedPodium({ standings }: { standings: StandingEntry[] }) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   container:    { flex: 1, paddingHorizontal: Spacing.three, paddingTop: Spacing.two },
   sectionTitle: { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 11, letterSpacing: 0.8, marginBottom: Spacing.two },
   list:         { flex: 1 },
@@ -126,4 +133,5 @@ const styles = StyleSheet.create({
   restRow:  { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.one },
   restRank: { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 12, width: 20, textAlign: 'center' },
   restName: { flex: 1, color: C.onSurface, fontFamily: FontFamily.regular, fontSize: 12 },
-});
+  });
+}

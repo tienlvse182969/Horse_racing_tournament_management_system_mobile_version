@@ -4,22 +4,25 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Gift, Flag, Target, Trophy, Bell } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { HeaderActions } from '@/components/header-actions';
 import type { Notification, NotificationType } from '@/mock-data';
 import { formatCurrency } from '@/mock-data';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useSpectatorNotifications } from '@/hooks/useSpectatorData';
 
 type NotifIconComp = React.ComponentType<{ size?: number; color?: string }>;
 
-const TYPE_CONFIG: Record<NotificationType, { Icon: NotifIconComp; color: string; bg: string }> = {
-  reward:     { Icon: Gift,   color: C.primary,         bg: C.primaryContainer },
-  result:     { Icon: Flag,   color: C.tertiary,        bg: C.tertiaryContainer },
-  prediction: { Icon: Target, color: C.secondary,       bg: C.secondaryContainer },
-  tournament: { Icon: Trophy, color: C.primary,         bg: C.primaryContainer },
-  system:     { Icon: Bell,   color: C.onSurfaceVariant, bg: `${C.onSurfaceVariant}25` },
-};
+function typeConfig(C: AppColors): Record<NotificationType, { Icon: NotifIconComp; color: string; bg: string }> {
+  return {
+    reward:     { Icon: Gift,   color: C.primary,         bg: C.primaryContainer },
+    result:     { Icon: Flag,   color: C.tertiary,        bg: C.tertiaryContainer },
+    prediction: { Icon: Target, color: C.secondary,       bg: C.secondaryContainer },
+    tournament: { Icon: Trophy, color: C.primary,         bg: C.primaryContainer },
+    system:     { Icon: Bell,   color: C.onSurfaceVariant, bg: `${C.onSurfaceVariant}25` },
+  };
+}
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -31,6 +34,9 @@ function timeAgo(dateStr: string): string {
 }
 
 export function SpectatorNotifications() {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
+  const TYPE_CONFIG = typeConfig(C);
   const { notifications: items, setNotifications } = useSpectatorNotifications();
   const unread = items.filter(n => !n.read).length;
 
@@ -97,7 +103,8 @@ export function SpectatorNotifications() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   root:    { flex: 1, backgroundColor: SC.lowest },
   safeArea:{ flex: 1 },
   scroll:  { paddingHorizontal: Spacing.three, gap: Spacing.two, paddingBottom: Spacing.five },
@@ -124,4 +131,5 @@ const styles = StyleSheet.create({
   cardFooter:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 },
   cardTime:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
   cardReward:  { color: C.primary, fontFamily: FontFamily.bold, fontSize: 12 },
-});
+  });
+}
