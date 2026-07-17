@@ -27,8 +27,6 @@ import { ApiError } from '@/api/client';
 import * as authApi from '@/api/auth.api';
 import { APP_VERSION } from '@/constants/version';
 
-const DEMO_PASSWORD = 'Demo@123';
-
 function redirectForRole(role: string) {
   if (role === 'jockey') router.replace('/jockey/home' as never);
   else if (role === 'spectator') router.replace('/(app)/home' as never);
@@ -41,8 +39,8 @@ export default function AuthScreen() {
   const styles = useThemedStyles(createStyles);
   const [activeTab, setActiveTab] = useState<Tab>('login');
   const [registerRole, setRegisterRole] = useState<RegisterRole | null>(null);
-  const [email, setEmail] = useState('spectator@demo.local');
-  const [password, setPassword] = useState(DEMO_PASSWORD);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
@@ -83,19 +81,6 @@ export default function AuthScreen() {
       redirectForRole(user.role);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Đã xảy ra lỗi');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleDemoLogin(demoEmail: string) {
-    setLoading(true);
-    setError(null);
-    try {
-      const user = await login(demoEmail, DEMO_PASSWORD);
-      redirectForRole(user.role);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Demo login failed');
     } finally {
       setLoading(false);
     }
@@ -176,29 +161,6 @@ export default function AuthScreen() {
               </Animated.View>
             )}
 
-            <View style={styles.demoRow}>
-              <TouchableOpacity
-                style={styles.demoBtn}
-                onPress={() => handleDemoLogin('spectator@demo.local')}
-                disabled={loading}
-                activeOpacity={0.8}>
-                <View style={styles.demoBtnInner}>
-                  <Users size={14} color={C.onSurfaceVariant} />
-                  <Text style={styles.demoText}>Demo Khán giả</Text>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.demoBtn, styles.demoBtnJockey]}
-                onPress={() => handleDemoLogin('jockey1@demo.local')}
-                disabled={loading}
-                activeOpacity={0.8}>
-                <View style={styles.demoBtnInner}>
-                  <Zap size={14} color={C.primary} />
-                  <Text style={[styles.demoText, styles.demoTextJockey]}>Demo Kỵ sĩ</Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-
             <Text style={styles.versionText}>Phiên bản {APP_VERSION}</Text>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -218,12 +180,6 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   submitInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   submitText:  { fontFamily: FontFamily.bold, fontSize: 16, letterSpacing: 0.5 },
   errorText:   { color: C.error, fontFamily: FontFamily.medium, fontSize: 13, marginBottom: Spacing.two },
-  demoRow:          { flexDirection: 'row', gap: Spacing.two, paddingVertical: Spacing.two },
-  demoBtn:          { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: Shape.full, borderWidth: 1, borderColor: C.outlineVariant },
-  demoBtnInner:     { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  demoBtnJockey:    { borderColor: `${C.primary}60`, backgroundColor: `${C.primary}15` },
-  demoText:         { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 13 },
-  demoTextJockey:   { color: C.primary },
   versionText:      { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12, textAlign: 'center', marginTop: Spacing.two },
   });
 }
