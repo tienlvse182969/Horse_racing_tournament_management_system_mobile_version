@@ -5,9 +5,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Zap, Trophy, Award, Timer } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { JockeyAvatarButton } from '@/components/jockey-avatar-button';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useJockeyRaces } from '@/hooks/useJockeyData';
 import { useHorseLeaderboard } from '@/hooks/useHorseLeaderboard';
 import { formatCurrency } from '@/mock-data';
@@ -15,11 +16,6 @@ import { MedalIcon } from '@/components/ui/medal-icon';
 
 type Tab = 'personal' | 'leaderboard';
 
-const POS_CONFIG: Record<number, { iconColor: string; bg: string; color: string }> = {
-  1: { iconColor: '#FFD700', bg: C.secondaryContainer, color: C.secondary },
-  2: { iconColor: '#9E9E9E', bg: `${C.onSurfaceVariant}25`, color: C.onSurfaceVariant },
-  3: { iconColor: '#CD7F32', bg: '#3A2010', color: '#FFAB60' },
-};
 const POS_LABEL: Record<number, string> = { 1: 'Vô địch', 2: 'Nhì', 3: 'Ba' };
 
 type TabDef = { key: Tab; Icon: React.ComponentType<{ size?: number; color?: string }>; label: string };
@@ -30,6 +26,8 @@ const TABS: TabDef[] = [
 
 export function JockeyResults() {
   const [tab, setTab] = useState<Tab>('personal');
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
 
   return (
     <View style={styles.root}>
@@ -61,6 +59,13 @@ export function JockeyResults() {
 }
 
 function PersonalContent() {
+  const { C, SC } = useAppColors();
+  const styles = useThemedStyles(createStyles);
+  const POS_CONFIG: Record<number, { iconColor: string; bg: string; color: string }> = {
+    1: { iconColor: C.secondary, bg: C.secondaryContainer, color: C.secondary },
+    2: { iconColor: '#9E9E9E', bg: `${C.onSurfaceVariant}25`, color: C.onSurfaceVariant },
+    3: { iconColor: '#CD7F32', bg: '#3A2010', color: '#FFAB60' },
+  };
   const { races } = useJockeyRaces();
   const personalResults = races
     .filter(r => r.status === 'completed' && r.myEntry.position)
@@ -150,6 +155,7 @@ function PersonalContent() {
 }
 
 function LeaderboardContent() {
+  const styles = useThemedStyles(createStyles);
   const { entries, loading } = useHorseLeaderboard(20);
 
   return (
@@ -193,7 +199,8 @@ function LeaderboardContent() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   root:    { flex: 1, backgroundColor: SC.lowest },
   safeArea:{ flex: 1 },
   scroll:  { paddingHorizontal: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.five },
@@ -241,4 +248,5 @@ const styles = StyleSheet.create({
   rankWinRate:    { color: C.secondary, fontFamily: FontFamily.bold, fontSize: 13 },
   rankSubtitle:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 10 },
   emptyText:      { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 13, textAlign: 'center', paddingVertical: Spacing.four },
-});
+  });
+}

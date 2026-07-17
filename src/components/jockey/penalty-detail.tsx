@@ -4,7 +4,8 @@ import { router } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { ChevronLeft, ShieldAlert, Gavel, Flag, Calendar } from 'lucide-react-native';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { formatBanDate } from './horse-ban-badge';
 import type { PenaltyDetailDto } from '@/api/jockey.api';
 
@@ -22,12 +23,14 @@ const SEVERITY_LABEL: Record<string, string> = {
   critical: 'Nghiêm trọng',
 };
 
-const SEVERITY_COLOR: Record<string, string> = {
-  low: C.tertiary,
-  medium: C.secondary,
-  high: C.error,
-  critical: C.error,
-};
+function severityColor(C: AppColors): Record<string, string> {
+  return {
+    low: C.tertiary,
+    medium: C.secondary,
+    high: C.error,
+    critical: C.error,
+  };
+}
 
 const PENALTY_APPLIED_LABEL: Record<string, string> = {
   warning: 'Cảnh cáo',
@@ -55,6 +58,9 @@ function formatFullDate(iso: string): string {
 }
 
 export function PenaltyDetail({ penalty, loading }: { penalty: PenaltyDetailDto | null; loading: boolean }) {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
+  const SEVERITY_COLOR = severityColor(C);
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -167,7 +173,8 @@ export function PenaltyDetail({ penalty, loading }: { penalty: PenaltyDetailDto 
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   root:     { flex: 1, backgroundColor: SC.lowest },
   safeArea: { flex: 1 },
 
@@ -200,4 +207,5 @@ const styles = StyleSheet.create({
 
   raceName: { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 14 },
   raceDate: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
-});
+  });
+}

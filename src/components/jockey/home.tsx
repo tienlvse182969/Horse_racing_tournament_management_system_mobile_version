@@ -6,15 +6,17 @@ import { Hand, Zap, Trophy, ChartBar, Mail, MapPin, Clock, ArrowLeftRight, Bankn
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { JockeyAvatarButton } from '@/components/jockey-avatar-button';
 import { JockeySuspensionBanner } from '@/components/jockey/jockey-suspension-banner';
 import { useAuth } from '@/context/AuthContext';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useJockeyDashboard, useJockeyInvitations, useJockeyRaces } from '@/hooks/useJockeyData';
 import { formatCurrency, formatDate } from '@/mock-data';
 
 function RaceDayCountdown({ date, time }: { date: string; time: string }) {
+  const styles = useThemedStyles(createStyles);
   const [label, setLabel] = useState(() => buildCountdownLabel(date, time));
   useEffect(() => {
     const id = setInterval(() => setLabel(buildCountdownLabel(date, time)), 1000);
@@ -35,6 +37,8 @@ function buildCountdownLabel(date: string, time: string): string {
 
 export function JockeyHome() {
   const { user } = useAuth();
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const stats = useJockeyDashboard();
   const { invitations } = useJockeyInvitations();
   const { races: jockeyRaces } = useJockeyRaces();
@@ -252,7 +256,8 @@ export function JockeyHome() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   root:    { flex: 1, backgroundColor: SC.lowest },
   safeArea:{ flex: 1 },
   scroll:  { paddingHorizontal: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.five },
@@ -332,4 +337,5 @@ const styles = StyleSheet.create({
   bar:           { flex: 1, borderRadius: 4 },
   barLabels:     { flexDirection: 'row', justifyContent: 'space-between' },
   barLabel:      { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 10 },
-});
+  });
+}

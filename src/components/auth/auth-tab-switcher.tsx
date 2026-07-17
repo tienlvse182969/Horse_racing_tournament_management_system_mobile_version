@@ -7,7 +7,8 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import type { Tab } from './types';
 
 type Props = {
@@ -16,6 +17,8 @@ type Props = {
 };
 
 export function AuthTabSwitcher({ activeTab, onTabChange }: Props) {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const containerWRef    = useRef(0);
   const containerWShared = useSharedValue(0);
   const pillOffset       = useSharedValue(0);
@@ -57,7 +60,8 @@ export function AuthTabSwitcher({ activeTab, onTabChange }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   tabContainer: {
     flexDirection: 'row',
     backgroundColor: SC.base,
@@ -84,4 +88,5 @@ const styles = StyleSheet.create({
   },
   tabText:       { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 14 },
   tabTextActive: { color: C.onPrimary },
-});
+  });
+}

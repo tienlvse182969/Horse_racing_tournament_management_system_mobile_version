@@ -202,3 +202,60 @@ export const HorseRacingTheme = {
     ...HorseRacingDark,
   },
 };
+
+// ── Horse Racing Theme (light counterpart, same amber/green brand hues) ───────
+export const HorseRacingLight = {
+  primary:              '#8B5000',
+  onPrimary:            '#FFFFFF',
+  primaryContainer:     '#FFDDB5',
+  onPrimaryContainer:   '#2B1700',
+  secondary:            '#7A5900',
+  onSecondary:          '#FFFFFF',
+  secondaryContainer:   '#FFDE9D',
+  onSecondaryContainer: '#251A00',
+  tertiary:             '#1F6F44',
+  onTertiary:           '#FFFFFF',
+  tertiaryContainer:    '#8EF5B6',
+  onTertiaryContainer:  '#00210E',
+  error:                '#BA1A1A',
+  onError:              '#FFFFFF',
+  errorContainer:       '#FFDAD6',
+  onErrorContainer:     '#410002',
+  background:           '#FFF8F0',
+  onBackground:         '#211A10',
+  surface:              '#FFF8F0',
+  onSurface:            '#211A10',
+  surfaceVariant:       '#F0E0CB',
+  onSurfaceVariant:     '#4E3F2F',
+  outline:              '#817567',
+  outlineVariant:       '#D3C4B4',
+  shadow:               '#000000',
+  scrim:                '#000000',
+  inverseSurface:       '#382D1F',
+  inverseOnSurface:     '#FBEEDC',
+  inversePrimary:       '#FFB86C',
+  surfaceDisabled:      'rgba(33,26,16,0.12)',
+  onSurfaceDisabled:    'rgba(33,26,16,0.38)',
+  backdrop:             'rgba(0,0,0,0.5)',
+} as const satisfies Record<keyof typeof HorseRacingDark, string>;
+
+// M3 surface container tokens — light scheme (lowest = near-background, highest = most elevated/tinted)
+export const SurfaceContainersLight = {
+  lowest:  '#FFFFFF',
+  low:     '#FBF8F3',
+  base:    '#F7F3EA',
+  high:    '#F2EDE1',
+  highest: '#ECE4D3',
+} as const satisfies Record<keyof typeof SurfaceContainers, string>;
+
+export const HorseRacingLightTheme = {
+  ...MD3LightTheme,
+  fonts: paperFonts,
+  colors: {
+    ...MD3LightTheme.colors,
+    ...HorseRacingLight,
+  },
+};
+
+export type AppColors = Record<keyof typeof HorseRacingDark, string>;
+export type SurfaceColors = Record<keyof typeof SurfaceContainers, string>;

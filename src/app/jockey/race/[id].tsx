@@ -4,9 +4,12 @@ import { useJockeyRaceDetail } from '@/hooks/useJockeyData';
 import { useAuth } from '@/context/AuthContext';
 import { RaceDay } from '@/components/jockey/race-day';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { HorseRacingDark as C, SurfaceContainers as SC, FontFamily, Spacing } from '@/constants/theme';
+import { FontFamily, Spacing, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 
 export default function JockeyRaceScreen() {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const { jockeyRace, fullRace } = useJockeyRaceDetail(id ?? '');
@@ -30,7 +33,9 @@ export default function JockeyRaceScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  loading:     { flex: 1, backgroundColor: SC.lowest, justifyContent: 'center', alignItems: 'center', gap: Spacing.two },
-  loadingText: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 14 },
-});
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
+    loading:     { flex: 1, backgroundColor: SC.lowest, justifyContent: 'center', alignItems: 'center', gap: Spacing.two },
+    loadingText: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 14 },
+  });
+}

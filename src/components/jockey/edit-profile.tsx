@@ -6,13 +6,16 @@ import { ArrowLeft } from 'lucide-react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { ApiError } from '@/api/client';
 import { useAuth } from '@/context/AuthContext';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 
 export function EditProfile() {
   const { user, updateProfile } = useAuth();
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const [fullName, setFullName] = useState(user?.fullName ?? '');
   const [phone, setPhone] = useState(user?.phone ?? '');
   const [loading, setLoading] = useState(false);
@@ -88,19 +91,21 @@ export function EditProfile() {
   );
 }
 
-const styles = StyleSheet.create({
-  root:    { flex: 1, backgroundColor: SC.lowest },
-  safeArea:{ flex: 1 },
-  scroll:  { paddingHorizontal: Spacing.three, paddingBottom: Spacing.five },
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
+    root:    { flex: 1, backgroundColor: SC.lowest },
+    safeArea:{ flex: 1 },
+    scroll:  { paddingHorizontal: Spacing.three, paddingBottom: Spacing.five },
 
-  form:      { gap: Spacing.two },
-  errorText: { color: C.error, fontFamily: FontFamily.medium, fontSize: 13, marginBottom: Spacing.one },
+    form:      { gap: Spacing.two },
+    errorText: { color: C.error, fontFamily: FontFamily.medium, fontSize: 13, marginBottom: Spacing.one },
 
-  submitBtn:  { backgroundColor: C.primary, borderRadius: Shape.full, height: 52, justifyContent: 'center', alignItems: 'center', marginTop: Spacing.two },
-  submitText: { color: C.onPrimary, fontFamily: FontFamily.bold, fontSize: 16, letterSpacing: 0.5 },
+    submitBtn:  { backgroundColor: C.primary, borderRadius: Shape.full, height: 52, justifyContent: 'center', alignItems: 'center', marginTop: Spacing.two },
+    submitText: { color: C.onPrimary, fontFamily: FontFamily.bold, fontSize: 16, letterSpacing: 0.5 },
 
-  backBtn: {
-    width: 34, height: 34, borderRadius: Shape.full,
-    backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center',
-  },
-});
+    backBtn: {
+      width: 34, height: 34, borderRadius: Shape.full,
+      backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center',
+    },
+  });
+}

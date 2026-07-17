@@ -4,20 +4,23 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Flag, User, MapPin, Ruler, Calendar, Hash } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { JockeyAvatarButton } from '@/components/jockey-avatar-button';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useJockeyRaces } from '@/hooks/useJockeyData';
 import { formatCurrency, isBeforeBanEnd } from '@/mock-data';
 import type { JockeyRace } from '@/mock-data/jockey';
 import { JockeySuspensionBanner } from '@/components/jockey/jockey-suspension-banner';
 import { useAuth } from '@/context/AuthContext';
 
-const STATUS_CONFIG = {
-  live:      { label: 'Đang đua',    color: C.tertiary,        bg: C.tertiaryContainer },
-  upcoming:  { label: 'Sắp diễn ra', color: C.secondary,       bg: C.secondaryContainer },
-  completed: { label: 'Đã kết thúc', color: C.onSurfaceVariant, bg: `${C.onSurfaceVariant}22` },
-} as const;
+function statusConfig(C: AppColors) {
+  return {
+    live:      { label: 'Đang đua',    color: C.tertiary,        bg: C.tertiaryContainer },
+    upcoming:  { label: 'Sắp diễn ra', color: C.secondary,       bg: C.secondaryContainer },
+    completed: { label: 'Đã kết thúc', color: C.onSurfaceVariant, bg: `${C.onSurfaceVariant}22` },
+  } as const;
+}
 
 function rankLabel(rank: number): string {
   if (rank === 1) return '1st';
@@ -26,14 +29,14 @@ function rankLabel(rank: number): string {
   return `#${rank}`;
 }
 
-function rankColor(rank: number): string {
+function rankColor(rank: number, C: AppColors): string {
   if (rank === 1) return C.tertiary;
   if (rank === 2) return C.secondary;
   if (rank === 3) return C.primary;
   return C.onSurfaceVariant;
 }
 
-function rankBg(rank: number): string {
+function rankBg(rank: number, C: AppColors): string {
   if (rank === 1) return C.tertiaryContainer;
   if (rank === 2) return C.secondaryContainer;
   if (rank === 3) return C.primaryContainer;
@@ -41,6 +44,9 @@ function rankBg(rank: number): string {
 }
 
 function RaceCard({ race, index }: { race: JockeyRace; index: number }) {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
+  const STATUS_CONFIG = statusConfig(C);
   const cfg = STATUS_CONFIG[race.status] ?? STATUS_CONFIG.upcoming;
   const hasResult = race.status === 'completed' && race.myEntry.position !== undefined;
   const { user } = useAuth();
@@ -94,8 +100,8 @@ function RaceCard({ race, index }: { race: JockeyRace; index: number }) {
         {/* Result section */}
         {hasResult && race.myEntry.position !== undefined && (
           <View style={styles.resultRow}>
-            <View style={[styles.rankBadge, { backgroundColor: rankBg(race.myEntry.position) }]}>
-              <Text style={[styles.rankText, { color: rankColor(race.myEntry.position) }]}>
+            <View style={[styles.rankBadge, { backgroundColor: rankBg(race.myEntry.position, C) }]}>
+              <Text style={[styles.rankText, { color: rankColor(race.myEntry.position, C) }]}>
                 {rankLabel(race.myEntry.position)}
               </Text>
             </View>
@@ -113,6 +119,7 @@ function RaceCard({ race, index }: { race: JockeyRace; index: number }) {
 }
 
 function RaceGroup({ title, races, offset }: { title: string; races: JockeyRace[]; offset: number }) {
+  const styles = useThemedStyles(createStyles);
   if (races.length === 0) return null;
   return (
     <Animated.View entering={FadeIn.delay(offset * 80).duration(300)} style={styles.section}>
@@ -128,6 +135,8 @@ function RaceGroup({ title, races, offset }: { title: string; races: JockeyRace[
 }
 
 export function JockeyAssignedRaces() {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const { races, loading, reload } = useJockeyRaces();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -197,7 +206,8 @@ export function JockeyAssignedRaces() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   root:    { flex: 1, backgroundColor: SC.lowest },
   safeArea:{ flex: 1 },
   scroll:  { paddingHorizontal: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.five },
@@ -240,4 +250,5 @@ const styles = StyleSheet.create({
   emptyWrap:    { alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.six },
   emptyText:    { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15 },
   emptySubText: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 13, textAlign: 'center' },
-});
+  });
+}

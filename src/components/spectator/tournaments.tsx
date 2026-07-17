@@ -5,9 +5,10 @@ import { MapPin, Calendar, Trophy } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { HeaderActions } from '@/components/header-actions';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useSpectatorTournaments } from '@/hooks/useSpectatorData';
 import type { TournamentDto } from '@/api/spectator.api';
 
@@ -15,14 +16,19 @@ function fmtDate(iso: string): string {
   return new Date(iso).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-const STATUS_CONFIG = {
-  ongoing:   { label: 'Trực tiếp',    color: C.tertiary,        bg: C.tertiaryContainer },
-  published: { label: 'Đang đăng ký', color: C.primary,         bg: C.primaryContainer },
-  completed: { label: 'Kết thúc',     color: C.onSurfaceVariant, bg: `${C.onSurfaceVariant}22` },
-  draft:     { label: 'Chuẩn bị',     color: C.onSurfaceVariant, bg: `${C.onSurfaceVariant}22` },
-} as const;
+function statusConfig(C: AppColors) {
+  return {
+    ongoing:   { label: 'Trực tiếp',    color: C.tertiary,        bg: C.tertiaryContainer },
+    published: { label: 'Đang đăng ký', color: C.primary,         bg: C.primaryContainer },
+    completed: { label: 'Kết thúc',     color: C.onSurfaceVariant, bg: `${C.onSurfaceVariant}22` },
+    draft:     { label: 'Chuẩn bị',     color: C.onSurfaceVariant, bg: `${C.onSurfaceVariant}22` },
+  } as const;
+}
 
 function TournamentCard({ t, index, onPress }: { t: TournamentDto; index: number; onPress: () => void }) {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
+  const STATUS_CONFIG = statusConfig(C);
   const cfg = STATUS_CONFIG[t.status] ?? STATUS_CONFIG.draft;
   return (
     <Animated.View entering={FadeInDown.delay(index * 60).duration(300)}>
@@ -56,6 +62,8 @@ function TournamentCard({ t, index, onPress }: { t: TournamentDto; index: number
 }
 
 export function SpectatorTournaments() {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const { tournaments, loading, reload } = useSpectatorTournaments();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -131,7 +139,8 @@ export function SpectatorTournaments() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   root:    { flex: 1, backgroundColor: SC.lowest },
   safeArea:{ flex: 1 },
   scroll:  { paddingHorizontal: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.five },
@@ -157,4 +166,5 @@ const styles = StyleSheet.create({
   emptyWrap:    { alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.six },
   emptyText:    { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15 },
   emptySubText: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 13 },
-});
+  });
+}

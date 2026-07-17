@@ -10,11 +10,12 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import {
-  HorseRacingDark as C,
-  SurfaceContainers as SC,
   Shape,
   FontFamily,
+  type AppColors,
+  type SurfaceColors,
 } from '@/constants/theme';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 
 // ─── Types (mirror of BottomTabBarProps without importing @react-navigation) ──
 type IconProps = { focused: boolean; color: string; size: number };
@@ -45,6 +46,8 @@ type TabItemProps = {
 };
 
 function TabItem({ isFocused, label, options, onPress }: TabItemProps) {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const progress = useSharedValue(isFocused ? 1 : 0);
 
   useEffect(() => {
@@ -92,6 +95,7 @@ function TabItem({ isFocused, label, options, onPress }: TabItemProps) {
 
 // ─── Tab bar ──────────────────────────────────────────────────────────────────
 export function M3TabBar({ state, descriptors, navigation }: TabBarProps) {
+  const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
 
   return (
@@ -129,7 +133,8 @@ export function M3TabBar({ state, descriptors, navigation }: TabBarProps) {
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   bar: {
     flexDirection: 'row',
     backgroundColor: SC.high,
@@ -183,4 +188,5 @@ const styles = StyleSheet.create({
   // Labels
   label:       { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 10, textAlign: 'center' },
   labelActive: { color: C.tertiary, fontFamily: FontFamily.bold },
-});
+  });
+}

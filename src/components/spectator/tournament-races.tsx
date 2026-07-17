@@ -5,8 +5,9 @@ import { router } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useSpectatorRaces, useSpectatorTournaments } from '@/hooks/useSpectatorData';
 import type { Race, RaceStatus } from '@/types/race';
 import { RaceCard } from './live/race-card';
@@ -22,6 +23,8 @@ const STATUS_LABELS: Record<RaceStatus, string> = {
 type Props = { tournamentId: string };
 
 export function TournamentRaces({ tournamentId }: Props) {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const { races, loading } = useSpectatorRaces();
   const { tournaments } = useSpectatorTournaments();
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
@@ -82,7 +85,8 @@ export function TournamentRaces({ tournamentId }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   root:    { flex: 1, backgroundColor: SC.lowest },
   safeArea:{ flex: 1 },
   scroll:  { paddingHorizontal: Spacing.three, paddingBottom: Spacing.five },
@@ -98,4 +102,5 @@ const styles = StyleSheet.create({
 
   emptyWrap: { alignItems: 'center', paddingVertical: Spacing.six },
   emptyText: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 14 },
-});
+  });
+}

@@ -1,7 +1,8 @@
 import { View, Text, StyleSheet, type ViewStyle } from 'react-native';
 import { ShieldAlert } from 'lucide-react-native';
 
-import { HorseRacingDark as C, Shape, FontFamily } from '@/constants/theme';
+import { Shape, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import type { PenaltyStatus } from '@/mock-data';
 
 export function formatBanDate(iso: string): string {
@@ -18,6 +19,9 @@ export function HorseBanBadge({
   penaltyStatus?: PenaltyStatus | null;
   style?: ViewStyle;
 }) {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
+
   if (!penaltyStatus?.isBanned) return null;
 
   const label = penaltyStatus.bannedUntil
@@ -32,16 +36,18 @@ export function HorseBanBadge({
   );
 }
 
-const styles = StyleSheet.create({
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    alignSelf: 'flex-start',
-    backgroundColor: C.errorContainer,
-    borderRadius: Shape.full,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  text: { color: C.error, fontFamily: FontFamily.bold, fontSize: 10 },
-});
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
+    badge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      alignSelf: 'flex-start',
+      backgroundColor: C.errorContainer,
+      borderRadius: Shape.full,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    text: { color: C.error, fontFamily: FontFamily.bold, fontSize: 10 },
+  });
+}

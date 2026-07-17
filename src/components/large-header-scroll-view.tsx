@@ -7,7 +7,8 @@ import Animated, {
   interpolate,
 } from 'react-native-reanimated';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, FontFamily, Spacing } from '@/constants/theme';
+import { FontFamily, Spacing, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 
 // Large title scrolls with content → compact header fades in when title scrolls out of view
 const LARGE_TITLE_H = 88;   // approx height of large title section
@@ -26,6 +27,8 @@ type Props = {
 };
 
 export function LargeHeaderScrollView({ title, bangers = false, contentContainerStyle, leftAction, rightAction, refreshing, onRefresh, children }: Props) {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const scrollY = useSharedValue(0);
 
   const handler = useAnimatedScrollHandler(e => {
@@ -103,7 +106,8 @@ export function LargeHeaderScrollView({ title, bangers = false, contentContainer
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   root: { flex: 1 },
 
   // Compact header (fixed overlay, appears on scroll)
@@ -171,4 +175,5 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.six,
     paddingBottom: Spacing.two,
   },
-});
+  });
+}

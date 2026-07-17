@@ -1,30 +1,19 @@
 import '@/global.css';
 
 import { useEffect } from 'react';
-import { DarkTheme, ThemeProvider, Stack } from 'expo-router';
+import { ThemeProvider as NavThemeProvider, Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
 import { PaperProvider } from 'react-native-paper';
+import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import { FONT_ASSETS, HorseRacingTheme, HorseRacingDark } from '@/constants/theme';
+import { FONT_ASSETS } from '@/constants/theme';
 
 import { AuthProvider } from '@/context/AuthContext';
+import { AppThemeProvider, useAppTheme } from '@/context/ThemeContext';
 
 SplashScreen.preventAutoHideAsync();
-
-const navTheme = {
-  ...DarkTheme,
-  colors: {
-    ...DarkTheme.colors,
-    background:   HorseRacingDark.background,
-    card:         HorseRacingDark.surface,
-    text:         HorseRacingDark.onSurface,
-    border:       HorseRacingDark.outlineVariant,
-    notification: HorseRacingDark.primary,
-    primary:      HorseRacingDark.primary,
-  },
-};
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(FONT_ASSETS);
@@ -40,13 +29,24 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <PaperProvider theme={HorseRacingTheme}>
-        <ThemeProvider value={navTheme}>
-          <AnimatedSplashOverlay />
-          <Stack screenOptions={{ headerShown: false }} />
-        </ThemeProvider>
-      </PaperProvider>
-    </AuthProvider>
+    <AppThemeProvider>
+      <AuthProvider>
+        <ThemedApp />
+      </AuthProvider>
+    </AppThemeProvider>
+  );
+}
+
+function ThemedApp() {
+  const { paperTheme, navTheme, resolvedScheme } = useAppTheme();
+
+  return (
+    <PaperProvider theme={paperTheme}>
+      <NavThemeProvider value={navTheme}>
+        <StatusBar style={resolvedScheme === 'dark' ? 'light' : 'dark'} />
+        <AnimatedSplashOverlay />
+        <Stack screenOptions={{ headerShown: false }} />
+      </NavThemeProvider>
+    </PaperProvider>
   );
 }

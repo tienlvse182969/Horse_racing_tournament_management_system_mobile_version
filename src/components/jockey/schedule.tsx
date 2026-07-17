@@ -5,9 +5,10 @@ import { ChevronLeft, ChevronRight, Calendar, MapPin, Zap } from 'lucide-react-n
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { JockeyAvatarButton } from '@/components/jockey-avatar-button';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useJockeyRaces } from '@/hooks/useJockeyData';
 import { formatCurrency, isBeforeBanEnd } from '@/mock-data';
 import { JockeySuspensionBanner } from '@/components/jockey/jockey-suspension-banner';
@@ -16,11 +17,6 @@ import { useAuth } from '@/context/AuthContext';
 const DAYS   = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 const MONTHS = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
 
-const STATUS_COLOR: Record<string, string> = {
-  live:      C.tertiary,
-  upcoming:  C.secondary,
-  completed: C.onSurfaceVariant,
-};
 const STATUS_LABEL: Record<string, string> = {
   live:      'Đang đua',
   upcoming:  'Sắp diễn ra',
@@ -41,6 +37,13 @@ function buildWeeks(year: number, month: number) {
 }
 
 export function JockeySchedule() {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
+  const STATUS_COLOR: Record<string, string> = {
+    live:      C.tertiary,
+    upcoming:  C.secondary,
+    completed: C.onSurfaceVariant,
+  };
   const { races: jockeyRaces } = useJockeyRaces();
   const { user } = useAuth();
   const today = new Date();
@@ -196,7 +199,8 @@ export function JockeySchedule() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   root:    { flex: 1, backgroundColor: SC.lowest },
   safeArea:{ flex: 1 },
   scroll:  { paddingHorizontal: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.five },
@@ -241,4 +245,5 @@ const styles = StyleSheet.create({
   myEntry:     { flexDirection: 'row', alignItems: 'center', gap: Spacing.one, backgroundColor: C.primaryContainer, borderRadius: Shape.medium, padding: Spacing.two },
   myHorse:     { color: C.onPrimaryContainer, fontFamily: FontFamily.bold, fontSize: 13 },
   myOdds:      { color: 'rgba(255,217,180,0.6)', fontFamily: FontFamily.regular, fontSize: 11 },
-});
+  });
+}

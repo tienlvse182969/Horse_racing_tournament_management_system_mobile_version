@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Platform, Alert } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Platform, Alert, BackHandler } from 'react-native';
 import * as Calendar from 'expo-calendar/legacy';
 import { LiveViewer } from './live-viewer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,11 +7,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, CalendarPlus } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import type { Race } from '@/types/race';
 import { formatCurrency, formatDate } from '@/utils/format';
-import { spectatorApi } from '@/api/spectator.api';
-import { MedalIcon } from '@/components/ui/medal-icon';
 
 const PENALTY_LABELS: Record<string, string> = {
   warning: 'Cảnh cáo',
@@ -25,10 +24,22 @@ const PENALTY_LABELS: Record<string, string> = {
 
 type Props = { race: Race; onBack: () => void };
 
+const MEDAL_COLORS = ['#C9971C', '#C0C0C0', '#CD7F32'];
+
 export function RaceDetail({ race, onBack }: Props) {
+  const { C, SC } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const [isWatching, setIsWatching] = useState(false);
   const [addingToCalendar, setAddingToCalendar] = useState(false);
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      onBack();
+      return true;
+    });
+    return () => sub.remove();
+  }, [onBack]);
 
   if (isWatching) {
     return <LiveViewer race={race} onClose={() => setIsWatching(false)} />;
@@ -36,6 +47,7 @@ export function RaceDetail({ race, onBack }: Props) {
 
   const isCompleted = race.status === 'completed';
   const isLive = race.status === 'live';
+  const isUpcoming = race.status === 'upcoming';
   const isPendingReview = isCompleted && !race.resultPublished;
 
   async function addToCalendar() {
@@ -82,10 +94,8 @@ export function RaceDetail({ race, onBack }: Props) {
       setAddingToCalendar(false);
     }
   }
-  const visibleEntries = isCompleted && race.resultPublished
-    ? race.entries.filter((e) => !e.isDisqualified)
-    : race.entries;
-  const sortedEntries = [...visibleEntries].sort((a, b) => {
+  const sortedEntries = [...race.entries].sort((a, b) => {
+    if (!!a.isDisqualified !== !!b.isDisqualified) return a.isDisqualified ? 1 : -1;
     if (a.position && b.position) return a.position - b.position;
     if (a.position) return -1;
     if (b.position) return 1;
@@ -108,7 +118,7 @@ export function RaceDetail({ race, onBack }: Props) {
         {/* Banner */}
         <Animated.View entering={FadeInDown.duration(320)}>
           <LinearGradient
-            colors={isLive ? ['#003520', '#1A5C3A'] : ['#1C1409', '#302015']}
+            colors={isLive ? ['#003520', '#1A5C3A'] : [SC.base, SC.high]}
             style={styles.banner}>
             {isLive && (
               <View style={styles.liveRow}>
@@ -133,7 +143,10 @@ export function RaceDetail({ race, onBack }: Props) {
         {/* Entries */}
         <Animated.View entering={FadeInDown.delay(80).duration(320)}>
           <Text style={styles.sectionTitle}>
-            {isPendingReview ? 'Kết quả tạm thời (chưa chính thức)' : isCompleted ? 'Kết quả chính thức' : 'Thứ hạng hiện tại'}
+            {isPendingReview ? 'Kết quả tạm thời (chưa chính thức)'
+              : isCompleted ? 'Kết quả chính thức'
+              : isUpcoming ? 'Ngựa tham gia'
+              : 'Thứ hạng hiện tại'}
           </Text>
           {isPendingReview && (
             <Text style={styles.pendingReviewText}>
@@ -141,26 +154,30 @@ export function RaceDetail({ race, onBack }: Props) {
             </Text>
           )}
           {sortedEntries.map((entry, idx) => (
-            <View key={entry.horse.id} style={styles.entryRow}>
+            <View key={entry.horse.id} style={[styles.entryRow, entry.isDisqualified && styles.entryRowDisqualified]}>
               <View style={styles.entryRank}>
-                {entry.position && entry.position <= 3
-                  ? <MedalIcon position={entry.position} size={18} />
+                {entry.isDisqualified
+                  ? <Text style={styles.entryTextDisqualified}>—</Text>
                   : entry.position
-                  ? <Text style={styles.rankNum}>{entry.position}</Text>
+                  ? <Text style={[styles.rankNum, entry.position <= 3 && { color: MEDAL_COLORS[entry.position - 1] }]}>#{entry.position}</Text>
                   : isCompleted
                   ? <Text style={styles.rankDash}>—</Text>
-                  : <Text style={styles.rankNum}>{idx + 1}</Text>}
+                  : isUpcoming
+                  ? null
+                  : <Text style={[styles.rankNum, idx < 3 && { color: MEDAL_COLORS[idx] }]}>#{idx + 1}</Text>}
               </View>
               <View style={[styles.horseColor, { backgroundColor: entry.horse.color }]} />
               <View style={styles.entryInfo}>
-                <Text style={styles.entryHorseName}>
-                  #{entry.horse.number} {entry.horse.name}
+                <Text style={[styles.entryHorseName, entry.isDisqualified && styles.entryTextDisqualified]}>
+                  {entry.horse.name}
                 </Text>
-                <Text style={styles.entryJockey}>{entry.jockeyName}</Text>
+                {!!entry.jockeyName && (
+                  <Text style={[styles.entryJockey, entry.isDisqualified && styles.entryTextDisqualified]}>{entry.jockeyName}</Text>
+                )}
               </View>
               <View style={styles.entryRight}>
                 {entry.finishTime && (
-                  <Text style={styles.finishTime}>{entry.finishTime}</Text>
+                  <Text style={[styles.finishTime, entry.isDisqualified && styles.entryTextDisqualified]}>{entry.finishTime}</Text>
                 )}
               </View>
             </View>
@@ -210,6 +227,7 @@ export function RaceDetail({ race, onBack }: Props) {
 }
 
 function InfoCell({ label, value, light }: { label: string; value: string; light?: boolean }) {
+  const styles = useThemedStyles(createStyles);
   return (
     <View style={styles.infoCell}>
       <Text style={[styles.infoCellLabel, light && styles.infoCellLabelLight]}>{label}</Text>
@@ -218,7 +236,8 @@ function InfoCell({ label, value, light }: { label: string; value: string; light
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   root:   { flex: 1, backgroundColor: SC.lowest },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -245,6 +264,8 @@ const styles = StyleSheet.create({
   sectionTitle: { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15, marginBottom: Spacing.two },
   pendingReviewText: { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 13, marginBottom: Spacing.two },
   entryRow:     { flexDirection: 'row', alignItems: 'center', backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, marginBottom: Spacing.two, gap: Spacing.two },
+  entryRowDisqualified: { backgroundColor: `${C.error}15` },
+  entryTextDisqualified: { color: C.error },
   entryRank:    { width: 32, alignItems: 'center' },
   rankNum:      { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 16 },
   rankDash:     { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 16 },
@@ -265,4 +286,5 @@ const styles = StyleSheet.create({
   calendarBtn:        { backgroundColor: C.primary, borderRadius: Shape.full, paddingVertical: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: Spacing.two },
   calendarBtnDisabled:{ opacity: 0.6 },
   calendarBtnText:    { color: C.onPrimary, fontFamily: FontFamily.bold, fontSize: 14 },
-});
+  });
+}

@@ -1,40 +1,46 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   ArrowLeft, Calendar, Target, CircleCheck, CircleX, Star, ChartBar,
-  Clock, ChevronRight, LogOut, Lock, Info, X, Wallet,
+  Clock, ChevronRight, LogOut, Lock, Info, X, Wallet, SunMoon,
 } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
+import { ThemeModeSheet } from '@/components/theme-mode-sheet';
 import { useAuth } from '@/context/AuthContext';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useSpectatorPoints, useSpectatorPredictions } from '@/hooks/useSpectatorData';
 import { formatCurrency, formatDate } from '@/mock-data';
 import { APP_VERSION } from '@/constants/version';
 
 type SettingItem = { Icon: React.ComponentType<{ size?: number; color?: string }>; label: string; onPress: () => void };
 
-const STATUS_CONFIG = {
-  won:     { color: C.tertiary,  bg: C.tertiaryContainer,  label: 'Đúng' },
-  partial: { color: C.primary,   bg: C.primaryContainer,   label: 'Một phần' },
-  lost:    { color: C.error,     bg: C.errorContainer,     label: 'Sai' },
-  pending: { color: C.secondary, bg: C.secondaryContainer, label: 'Chờ' },
-  cancelled: { color: C.onSurfaceVariant, bg: SC.high, label: 'Đã hủy' },
-};
-
 export function SpectatorProfile() {
   const { user, logout } = useAuth();
+  const { C, SC } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const { balance } = useSpectatorPoints();
   const { predictions } = useSpectatorPredictions();
   const [aboutVisible, setAboutVisible] = useState(false);
+  const [themeVisible, setThemeVisible] = useState(false);
+
+  const STATUS_CONFIG = useMemo(() => ({
+    won:     { color: C.tertiary,  bg: C.tertiaryContainer,  label: 'Đúng' },
+    partial: { color: C.primary,   bg: C.primaryContainer,   label: 'Một phần' },
+    lost:    { color: C.error,     bg: C.errorContainer,     label: 'Sai' },
+    pending: { color: C.secondary, bg: C.secondaryContainer, label: 'Chờ' },
+    cancelled: { color: C.onSurfaceVariant, bg: SC.high, label: 'Đã hủy' },
+  }), [C, SC]);
 
   const SETTINGS: SettingItem[] = [
     { Icon: Wallet, label: 'Nạp điểm',     onPress: () => router.push('/top-up' as never) },
     { Icon: Lock, label: 'Đổi mật khẩu', onPress: () => router.push('/change-password' as never) },
+    { Icon: SunMoon, label: 'Giao diện', onPress: () => setThemeVisible(true) },
     { Icon: Info, label: 'Về ứng dụng',   onPress: () => setAboutVisible(true) },
   ];
   const won = predictions.filter(p => p.status === 'won').length;
@@ -181,11 +187,14 @@ export function SpectatorProfile() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      <ThemeModeSheet visible={themeVisible} onClose={() => setThemeVisible(false)} />
     </View>
   );
 }
 
 function LegendItem({ color, label }: { color: string; label: string }) {
+  const styles = useThemedStyles(createStyles);
   return (
     <View style={styles.legendItem}>
       <View style={[styles.legendDot, { backgroundColor: color }]} />
@@ -194,7 +203,8 @@ function LegendItem({ color, label }: { color: string; label: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   root:    { flex: 1, backgroundColor: SC.lowest },
   safeArea:{ flex: 1 },
   scroll:  { paddingHorizontal: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.five },
@@ -253,4 +263,5 @@ const styles = StyleSheet.create({
   modalCloseBtn:  { position: 'absolute', top: Spacing.two, right: Spacing.two, width: 32, height: 32, borderRadius: Shape.full, backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center' },
   modalAppName:   { color: C.primary, fontFamily: FontFamily.bangers, fontSize: 28, letterSpacing: 2, marginTop: Spacing.two },
   modalVersion:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 13 },
-});
+  });
+}

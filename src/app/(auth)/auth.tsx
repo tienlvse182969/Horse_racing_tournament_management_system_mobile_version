@@ -11,11 +11,11 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { Zap, Users } from 'lucide-react-native';
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { AuthHeader } from '@/components/auth/auth-header';
 import { AuthTabSwitcher } from '@/components/auth/auth-tab-switcher';
 import { LoginForm } from '@/components/auth/login-form';
@@ -27,8 +27,6 @@ import { ApiError } from '@/api/client';
 import * as authApi from '@/api/auth.api';
 import { APP_VERSION } from '@/constants/version';
 
-const DEMO_PASSWORD = 'Demo@123';
-
 function redirectForRole(role: string) {
   if (role === 'jockey') router.replace('/jockey/home' as never);
   else if (role === 'spectator') router.replace('/(app)/home' as never);
@@ -37,10 +35,12 @@ function redirectForRole(role: string) {
 
 export default function AuthScreen() {
   const { login, registerSpectator } = useAuth();
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const [activeTab, setActiveTab] = useState<Tab>('login');
   const [registerRole, setRegisterRole] = useState<RegisterRole | null>(null);
-  const [email, setEmail] = useState('spectator@demo.local');
-  const [password, setPassword] = useState(DEMO_PASSWORD);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
@@ -86,22 +86,8 @@ export default function AuthScreen() {
     }
   }
 
-  async function handleDemoLogin(demoEmail: string) {
-    setLoading(true);
-    setError(null);
-    try {
-      const user = await login(demoEmail, DEMO_PASSWORD);
-      redirectForRole(user.role);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Demo login failed');
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
     <View style={styles.container}>
-      <StatusBar style="light" />
       <SafeAreaView style={styles.safeArea}>
         <AuthHeader />
         <KeyboardAvoidingView
@@ -175,29 +161,6 @@ export default function AuthScreen() {
               </Animated.View>
             )}
 
-            <View style={styles.demoRow}>
-              <TouchableOpacity
-                style={styles.demoBtn}
-                onPress={() => handleDemoLogin('spectator@demo.local')}
-                disabled={loading}
-                activeOpacity={0.8}>
-                <View style={styles.demoBtnInner}>
-                  <Users size={14} color={C.onSurfaceVariant} />
-                  <Text style={styles.demoText}>Demo Khán giả</Text>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.demoBtn, styles.demoBtnJockey]}
-                onPress={() => handleDemoLogin('jockey1@demo.local')}
-                disabled={loading}
-                activeOpacity={0.8}>
-                <View style={styles.demoBtnInner}>
-                  <Zap size={14} color={C.primary} />
-                  <Text style={[styles.demoText, styles.demoTextJockey]}>Demo Kỵ sĩ</Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-
             <Text style={styles.versionText}>Phiên bản {APP_VERSION}</Text>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -206,7 +169,8 @@ export default function AuthScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   container:   { flex: 1, backgroundColor: SC.low },
   safeArea:    { flex: 1 },
   flex:        { flex: 1 },
@@ -216,11 +180,6 @@ const styles = StyleSheet.create({
   submitInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   submitText:  { fontFamily: FontFamily.bold, fontSize: 16, letterSpacing: 0.5 },
   errorText:   { color: C.error, fontFamily: FontFamily.medium, fontSize: 13, marginBottom: Spacing.two },
-  demoRow:          { flexDirection: 'row', gap: Spacing.two, paddingVertical: Spacing.two },
-  demoBtn:          { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: Shape.full, borderWidth: 1, borderColor: C.outlineVariant },
-  demoBtnInner:     { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  demoBtnJockey:    { borderColor: `${C.primary}60`, backgroundColor: `${C.primary}15` },
-  demoText:         { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 13 },
-  demoTextJockey:   { color: C.primary },
   versionText:      { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12, textAlign: 'center', marginTop: Spacing.two },
-});
+  });
+}

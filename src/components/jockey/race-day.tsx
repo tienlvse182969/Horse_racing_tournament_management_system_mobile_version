@@ -7,7 +7,8 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { ChevronLeft, Ruler, Trophy, Leaf, RotateCcw, MapPin, CalendarDays } from 'lucide-react-native';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { formatCurrency } from '@/mock-data';
 import { MedalIcon } from '@/components/ui/medal-icon';
 import { RaceLaneTrack } from '@/components/spectator/live/race-lane-track';
@@ -38,6 +39,8 @@ type Props = {
 
 // ─── Root component — delegates to phase view ────────────────────────────────
 export function RaceDay({ jockeyRace, fullRace, jockeyName }: Props) {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const statusLabel =
     jockeyRace.status === 'live'      ? 'ĐANG ĐUA'     :
     jockeyRace.status === 'upcoming'  ? 'SẮP DIỄN RA'  :
@@ -80,6 +83,8 @@ export function RaceDay({ jockeyRace, fullRace, jockeyName }: Props) {
 
 // ─── Phase 1: Pre-race ────────────────────────────────────────────────────────
 function PreRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRace: Race | null }) {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const [timeLeft, setTimeLeft] = useState(() => calcTimeLeft(jockeyRace.date, jockeyRace.time));
 
   useEffect(() => {
@@ -237,6 +242,7 @@ function LiveRaceView({
   fullRace: Race | null;
   jockeyName: string;
 }) {
+  const styles = useThemedStyles(createStyles);
   const [raceState, setRaceState] = useState<RaceState>('idle');
   const [standings, setStandings] = useState<StandingEntry[]>(() =>
     (fullRace?.entries ?? []).map((e, i) => ({
@@ -494,6 +500,7 @@ function LiveRaceView({
 
 // ─── Phase 3: Post-race ───────────────────────────────────────────────────────
 function PostRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRace: Race | null }) {
+  const styles = useThemedStyles(createStyles);
   const { position, finishTime, horse } = jockeyRace.myEntry;
   const isTopThree = position !== undefined && position <= 3;
   const prizeEstimate = position === 1 ? jockeyRace.purse * 0.5
@@ -579,6 +586,7 @@ function PostRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRa
 
 // ─── Small helpers ─────────────────────────────────────────────────────────────
 function CountdownUnit({ value, unit }: { value: string; unit: string }) {
+  const styles = useThemedStyles(createStyles);
   return (
     <View style={styles.countdownUnit}>
       <Text style={styles.countdownDigit}>{value}</Text>
@@ -588,6 +596,7 @@ function CountdownUnit({ value, unit }: { value: string; unit: string }) {
 }
 
 function ConditionCell({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  const styles = useThemedStyles(createStyles);
   return (
     <View style={styles.conditionCell}>
       {icon}
@@ -609,7 +618,8 @@ function calcTimeLeft(date: string, time: string) {
 }
 
 // ─── Styles ────────────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   root:      { flex: 1, backgroundColor: SC.lowest },
   safeArea:  { flex: 1 },
 
@@ -712,4 +722,5 @@ const styles = StyleSheet.create({
   earningsNote:       { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
   returnBtn:          { backgroundColor: C.primaryContainer, borderRadius: Shape.full, paddingVertical: 14, alignItems: 'center' },
   returnBtnText:      { color: C.primary, fontFamily: FontFamily.bold, fontSize: 15 },
-});
+  });
+}

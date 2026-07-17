@@ -4,13 +4,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MailX, Zap, Clock, CircleCheck, CircleX, MapPin, ArrowLeftRight, Trophy, Handshake, Calendar, MessageSquare, X, Check } from 'lucide-react-native';
 import Animated, { FadeInDown, useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { JockeyAvatarButton } from '@/components/jockey-avatar-button';
 import { JockeySuspensionBanner } from '@/components/jockey/jockey-suspension-banner';
 import type { Invitation, InvitationStatus } from '@/mock-data';
 import { formatCurrency, formatDate, isBeforeBanEnd } from '@/mock-data';
 import { useAuth } from '@/context/AuthContext';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useJockeyInvitations } from '@/hooks/useJockeyData';
 import { ActivityIndicator } from 'react-native';
 
@@ -24,13 +25,17 @@ const FILTERS: { key: FilterType; label: string }[] = [
   { key: 'declined', label: 'Đã từ chối' },
 ];
 
-const STATUS_CONFIG: Record<InvitationStatus, { label: string; color: string; bg: string; Icon: StatusIcon }> = {
-  pending:  { label: 'Chờ phản hồi', color: C.secondary, bg: C.secondaryContainer, Icon: Clock        },
-  accepted: { label: 'Đã chấp nhận', color: C.tertiary,  bg: C.tertiaryContainer,  Icon: CircleCheck  },
-  declined: { label: 'Đã từ chối',   color: C.error,     bg: C.errorContainer,     Icon: CircleX      },
-};
+function statusConfig(C: AppColors): Record<InvitationStatus, { label: string; color: string; bg: string; Icon: StatusIcon }> {
+  return {
+    pending:  { label: 'Chờ phản hồi', color: C.secondary, bg: C.secondaryContainer, Icon: Clock        },
+    accepted: { label: 'Đã chấp nhận', color: C.tertiary,  bg: C.tertiaryContainer,  Icon: CircleCheck  },
+    declined: { label: 'Đã từ chối',   color: C.error,     bg: C.errorContainer,     Icon: CircleX      },
+  };
+}
 
 export function JockeyInvitations() {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
   const { invitations: items, loading, reload, respond } = useJockeyInvitations();
   const [filter, setFilter] = useState<FilterType>('all');
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -122,7 +127,9 @@ function InvitationCard({
   onAccept: () => void;
   onDecline: () => void;
 }) {
-  const sc = STATUS_CONFIG[inv.status];
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
+  const sc = statusConfig(C)[inv.status];
   const { user } = useAuth();
   const locked = isBeforeBanEnd(inv.race.date, inv.race.time, user?.penaltyStatus?.bannedUntil);
 
@@ -202,7 +209,8 @@ function InvitationCard({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   root:    { flex: 1, backgroundColor: SC.lowest },
   safeArea:{ flex: 1 },
   scroll:  { paddingHorizontal: Spacing.three, gap: Spacing.two, paddingBottom: Spacing.five },
@@ -248,4 +256,5 @@ const styles = StyleSheet.create({
   declineBtnText: { color: C.error, fontFamily: FontFamily.bold, fontSize: 14 },
   acceptBtn:   { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: C.tertiary, borderRadius: Shape.large, paddingVertical: 13 },
   acceptBtnText: { color: C.onTertiary, fontFamily: FontFamily.bold, fontSize: 14 },
-});
+  });
+}

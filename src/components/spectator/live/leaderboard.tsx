@@ -1,14 +1,16 @@
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { HorseRacingDark as C, SurfaceContainers as SC, Shape, Spacing, FontFamily } from '@/constants/theme';
+import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useHorseLeaderboard } from '@/hooks/useHorseLeaderboard';
 import { MedalIcon } from '@/components/ui/medal-icon';
 
-const PODIUM_COLORS = [C.secondary, C.onSurfaceVariant, C.primary];
-const PODIUM_BG     = [C.secondaryContainer, `${C.onSurfaceVariant}25`, C.primaryContainer];
-
 export function Leaderboard({ standalone = true }: { standalone?: boolean }) {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
+  const PODIUM_COLORS = [C.secondary, C.onSurfaceVariant, C.primary];
+  const PODIUM_BG     = [C.secondaryContainer, `${C.onSurfaceVariant}25`, C.primaryContainer];
   const { entries, loading } = useHorseLeaderboard(10);
   const top3 = entries.slice(0, 3);
 
@@ -75,7 +77,8 @@ export function Leaderboard({ standalone = true }: { standalone?: boolean }) {
   return <View style={styles.inlineContent}>{content}</View>;
 }
 
-const styles = StyleSheet.create({
+function createStyles(C: AppColors, SC: SurfaceColors) {
+  return StyleSheet.create({
   scroll:         { padding: Spacing.three, gap: Spacing.two, paddingBottom: Spacing.five },
   inlineContent:  { gap: Spacing.two },
 
@@ -99,4 +102,5 @@ const styles = StyleSheet.create({
   winRate:      { color: C.primary, fontFamily: FontFamily.bold, fontSize: 13 },
   entrySubtitle:{ color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 10 },
   emptyText: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 13, textAlign: 'center', paddingVertical: Spacing.four },
-});
+  });
+}
