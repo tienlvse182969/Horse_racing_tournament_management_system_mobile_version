@@ -7,6 +7,7 @@ import type { Invitation, JockeyRace } from '@/mock-data/jockey';
 import { jockeyRaces } from '@/mock-data/jockey';
 import { races } from '@/mock-data/races';
 import type { Race } from '@/mock-data/races';
+import type { Notification } from '@/mock-data/notifications';
 
 const POLL_INTERVAL_MS = 8000;
 
@@ -85,6 +86,43 @@ export function useJockeyPenaltyDetail(): { penalty: PenaltyDetailDto | null; lo
   }, []);
 
   return { penalty, loading };
+}
+
+export function useJockeyPoints() {
+  const [balance, setBalance] = useState(0);
+  const [totalEarned, setTotalEarned] = useState(0);
+  const [totalSpent, setTotalSpent] = useState(0);
+  const [transactions, setTransactions] = useState<Awaited<ReturnType<typeof jockeyApi.getPoints>>['points']['transactions']>([]);
+  const reload = useCallback(() => {
+    jockeyApi.getPoints().then((res) => {
+      setBalance(res.points.currentBalance);
+      setTotalEarned(res.points.totalPointsEarned);
+      setTotalSpent(res.points.totalPointsSpent);
+      setTransactions(res.points.transactions.filter(tx => tx.points > 0).slice(0, 10));
+    }).catch(() => {});
+  }, []);
+  useEffect(() => { reload(); }, [reload]);
+  return { balance, totalEarned, totalSpent, transactions, reload };
+}
+
+export function useJockeyNotifications() {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const reload = useCallback(() => {
+    jockeyApi.listNotifications().then((res) => {
+      setNotifications(
+        res.notifications.map((n) => ({
+          id: n.id,
+          type: 'system' as Notification['type'],
+          title: n.title,
+          body: n.message,
+          time: n.createdAt,
+          read: n.isRead,
+        })),
+      );
+    }).catch(() => {});
+  }, []);
+  useEffect(() => { reload(); }, [reload]);
+  return { notifications, setNotifications, reload };
 }
 
 export function useJockeyRaceDetail(id: string): { jockeyRace: JockeyRace | null; fullRace: Race | null } {

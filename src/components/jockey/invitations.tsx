@@ -6,7 +6,7 @@ import Animated, { FadeInDown, useSharedValue, withTiming, useAnimatedStyle } fr
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
-import { JockeyAvatarButton } from '@/components/jockey-avatar-button';
+import { JockeyHeaderActions } from '@/components/jockey-header-actions';
 import { JockeySuspensionBanner } from '@/components/jockey/jockey-suspension-banner';
 import type { Invitation, InvitationStatus } from '@/mock-data';
 import { formatCurrency, formatDate, isBeforeBanEnd } from '@/mock-data';
@@ -60,7 +60,7 @@ export function JockeyInvitations() {
         <LargeHeaderScrollView
           title="Lời mời"
           contentContainerStyle={styles.scroll}
-          rightAction={<JockeyAvatarButton />}
+          rightAction={<JockeyHeaderActions />}
           refreshing={refreshing}
           onRefresh={handleRefresh}>
 

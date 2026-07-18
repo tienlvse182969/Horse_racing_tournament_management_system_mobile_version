@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Tabs } from 'expo-router';
-import { Home, Mail, Flag, Calendar, Trophy } from 'lucide-react-native';
+import { Home, Mail, Flag, Bell, Trophy } from 'lucide-react-native';
 import type { ColorValue } from 'react-native';
 
 import { M3TabBar } from '@/components/m3-tab-bar';
@@ -17,6 +17,7 @@ export default function JockeyTabsLayout() {
   const { user } = useAuth();
   const [pendingCount, setPendingCount] = useState(0);
   const [upcomingRaceCount, setUpcomingRaceCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (user?.role === 'jockey') {
@@ -25,6 +26,9 @@ export default function JockeyTabsLayout() {
       }).catch(() => {});
       jockeyApi.dashboard().then((res) => {
         setUpcomingRaceCount(res.upcomingRaces);
+      }).catch(() => {});
+      jockeyApi.listNotifications().then((res) => {
+        setUnreadCount(res.notifications.filter((n) => !n.isRead).length);
       }).catch(() => {});
     }
   }, [user]);
@@ -54,8 +58,12 @@ export default function JockeyTabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="schedule"
-        options={{ title: 'Lịch đua', tabBarIcon: tabIcon(Calendar) }}
+        name="notifications"
+        options={{
+          title: 'Thông báo',
+          tabBarIcon: tabIcon(Bell),
+          tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
+        }}
       />
       <Tabs.Screen
         name="results"

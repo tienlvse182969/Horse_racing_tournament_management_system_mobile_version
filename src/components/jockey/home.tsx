@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Hand, Zap, Trophy, ChartBar, Mail, MapPin, Clock, ArrowLeftRight, Banknote, TrendingUp } from 'lucide-react-native';
+import { Hand, Zap, Trophy, ChartBar, Mail, MapPin, Clock, ArrowLeftRight, Award } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
-import { JockeyAvatarButton } from '@/components/jockey-avatar-button';
+import { JockeyHeaderActions } from '@/components/jockey-header-actions';
 import { JockeySuspensionBanner } from '@/components/jockey/jockey-suspension-banner';
 import { useAuth } from '@/context/AuthContext';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
-import { useJockeyDashboard, useJockeyInvitations, useJockeyRaces } from '@/hooks/useJockeyData';
+import { useJockeyDashboard, useJockeyInvitations, useJockeyPoints, useJockeyRaces } from '@/hooks/useJockeyData';
 import { formatCurrency, formatDate } from '@/mock-data';
+
+const HERO_BG = require('@/assets/images/Meisho-Tabaru-Takarazuka-Kinen-scaled.png');
 
 function RaceDayCountdown({ date, time }: { date: string; time: string }) {
   const styles = useThemedStyles(createStyles);
@@ -42,6 +45,7 @@ export function JockeyHome() {
   const stats = useJockeyDashboard();
   const { invitations } = useJockeyInvitations();
   const { races: jockeyRaces } = useJockeyRaces();
+  const { balance: pointsBalance } = useJockeyPoints();
   const pendingCount = stats.pendingInvitations || invitations.filter(i => i.status === 'pending').length;
   const today = new Date().toISOString().slice(0, 10);
   const todayRace = jockeyRaces.find(r => r.date === today && r.status !== 'completed');
@@ -50,30 +54,35 @@ export function JockeyHome() {
     .slice(0, 3);
   const displayName = user?.fullName ?? 'Kỵ sĩ';
   const initials = displayName.split(' ').map(w => w[0]).join('').slice(-2).toUpperCase();
-  const winRate = stats.completedRaces > 0 ? Math.round((stats.completedRaces / (stats.completedRaces + stats.upcomingRaces || 1)) * 100) : 0;
+  const completedRaces = jockeyRaces.filter(r => r.status === 'completed' && r.myEntry.position);
+  const completedCount = completedRaces.length;
+  const wins = completedRaces.filter(r => r.myEntry.position === 1).length;
+  const podiums = completedRaces.filter(r => (r.myEntry.position ?? 0) <= 3).length;
+  const winRate = completedCount > 0 ? Math.round((wins / completedCount) * 100) : 0;
 
   type HeroStat = { label: string; value: string | number; Icon: React.ComponentType<{ size?: number; color?: string }> };
   const heroStats: HeroStat[] = [
-    { label: 'Tổng đua',     value: stats.completedRaces + stats.upcomingRaces, Icon: Zap      },
-    { label: 'Chiến thắng',  value: stats.completedRaces,                       Icon: Trophy   },
-    { label: 'Tỷ lệ thắng', value: `${winRate}%`,                              Icon: ChartBar },
+    { label: 'Cuộc đua đã xong', value: completedCount, Icon: Zap      },
+    { label: 'Chiến thắng',      value: wins,           Icon: Trophy   },
+    { label: 'Vào top 3',        value: podiums,        Icon: Award    },
+    { label: 'Tỷ lệ thắng',     value: `${winRate}%`,  Icon: ChartBar },
   ];
 
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <LargeHeaderScrollView title="RaceTrack VN" bangers contentContainerStyle={styles.scroll} rightAction={<JockeyAvatarButton />}>
+        <LargeHeaderScrollView title="RaceTrack VN" bangers contentContainerStyle={styles.scroll} rightAction={<JockeyHeaderActions />}>
 
           {/* Hero stats card */}
           <Animated.View entering={FadeIn.duration(380)}>
-            <LinearGradient
-              colors={['#3B1A00', '#7B3F00', '#C07A00']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.heroCard}>
-              {/* BG decoration */}
-              <View style={styles.heroBgCircle1} />
-              <View style={styles.heroBgCircle2} />
+            <View style={styles.heroCard}>
+              <Image source={HERO_BG} style={StyleSheet.absoluteFill} contentFit="cover" />
+              <LinearGradient
+                colors={['rgba(35,17,0,0.55)', 'rgba(15,7,0,0.85)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
 
               <View style={styles.heroTop}>
                 <View>
@@ -84,7 +93,6 @@ export function JockeyHome() {
                   <Text style={styles.heroName}>
                     {displayName.split(' ').slice(-2).join(' ')}
                   </Text>
-                  <Text style={styles.heroLicense}>#{user?.id.slice(-6) ?? '------'}</Text>
                 </View>
                 <View style={styles.heroAvatar}>
                   <Text style={styles.heroInitials}>{initials}</Text>
@@ -100,7 +108,7 @@ export function JockeyHome() {
                   </View>
                 ))}
               </View>
-            </LinearGradient>
+            </View>
           </Animated.View>
 
           <JockeySuspensionBanner />
@@ -217,37 +225,13 @@ export function JockeyHome() {
             ))}
           </Animated.View>
 
-          {/* Monthly earnings */}
-          <Animated.View entering={FadeInDown.delay(360).duration(320)} style={styles.earningsCard}>
+          {/* Points */}
+          <Animated.View entering={FadeInDown.delay(360).duration(320)} style={styles.pointsCard}>
             <View style={styles.earningsHeader}>
-              <Text style={styles.earningsLabel}>Thu nhập tháng 5</Text>
-              <Banknote size={18} color={C.onSurfaceVariant} />
+              <Text style={styles.earningsLabel}>Điểm tích lũy</Text>
+              <Award size={18} color={C.tertiary} />
             </View>
-            <Text style={styles.earningsAmount}>{formatCurrency(405_000_000)}</Text>
-            <View style={styles.earningsTrend}>
-              <TrendingUp size={13} color={C.tertiary} />
-              <Text style={styles.earningsTrendText}>+12.5%</Text>
-              <Text style={styles.earningsTrendSub}>so với tháng trước</Text>
-            </View>
-            <View style={styles.barChart}>
-              {[65, 80, 55, 90, 70, 100, 85].map((h, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.bar,
-                    {
-                      height: `${h}%` as any,
-                      backgroundColor: i === 6 ? C.primary : C.primaryContainer,
-                    },
-                  ]}
-                />
-              ))}
-            </View>
-            <View style={styles.barLabels}>
-              {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map(d => (
-                <Text key={d} style={styles.barLabel}>{d}</Text>
-              ))}
-            </View>
+            <Text style={styles.pointsAmount}>{pointsBalance.toLocaleString('vi-VN')}</Text>
           </Animated.View>
 
         </LargeHeaderScrollView>
@@ -264,13 +248,10 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
 
   // Hero
   heroCard:      { borderRadius: Shape.large, padding: Spacing.three, overflow: 'hidden' },
-  heroBgCircle1: { position: 'absolute', right: -24, top: -24, width: 96, height: 96, borderRadius: Shape.full, backgroundColor: 'rgba(255,217,180,0.1)' },
-  heroBgCircle2: { position: 'absolute', right: -8, top: 32, width: 56, height: 56, borderRadius: Shape.full, backgroundColor: 'rgba(255,217,180,0.1)' },
   heroTop:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: Spacing.three },
   heroGreetingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   heroGreeting:  { color: 'rgba(255,217,180,0.7)', fontFamily: FontFamily.medium, fontSize: 12 },
   heroName:      { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 22, letterSpacing: -0.3 },
-  heroLicense:   { color: 'rgba(255,217,180,0.55)', fontFamily: FontFamily.regular, fontSize: 12 },
   heroAvatar:    { width: 56, height: 56, borderRadius: Shape.medium, backgroundColor: 'rgba(255,217,180,0.15)', borderWidth: 1.5, borderColor: 'rgba(255,217,180,0.3)', justifyContent: 'center', alignItems: 'center' },
   heroInitials:  { color: '#FFD9B4', fontFamily: FontFamily.bold, fontSize: 22 },
   statsRow:      { flexDirection: 'row', gap: Spacing.two },
@@ -325,17 +306,10 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   confirmedBadge:{ marginLeft: 'auto', backgroundColor: C.tertiaryContainer, borderRadius: Shape.full, paddingHorizontal: 10, paddingVertical: 3 },
   confirmedText: { color: C.tertiary, fontFamily: FontFamily.bold, fontSize: 10 },
 
-  // Earnings
-  earningsCard:  { backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.three, gap: Spacing.one },
+  // Points
+  pointsCard:    { backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.three, gap: Spacing.one },
   earningsHeader:{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   earningsLabel: { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 14 },
-  earningsAmount:{ color: C.primary, fontFamily: FontFamily.bold, fontSize: 28, letterSpacing: -0.5 },
-  earningsTrend: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  earningsTrendText:{ color: C.tertiary, fontFamily: FontFamily.bold, fontSize: 12 },
-  earningsTrendSub: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
-  barChart:      { flexDirection: 'row', alignItems: 'flex-end', height: 48, gap: 5, marginTop: Spacing.two },
-  bar:           { flex: 1, borderRadius: 4 },
-  barLabels:     { flexDirection: 'row', justifyContent: 'space-between' },
-  barLabel:      { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 10 },
+  pointsAmount:  { color: C.tertiary, fontFamily: FontFamily.bold, fontSize: 28, letterSpacing: -0.5 },
   });
 }

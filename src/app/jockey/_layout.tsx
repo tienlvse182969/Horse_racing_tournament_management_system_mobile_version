@@ -23,6 +23,7 @@ export default function JockeyLayout() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="race/[id]" />
       <Stack.Screen name="penalty-detail" />
+      <Stack.Screen name="schedule" />
     </Stack>
   );
 }

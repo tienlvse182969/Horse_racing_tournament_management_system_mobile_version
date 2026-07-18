@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Platform, Alert, BackHandler } from 'react-native';
-import * as Calendar from 'expo-calendar/legacy';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, BackHandler } from 'react-native';
 import { LiveViewer } from './live-viewer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,6 +10,7 @@ import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import type { Race } from '@/types/race';
 import { formatCurrency, formatDate } from '@/utils/format';
+import { addRaceEventToCalendar } from '@/utils/calendar';
 
 const PENALTY_LABELS: Record<string, string> = {
   warning: 'Cảnh cáo',
@@ -53,43 +53,22 @@ export function RaceDetail({ race, onBack }: Props) {
   async function addToCalendar() {
     setAddingToCalendar(true);
     try {
-      const { status } = await Calendar.requestCalendarPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Không có quyền', 'Vui lòng cấp quyền truy cập lịch trong Cài đặt.');
-        return;
-      }
-
-      const [year, month, day] = race.date.split('-').map(Number);
-      const [hours, minutes] = race.time.split(':').map(Number);
-      const startDate = new Date(year, month - 1, day, hours, minutes, 0);
-      const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
-
-      let calendarId: string;
-      if (Platform.OS === 'ios') {
-        const cal = await Calendar.getDefaultCalendarAsync();
-        calendarId = cal.id;
-      } else {
-        const cals = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
-        const writable = cals.find(c => c.allowsModifications);
-        if (!writable) {
-          Alert.alert('Lỗi', 'Không tìm thấy lịch có thể ghi. Vui lòng kiểm tra ứng dụng lịch.');
-          return;
-        }
-        calendarId = writable.id;
-      }
-
-      await Calendar.createEventAsync(calendarId, {
+      const result = await addRaceEventToCalendar({
         title: race.name,
-        startDate,
-        endDate,
+        date: race.date,
+        time: race.time,
         location: race.location,
         notes: `Đua ngựa tại ${race.location} — ${race.distance}m, ${race.laps} vòng. Giải thưởng: ${formatCurrency(race.purse)}`,
-        timeZone: 'Asia/Ho_Chi_Minh',
       });
-
-      Alert.alert('Đã thêm vào lịch', `"${race.name}" đã được lưu vào lịch của bạn.`);
-    } catch {
-      Alert.alert('Lỗi', 'Không thể thêm vào lịch. Vui lòng thử lại.');
+      if (result.ok) {
+        Alert.alert('Đã thêm vào lịch', `"${race.name}" đã được lưu vào lịch của bạn.`);
+      } else if (result.reason === 'permission') {
+        Alert.alert('Không có quyền', 'Vui lòng cấp quyền truy cập lịch trong Cài đặt.');
+      } else if (result.reason === 'no-writable-calendar') {
+        Alert.alert('Lỗi', 'Không tìm thấy lịch có thể ghi. Vui lòng kiểm tra ứng dụng lịch.');
+      } else {
+        Alert.alert('Lỗi', 'Không thể thêm vào lịch. Vui lòng thử lại.');
+      }
     } finally {
       setAddingToCalendar(false);
     }
