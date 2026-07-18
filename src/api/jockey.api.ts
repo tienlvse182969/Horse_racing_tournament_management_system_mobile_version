@@ -15,6 +15,7 @@ export const jockeyApi = {
   getRace: (id: string) => apiGet<{ race: JockeyRaceDto }>(`/api/jockey/races/${id}`),
   listNotifications: () => apiGet<{ notifications: NotificationDto[] }>('/api/jockey/notifications'),
   getPenaltyDetail: () => apiGet<{ penalty: PenaltyDetailDto }>('/api/jockey/penalty-detail'),
+  getPoints: () => apiGet<{ points: PointsWalletDto }>('/api/points/me'),
 };
 
 export interface PenaltyStatusDto {
@@ -69,6 +70,13 @@ export interface NotificationDto {
   message: string;
   isRead: boolean;
   createdAt: string;
+}
+
+export interface PointsWalletDto {
+  currentBalance: number;
+  totalPointsEarned: number;
+  totalPointsSpent: number;
+  transactions: Array<{ id: string; type: string; points: number; balanceAfter: number; note?: string; createdAt: string }>;
 }
 
 export interface PenaltyDetailDto {

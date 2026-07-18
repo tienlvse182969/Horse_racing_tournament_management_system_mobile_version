@@ -1,12 +1,13 @@
 import { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Flag, User, MapPin, Ruler, Calendar, Hash } from 'lucide-react-native';
+import { router } from 'expo-router';
+import { Flag, Ruler } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
-import { JockeyAvatarButton } from '@/components/jockey-avatar-button';
+import { JockeyHeaderActions } from '@/components/jockey-header-actions';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useJockeyRaces } from '@/hooks/useJockeyData';
 import { formatCurrency, isBeforeBanEnd } from '@/mock-data';
@@ -54,7 +55,11 @@ function RaceCard({ race, index }: { race: JockeyRace; index: number }) {
 
   return (
     <Animated.View entering={FadeInDown.delay(index * 50).duration(280)}>
-      <View style={[styles.card, locked && styles.cardLocked]}>
+      <TouchableOpacity
+        style={[styles.card, locked && styles.cardLocked]}
+        onPress={() => router.push(`/jockey/race/${race.id}` as any)}
+        disabled={locked}
+        activeOpacity={0.85}>
         {/* Header */}
         <View style={styles.cardHeader}>
           <Text style={styles.cardName} numberOfLines={2}>{race.name}</Text>
@@ -63,7 +68,7 @@ function RaceCard({ race, index }: { race: JockeyRace; index: number }) {
           </View>
         </View>
 
-        {/* Detail grid */}
+        {/* Detail grid — horse + distance only; tap for full details */}
         <View style={styles.detailGrid}>
           <View style={styles.detailItem}>
             <Flag size={12} color={C.onSurfaceVariant} />
@@ -71,29 +76,9 @@ function RaceCard({ race, index }: { race: JockeyRace; index: number }) {
             <Text style={styles.detailValue} numberOfLines={1}>{race.myEntry.horse.name}</Text>
           </View>
           <View style={styles.detailItem}>
-            <Hash size={12} color={C.onSurfaceVariant} />
-            <Text style={styles.detailLabel}>Làn</Text>
-            <Text style={styles.detailValue}>{race.myEntry.horse.number}</Text>
-          </View>
-          <View style={styles.detailItem}>
-            <Calendar size={12} color={C.onSurfaceVariant} />
-            <Text style={styles.detailLabel}>Ngày</Text>
-            <Text style={styles.detailValue}>{race.date} · {race.time}</Text>
-          </View>
-          <View style={styles.detailItem}>
             <Ruler size={12} color={C.onSurfaceVariant} />
             <Text style={styles.detailLabel}>Cự ly</Text>
             <Text style={styles.detailValue}>{race.distance}m</Text>
-          </View>
-          <View style={styles.detailItem}>
-            <MapPin size={12} color={C.onSurfaceVariant} />
-            <Text style={styles.detailLabel}>Giải đấu</Text>
-            <Text style={styles.detailValue} numberOfLines={1}>{race.location}</Text>
-          </View>
-          <View style={styles.detailItem}>
-            <User size={12} color={C.onSurfaceVariant} />
-            <Text style={styles.detailLabel}>Chủ ngựa</Text>
-            <Text style={styles.detailValue} numberOfLines={1}>{race.ownerName ?? '—'}</Text>
           </View>
         </View>
 
@@ -113,7 +98,7 @@ function RaceCard({ race, index }: { race: JockeyRace; index: number }) {
             )}
           </View>
         )}
-      </View>
+      </TouchableOpacity>
     </Animated.View>
   );
 }
@@ -156,7 +141,7 @@ export function JockeyAssignedRaces() {
         <LargeHeaderScrollView
           title="Cuộc đua"
           contentContainerStyle={styles.scroll}
-          rightAction={<JockeyAvatarButton />}
+          rightAction={<JockeyHeaderActions />}
           refreshing={refreshing}
           onRefresh={handleRefresh}>
 

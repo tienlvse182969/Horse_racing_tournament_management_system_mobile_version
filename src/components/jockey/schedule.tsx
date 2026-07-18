@@ -7,7 +7,7 @@ import { router } from 'expo-router';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
-import { JockeyAvatarButton } from '@/components/jockey-avatar-button';
+import { JockeyHeaderActions } from '@/components/jockey-header-actions';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useJockeyRaces } from '@/hooks/useJockeyData';
 import { formatCurrency, isBeforeBanEnd } from '@/mock-data';
@@ -78,7 +78,7 @@ export function JockeySchedule() {
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <LargeHeaderScrollView title="Lịch thi đấu" contentContainerStyle={styles.scroll} rightAction={<JockeyAvatarButton />}>
+        <LargeHeaderScrollView title="Lịch thi đấu" contentContainerStyle={styles.scroll} rightAction={<JockeyHeaderActions />}>
 
           <JockeySuspensionBanner />
 

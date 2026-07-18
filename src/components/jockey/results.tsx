@@ -7,10 +7,12 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
-import { JockeyAvatarButton } from '@/components/jockey-avatar-button';
+import { JockeyHeaderActions } from '@/components/jockey-header-actions';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useJockeyRaces } from '@/hooks/useJockeyData';
 import { useHorseLeaderboard } from '@/hooks/useHorseLeaderboard';
+import { useRaceLeaderboard } from '@/hooks/useRaceLeaderboard';
+import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/mock-data';
 import { MedalIcon } from '@/components/ui/medal-icon';
 
@@ -32,7 +34,7 @@ export function JockeyResults() {
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <LargeHeaderScrollView title="Kết quả & XH" contentContainerStyle={styles.scroll} rightAction={<JockeyAvatarButton />}>
+        <LargeHeaderScrollView title="Kết quả & XH" contentContainerStyle={styles.scroll} rightAction={<JockeyHeaderActions />}>
 
           {/* Tab switcher */}
           <View style={styles.tabPill}>
@@ -66,6 +68,7 @@ function PersonalContent() {
     2: { iconColor: '#9E9E9E', bg: `${C.onSurfaceVariant}25`, color: C.onSurfaceVariant },
     3: { iconColor: '#CD7F32', bg: '#3A2010', color: '#FFAB60' },
   };
+  const { user } = useAuth();
   const { races } = useJockeyRaces();
   const personalResults = races
     .filter(r => r.status === 'completed' && r.myEntry.position)
@@ -102,11 +105,6 @@ function PersonalContent() {
               <Text style={styles.statLabel}>{s.label}</Text>
             </View>
           ))}
-        </View>
-        <View style={styles.statsDivider} />
-        <View style={styles.earningsRow}>
-          <Text style={styles.earningsLabel}>Tổng thu nhập gần đây</Text>
-          <Text style={styles.earningsValue}>{formatCurrency(totalEarnings)}</Text>
         </View>
       </LinearGradient>
 
@@ -150,7 +148,110 @@ function PersonalContent() {
           </Animated.View>
         );
       })}
+
+      {/* Full leaderboard per completed race — mirrors web's "Bảng xếp hạng đầy đủ" */}
+      {personalResults.length > 0 && (
+        <>
+          <Text style={styles.historyTitle}>Bảng xếp hạng đầy đủ</Text>
+          {personalResults.map((r, i) => (
+            <Animated.View
+              key={`lb-${r.raceId}`}
+              entering={FadeInDown.delay((personalResults.length + i) * 60).duration(280)}>
+              <RaceLeaderboardCard raceId={r.raceId} currentJockeyId={user?.id} />
+            </Animated.View>
+          ))}
+        </>
+      )}
     </>
+  );
+}
+
+function fmtRaceTime(sec: number | null): string {
+  if (sec == null) return '—';
+  const m = Math.floor(sec / 60);
+  const s = sec - m * 60;
+  return m > 0 ? `${m}:${s.toFixed(2).padStart(5, '0')}` : `${s.toFixed(2)}s`;
+}
+
+function RaceLeaderboardCard({ raceId, currentJockeyId }: { raceId: string; currentJockeyId?: string }) {
+  const styles = useThemedStyles(createStyles);
+  const { leaderboard, loading } = useRaceLeaderboard(raceId);
+
+  if (loading) {
+    return (
+      <View style={styles.lbRaceCard}>
+        <Text style={styles.emptyText}>Đang tải bảng xếp hạng…</Text>
+      </View>
+    );
+  }
+
+  if (!leaderboard || leaderboard.stage === null || leaderboard.rankings.length === 0) {
+    return (
+      <View style={styles.lbRaceCard}>
+        <Text style={styles.lbRaceTitle}>{leaderboard?.raceName ?? ''}</Text>
+        <Text style={styles.emptyText}>Kết quả chưa được công bố cho cuộc đua này.</Text>
+      </View>
+    );
+  }
+
+  const visibleRankings = leaderboard.rankings.filter(r => !r.isDisqualified);
+
+  if (visibleRankings.length === 0) {
+    return (
+      <View style={styles.lbRaceCard}>
+        <Text style={styles.lbRaceTitle}>{leaderboard.raceName}</Text>
+        <Text style={styles.emptyText}>Không còn ngựa hợp lệ trong bảng xếp hạng sau khi xử phạt.</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.lbRaceCard}>
+      <Text style={styles.lbRaceTitle}>{leaderboard.raceName}</Text>
+      <Text style={styles.lbRaceMeta}>
+        vòng {leaderboard.round}
+        {leaderboard.distance ? ` · ${leaderboard.distance}m` : ''}
+        {leaderboard.tournamentName ? ` · ${leaderboard.tournamentName}` : ''}
+      </Text>
+
+      {visibleRankings.map((r, index) => {
+        const displayRank = index + 1;
+        const highlighted = r.jockey.id === currentJockeyId;
+        return (
+          <View key={`${r.horse.id}-${displayRank}`} style={[styles.lbRow, highlighted && styles.lbRowHighlight]}>
+            <View style={styles.lbRankCol}>
+              {displayRank <= 3 ? (
+                <MedalIcon position={displayRank} size={20} />
+              ) : (
+                <Text style={styles.rankNum}>{displayRank}</Text>
+              )}
+              <Text style={styles.lbRankNum}>
+                {displayRank}
+                {r.isDeadHeat ? '=' : ''}
+              </Text>
+            </View>
+            <View style={styles.lbMidCol}>
+              <View style={styles.lbHorseRow}>
+                <Text style={styles.lbHorseName} numberOfLines={1}>{r.horse.name}</Text>
+                {highlighted && (
+                  <View style={styles.lbBadge}>
+                    <Text style={styles.lbBadgeText}>của bạn</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.lbJockeyName} numberOfLines={1}>{r.jockey.fullName}</Text>
+            </View>
+            <View style={styles.lbRightCol}>
+              <Text style={styles.lbTime}>{fmtRaceTime(r.finishTime)}</Text>
+              <Text style={styles.lbMargin}>
+                {displayRank === 1 ? '—' : r.marginBehind != null ? `+${r.marginBehind.toFixed(2)}s` : '—'}
+              </Text>
+              <Text style={styles.lbPrize}>{r.prize > 0 ? r.prize.toLocaleString('vi-VN') : '—'}</Text>
+            </View>
+          </View>
+        );
+      })}
+    </View>
   );
 }
 
@@ -248,5 +349,24 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   rankWinRate:    { color: C.secondary, fontFamily: FontFamily.bold, fontSize: 13 },
   rankSubtitle:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 10 },
   emptyText:      { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 13, textAlign: 'center', paddingVertical: Spacing.four },
+
+  // Full per-race leaderboard
+  lbRaceCard:     { backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, marginBottom: Spacing.two, gap: Spacing.one },
+  lbRaceTitle:    { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 13 },
+  lbRaceMeta:     { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11, marginBottom: 4 },
+  lbRow:          { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, paddingVertical: 8, borderRadius: Shape.medium, paddingHorizontal: 6 },
+  lbRowHighlight: { borderWidth: 1, borderColor: `${C.primary}40`, backgroundColor: `${C.primary}12` },
+  lbRankCol:      { width: 32, alignItems: 'center', gap: 2 },
+  lbRankNum:      { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 10 },
+  lbMidCol:       { flex: 1, gap: 2 },
+  lbHorseRow:     { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  lbHorseName:    { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 13, flexShrink: 1 },
+  lbJockeyName:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
+  lbBadge:        { backgroundColor: C.primaryContainer, borderRadius: Shape.full, paddingHorizontal: 6, paddingVertical: 1 },
+  lbBadgeText:    { color: C.primary, fontFamily: FontFamily.medium, fontSize: 9 },
+  lbRightCol:     { alignItems: 'flex-end', gap: 1, minWidth: 70 },
+  lbTime:         { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 12 },
+  lbMargin:       { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 10 },
+  lbPrize:        { color: C.secondary, fontFamily: FontFamily.medium, fontSize: 11 },
   });
 }
