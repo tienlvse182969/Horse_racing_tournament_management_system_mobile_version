@@ -70,11 +70,6 @@ export function PredictionHistory({ predictions, onCancel }: Props) {
                 <Text style={styles.cardPick}>
                   #{pred.predictedHorseNumber} {pred.predictedHorseName}
                 </Text>
-                {pred.riskMultiplier && pred.riskMultiplier > 1 ? (
-                  <View style={styles.riskBadge}>
-                    <Text style={styles.riskBadgeText}>{pred.riskMultiplier}x</Text>
-                  </View>
-                ) : null}
               </View>
               {pred.contribution ? (
                 <Text style={styles.cardStake}>{formatNumber(pred.contribution)} điểm</Text>
@@ -121,8 +116,6 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   cardRace:    { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15 },
   cardPickRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   cardPick:    { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 13 },
-  riskBadge:     { backgroundColor: SC.highest, borderRadius: Shape.full, paddingHorizontal: 6, paddingVertical: 1 },
-  riskBadgeText: { color: C.primary, fontFamily: FontFamily.bold, fontSize: 10 },
   cardStake:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
   cardReward:  { color: C.primary, fontFamily: FontFamily.bold, fontSize: 14 },
   cancelBtn:   { alignSelf: 'flex-start', borderRadius: Shape.full, borderWidth: 1, borderColor: C.error, paddingHorizontal: 12, paddingVertical: 6, marginTop: 2 },

@@ -39,7 +39,7 @@ export function useSpectatorPoints() {
   const [totalSpent, setTotalSpent] = useState(0);
   const [transactions, setTransactions] = useState<PointTransaction[]>([]);
   const reload = useCallback(() => {
-    spectatorApi.getPoints().then((res) => {
+    return spectatorApi.getPoints().then((res) => {
       setBalance(res.points.currentBalance);
       setTotalEarned(res.points.totalPointsEarned);
       setTotalSpent(res.points.totalPointsSpent);
@@ -57,7 +57,7 @@ export function useSpectatorPoints() {
 export function useSpectatorPredictions() {
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const reload = useCallback(() => {
-    spectatorApi.listPredictions().then((res) => {
+    return spectatorApi.listPredictions().then((res) => {
       setPredictions(
         res.predictions.map((p) => ({
           id: p.id,

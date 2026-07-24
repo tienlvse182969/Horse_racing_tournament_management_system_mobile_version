@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert, TextInput } from 'react-native';
-import { CircleCheck, Circle, Target, Coins } from 'lucide-react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert, TextInput, Modal, Pressable } from 'react-native';
+import { CircleCheck, Circle, Target, Coins, X } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
@@ -23,6 +23,7 @@ export function PredictForm({ onSubmitted }: Props) {
   const [ticketCountInput, setTicketCountInput] = useState('1');
   const [submitted, setSubmitted]             = useState(false);
   const [submitting, setSubmitting]           = useState(false);
+  const [confirmVisible, setConfirmVisible]   = useState(false);
 
   const selectedRace  = predictableRaces.find(r => r.id === selectedRaceId);
   const selectedHorse = selectedRace?.entries.find(e => e.horse.id === selectedHorseId);
@@ -36,7 +37,7 @@ export function PredictForm({ onSubmitted }: Props) {
     setTicketCountInput('1');
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!selectedRaceId || !selectedHorseId) return;
     if (ticketCount <= 0) {
       Alert.alert('Số phiếu không hợp lệ', 'Vui lòng nhập số phiếu lớn hơn 0.');
@@ -46,14 +47,21 @@ export function PredictForm({ onSubmitted }: Props) {
       Alert.alert('Không đủ điểm', `Bạn cần ${formatNumber(cost)} điểm để gửi dự đoán này.`);
       return;
     }
+    setConfirmVisible(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    if (!selectedRaceId || !selectedHorseId) return;
     setSubmitting(true);
     try {
       await spectatorApi.createPrediction(selectedRaceId, [{ rank: 1, horseId: selectedHorseId }], ticketCount);
       reloadPoints();
+      setConfirmVisible(false);
       setSubmitted(true);
       setTimeout(onSubmitted, 1800);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Có lỗi xảy ra, vui lòng thử lại.';
+      setConfirmVisible(false);
       Alert.alert('Không thể gửi dự đoán', message);
     } finally {
       setSubmitting(false);
@@ -205,6 +213,64 @@ export function PredictForm({ onSubmitted }: Props) {
           </TouchableOpacity>
         </Animated.View>
       )}
+
+      <Modal
+        visible={confirmVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => { if (!submitting) setConfirmVisible(false); }}>
+        <Pressable style={styles.modalBackdrop} onPress={() => { if (!submitting) setConfirmVisible(false); }}>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            {!submitting && (
+              <Pressable style={styles.modalCloseBtn} onPress={() => setConfirmVisible(false)}>
+                <X size={20} color={C.onSurfaceVariant} />
+              </Pressable>
+            )}
+            <Text style={styles.modalTitle}>Xác nhận dự đoán</Text>
+            <Text style={styles.modalSub}>Vui lòng kiểm tra lại thông tin trước khi gửi</Text>
+
+            <View style={styles.modalInfoBox}>
+              <View style={styles.modalInfoRow}>
+                <Text style={styles.modalInfoLabel}>Cuộc đua</Text>
+                <Text style={styles.modalInfoValue} numberOfLines={1}>{selectedRace?.name}</Text>
+              </View>
+              <View style={styles.modalInfoRow}>
+                <Text style={styles.modalInfoLabel}>Ngựa dự đoán</Text>
+                <Text style={styles.modalInfoValue} numberOfLines={1}>
+                  #{selectedHorse?.horse.number} {selectedHorse?.horse.name}
+                </Text>
+              </View>
+              <View style={styles.modalInfoRow}>
+                <Text style={styles.modalInfoLabel}>Số phiếu</Text>
+                <Text style={styles.modalInfoValue}>{ticketCount}</Text>
+              </View>
+              <View style={[styles.modalInfoRow, styles.modalInfoRowLast]}>
+                <Text style={styles.modalInfoLabel}>Tổng điểm cược</Text>
+                <Text style={styles.modalInfoValueStrong}>{formatNumber(cost)} pts</Text>
+              </View>
+            </View>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalBtnGhost]}
+                disabled={submitting}
+                onPress={() => setConfirmVisible(false)}
+                activeOpacity={0.8}>
+                <Text style={styles.modalBtnGhostText}>Hủy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalBtnConfirm, submitting && styles.submitBtnDisabled]}
+                disabled={submitting}
+                onPress={handleConfirmSubmit}
+                activeOpacity={0.85}>
+                {submitting
+                  ? <ActivityIndicator color={C.onSecondary} />
+                  : <Text style={styles.modalBtnConfirmText}>Xác nhận gửi</Text>}
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -255,5 +321,25 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
 
   emptyBox:  { alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.six },
   emptyText: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 14, textAlign: 'center' },
+
+  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', alignItems: 'center', padding: Spacing.three },
+  modalCard:     { width: '100%', maxWidth: 360, backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.three, gap: 4 },
+  modalCloseBtn: { position: 'absolute', top: Spacing.two, right: Spacing.two, width: 32, height: 32, borderRadius: Shape.full, backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center', zIndex: 1 },
+  modalTitle:    { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 17, paddingRight: Spacing.five },
+  modalSub:      { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12, marginBottom: Spacing.two },
+
+  modalInfoBox:      { backgroundColor: SC.base, borderRadius: Shape.medium, padding: Spacing.two, gap: Spacing.one },
+  modalInfoRow:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: Spacing.two, paddingBottom: Spacing.one, borderBottomWidth: 1, borderBottomColor: `${C.onSurfaceVariant}20` },
+  modalInfoRowLast:  { paddingBottom: 0, borderBottomWidth: 0 },
+  modalInfoLabel:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
+  modalInfoValue:    { color: C.onSurface, fontFamily: FontFamily.medium, fontSize: 13, flexShrink: 1, textAlign: 'right' },
+  modalInfoValueStrong: { color: C.primary, fontFamily: FontFamily.bold, fontSize: 15 },
+
+  modalActions:      { flexDirection: 'row', gap: Spacing.two, marginTop: Spacing.two },
+  modalBtn:          { flex: 1, borderRadius: Shape.full, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
+  modalBtnGhost:     { backgroundColor: SC.highest },
+  modalBtnGhostText: { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 14 },
+  modalBtnConfirm:      { backgroundColor: C.secondary },
+  modalBtnConfirmText:  { color: C.onSecondary, fontFamily: FontFamily.bold, fontSize: 14 },
   });
 }

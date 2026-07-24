@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Star, Gift } from 'lucide-react-native';
@@ -18,7 +18,8 @@ export function SpectatorPredict() {
   const { C } = useAppColors();
   const styles = useThemedStyles(createStyles);
   const [tab, setTab] = useState<Tab>('predict');
-  const { balance } = useSpectatorPoints();
+  const [refreshing, setRefreshing] = useState(false);
+  const { balance, reload: reloadPoints } = useSpectatorPoints();
   const { predictions, reload, cancelPrediction } = useSpectatorPredictions();
 
   const totalPoints  = balance;
@@ -29,10 +30,21 @@ export function SpectatorPredict() {
     setTab('history');
   };
 
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([reload(), reloadPoints()]);
+    setRefreshing(false);
+  }, [reload, reloadPoints]);
+
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <LargeHeaderScrollView title="Dự đoán" contentContainerStyle={styles.scroll} rightAction={<HeaderActions />}>
+        <LargeHeaderScrollView
+          title="Dự đoán"
+          contentContainerStyle={styles.scroll}
+          rightAction={<HeaderActions />}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}>
 
           {/* Points banner */}
           <View style={styles.pointsBanner}>
