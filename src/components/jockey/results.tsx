@@ -13,7 +13,7 @@ import { useJockeyRaces } from '@/hooks/useJockeyData';
 import { useHorseLeaderboard } from '@/hooks/useHorseLeaderboard';
 import { useRaceLeaderboard } from '@/hooks/useRaceLeaderboard';
 import { useAuth } from '@/context/AuthContext';
-import { formatCurrency } from '@/mock-data';
+import { formatCurrency, formatNumber } from '@/mock-data';
 import { MedalIcon } from '@/components/ui/medal-icon';
 
 type Tab = 'personal' | 'leaderboard';
@@ -246,7 +246,7 @@ function RaceLeaderboardCard({ raceId, currentJockeyId }: { raceId: string; curr
               <Text style={styles.lbMargin}>
                 {displayRank === 1 ? '—' : r.marginBehind != null ? `+${r.marginBehind.toFixed(2)}s` : '—'}
               </Text>
-              <Text style={styles.lbPrize}>{r.prize > 0 ? r.prize.toLocaleString('vi-VN') : '—'}</Text>
+              <Text style={styles.lbPrize}>{r.prize > 0 ? formatNumber(r.prize) : '—'}</Text>
             </View>
           </View>
         );

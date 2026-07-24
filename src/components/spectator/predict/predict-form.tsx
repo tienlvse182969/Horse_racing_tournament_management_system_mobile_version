@@ -5,7 +5,7 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
-import { formatCurrency, formatDate } from '@/mock-data';
+import { formatCurrency, formatDate, formatNumber } from '@/mock-data';
 import { useSpectatorPoints, useSpectatorRaces } from '@/hooks/useSpectatorData';
 import { spectatorApi } from '@/api/spectator.api';
 import { NumberWheelPicker } from '@/components/ui/number-wheel-picker';
@@ -43,7 +43,7 @@ export function PredictForm({ onSubmitted }: Props) {
       return;
     }
     if (cost > balance) {
-      Alert.alert('Không đủ điểm', `Bạn cần ${cost.toLocaleString('vi-VN')} điểm để gửi dự đoán này.`);
+      Alert.alert('Không đủ điểm', `Bạn cần ${formatNumber(cost)} điểm để gửi dự đoán này.`);
       return;
     }
     setSubmitting(true);
@@ -74,7 +74,7 @@ export function PredictForm({ onSubmitted }: Props) {
         <Text style={styles.successSub}>
           #{selectedHorse?.horse.number} {selectedHorse?.horse.name}{'\n'}
           {selectedRace?.name}
-          {cost > 0 ? `\n-${cost.toLocaleString()} điểm` : ''}
+          {cost > 0 ? `\n-${formatNumber(cost)} điểm` : ''}
         </Text>
       </Animated.View>
     );
@@ -180,7 +180,7 @@ export function PredictForm({ onSubmitted }: Props) {
                 placeholderTextColor={C.onSurfaceVariant}
               />
               <Text style={styles.ticketPriceText}>
-                Giá 1 phiếu: {ticketPrice.toLocaleString('vi-VN')} điểm
+                Giá 1 phiếu: {formatNumber(ticketPrice)} điểm
               </Text>
             </View>
           </View>
@@ -201,7 +201,7 @@ export function PredictForm({ onSubmitted }: Props) {
             onPress={handleSubmit}
             activeOpacity={0.85}>
             <Target size={18} color={C.onSecondary} />
-            <Text style={styles.submitText}>Gửi dự đoán · {cost.toLocaleString('vi-VN')} pts</Text>
+            <Text style={styles.submitText}>Gửi dự đoán · {formatNumber(cost)} pts</Text>
           </TouchableOpacity>
         </Animated.View>
       )}

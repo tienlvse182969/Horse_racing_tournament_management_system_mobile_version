@@ -4,7 +4,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
-import { formatDate } from '@/mock-data';
+import { formatDate, formatNumber } from '@/mock-data';
 import type { Prediction } from '@/mock-data/predictions';
 
 type StatusIcon = React.ComponentType<{ size?: number; color?: string }>;
@@ -77,10 +77,10 @@ export function PredictionHistory({ predictions, onCancel }: Props) {
                 ) : null}
               </View>
               {pred.contribution ? (
-                <Text style={styles.cardStake}>{pred.contribution.toLocaleString()} điểm</Text>
+                <Text style={styles.cardStake}>{formatNumber(pred.contribution)} điểm</Text>
               ) : null}
               {pred.reward ? (
-                <Text style={styles.cardReward}>+{pred.reward.toLocaleString()} điểm</Text>
+                <Text style={styles.cardReward}>+{formatNumber(pred.reward)} điểm</Text>
               ) : null}
               {pred.status === 'pending' && onCancel ? (
                 <Pressable style={styles.cancelBtn} onPress={() => handleCancel(pred.id)}>

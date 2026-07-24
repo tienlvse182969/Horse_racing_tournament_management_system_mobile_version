@@ -8,6 +8,7 @@ import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { HeaderActions } from '@/components/header-actions';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useSpectatorPoints, useSpectatorPredictions } from '@/hooks/useSpectatorData';
+import { formatNumber } from '@/mock-data';
 import { PredictForm } from './predict-form';
 import { PredictionHistory } from './history';
 
@@ -37,16 +38,16 @@ export function SpectatorPredict() {
           <View style={styles.pointsBanner}>
             <View style={styles.pointsItem}>
               <Star size={18} color={C.secondary} />
-              <Text style={styles.pointsValue}>{totalPoints.toLocaleString()}</Text>
-              <Text style={styles.pointsLabel}>Điểm tích lũy</Text>
+              <Text style={styles.pointsValue}>{formatNumber(totalPoints)}</Text>
+              <Text style={styles.pointsLabel}>Số dư ví điểm</Text>
             </View>
             <View style={styles.pointsDivider} />
             <View style={styles.pointsItem}>
               <Gift size={18} color={C.primary} />
               <Text style={[styles.pointsValue, { color: C.primary }]}>
-                {(totalRewards / 1000).toFixed(0)}k
+                {formatNumber(totalRewards)}
               </Text>
-              <Text style={styles.pointsLabel}>Tổng thưởng</Text>
+              <Text style={styles.pointsLabel}>Tổng điểm thưởng nhận được</Text>
             </View>
           </View>
 
@@ -62,7 +63,7 @@ export function SpectatorPredict() {
               style={[styles.tabBtn, tab === 'history' && styles.tabBtnActive]}
               onPress={() => setTab('history')}
               activeOpacity={0.8}>
-              <Text style={[styles.tabBtnText, tab === 'history' && styles.tabBtnTextActive]}>Lịch sử</Text>
+              <Text style={[styles.tabBtnText, tab === 'history' && styles.tabBtnTextActive]}>Các phiếu dự đoán</Text>
             </TouchableOpacity>
           </View>
 

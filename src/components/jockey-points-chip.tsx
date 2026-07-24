@@ -4,6 +4,7 @@ import { Award } from 'lucide-react-native';
 import { Shape, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useJockeyPoints } from '@/hooks/useJockeyData';
+import { formatNumber } from '@/mock-data';
 
 export function JockeyPointsChip() {
   const { C } = useAppColors();
@@ -12,7 +13,7 @@ export function JockeyPointsChip() {
   return (
     <View style={styles.chip}>
       <Award size={13} color={C.tertiary} />
-      <Text style={styles.chipText}>{balance.toLocaleString('vi-VN')}</Text>
+      <Text style={styles.chipText}>{formatNumber(balance)}</Text>
     </View>
   );
 }

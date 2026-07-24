@@ -46,7 +46,11 @@ export function useSpectatorPoints() {
       setTransactions(res.points.transactions.filter(tx => tx.points > 0).slice(0, 10));
     }).catch(() => {});
   }, []);
-  useEffect(() => { reload(); }, [reload]);
+  useEffect(() => {
+    reload();
+    const interval = setInterval(reload, 8000);
+    return () => clearInterval(interval);
+  }, [reload]);
   return { balance, totalEarned, totalSpent, transactions, reload };
 }
 
@@ -80,7 +84,11 @@ export function useSpectatorPredictions() {
       );
     }).catch(() => {});
   }, []);
-  useEffect(() => { reload(); }, [reload]);
+  useEffect(() => {
+    reload();
+    const interval = setInterval(reload, 8000);
+    return () => clearInterval(interval);
+  }, [reload]);
   const cancelPrediction = useCallback(async (predictionId: string) => {
     try {
       await spectatorApi.cancelPrediction(predictionId);

@@ -11,6 +11,7 @@ import { AvatarTabButton } from '@/components/avatar-tab-button';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useSpectatorPoints } from '@/hooks/useSpectatorData';
 import { spectatorApi } from '@/api/spectator.api';
+import { formatNumber } from '@/mock-data';
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -58,7 +59,7 @@ export function SpectatorRewardsHistory() {
       await spectatorApi.topUpPoints(points);
       reload();
       setTopUpVisible(false);
-      Alert.alert('Nạp điểm thành công', `Đã nạp ${points.toLocaleString('vi-VN')} điểm.`);
+      Alert.alert('Nạp điểm thành công', `Đã nạp ${formatNumber(points)} điểm.`);
     } catch (error) {
       Alert.alert('Không thể nạp điểm', error instanceof Error ? error.message : 'Vui lòng thử lại.');
     } finally {
@@ -100,17 +101,17 @@ export function SpectatorRewardsHistory() {
           <Animated.View entering={FadeIn.duration(400)} style={styles.statsRow}>
             <View style={styles.statCard}>
               <Wallet size={20} color={C.primary} />
-              <Text style={styles.statValue}>{balance.toLocaleString('vi-VN')}</Text>
+              <Text style={styles.statValue}>{formatNumber(balance)}</Text>
               <Text style={styles.statLabel}>Số dư hiện tại</Text>
             </View>
             <View style={styles.statCard}>
               <Gift size={20} color={C.tertiary} />
-              <Text style={[styles.statValue, { color: C.tertiary }]}>{totalEarned.toLocaleString('vi-VN')}</Text>
+              <Text style={[styles.statValue, { color: C.tertiary }]}>{formatNumber(totalEarned)}</Text>
               <Text style={styles.statLabel}>Tổng đã nhận được</Text>
             </View>
             <View style={styles.statCard}>
               <PiggyBank size={20} color={C.secondary} />
-              <Text style={[styles.statValue, { color: C.secondary }]}>{totalSpent.toLocaleString('vi-VN')}</Text>
+              <Text style={[styles.statValue, { color: C.secondary }]}>{formatNumber(totalSpent)}</Text>
               <Text style={styles.statLabel}>Tổng tiết kiệm</Text>
             </View>
           </Animated.View>
@@ -148,7 +149,7 @@ export function SpectatorRewardsHistory() {
                     </View>
                     <View style={styles.cardFooter}>
                       <Text style={styles.cardTime}>{timeAgo(tx.createdAt)}</Text>
-                      <Text style={styles.cardAmount}>+{tx.points.toLocaleString('vi-VN')} pts</Text>
+                      <Text style={styles.cardAmount}>+{formatNumber(tx.points)} pts</Text>
                     </View>
                   </View>
                 </View>
