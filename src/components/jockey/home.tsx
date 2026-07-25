@@ -14,7 +14,7 @@ import { JockeySuspensionBanner } from '@/components/jockey/jockey-suspension-ba
 import { useAuth } from '@/context/AuthContext';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useJockeyDashboard, useJockeyInvitations, useJockeyPoints, useJockeyRaces } from '@/hooks/useJockeyData';
-import { formatCurrency, formatDate } from '@/mock-data';
+import { formatCurrency, formatDate, formatNumber } from '@/mock-data';
 
 const HERO_BG = require('@/assets/images/Meisho-Tabaru-Takarazuka-Kinen-scaled.png');
 
@@ -228,10 +228,10 @@ export function JockeyHome() {
           {/* Points */}
           <Animated.View entering={FadeInDown.delay(360).duration(320)} style={styles.pointsCard}>
             <View style={styles.earningsHeader}>
-              <Text style={styles.earningsLabel}>Điểm tích lũy</Text>
+              <Text style={styles.earningsLabel}>Số dư ví điểm</Text>
               <Award size={18} color={C.tertiary} />
             </View>
-            <Text style={styles.pointsAmount}>{pointsBalance.toLocaleString('vi-VN')}</Text>
+            <Text style={styles.pointsAmount}>{formatNumber(pointsBalance)}</Text>
           </Animated.View>
 
         </LargeHeaderScrollView>

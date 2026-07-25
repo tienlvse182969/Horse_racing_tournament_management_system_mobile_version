@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { Shape, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useSpectatorPoints } from '@/hooks/useSpectatorData';
+import { formatNumber } from '@/mock-data';
 
 export function PointsChip() {
   const { C } = useAppColors();
@@ -16,7 +17,7 @@ export function PointsChip() {
       onPress={() => router.push('/(app)/rewards' as never)}
       android_ripple={{ color: `${C.tertiary}22`, radius: 40, borderless: false }}>
       <Award size={13} color={C.tertiary} />
-      <Text style={styles.chipText}>{balance.toLocaleString('vi-VN')}</Text>
+      <Text style={styles.chipText}>{formatNumber(balance)}</Text>
     </Pressable>
   );
 }

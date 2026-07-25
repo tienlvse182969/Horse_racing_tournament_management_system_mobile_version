@@ -13,6 +13,7 @@ import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useSpectatorPoints, useSpectatorTopUps } from '@/hooks/useSpectatorData';
 import { spectatorApi } from '@/api/spectator.api';
 import { ApiError } from '@/api/client';
+import { formatNumber } from '@/mock-data';
 
 const QUICK_AMOUNTS = [100, 500, 1000, 5000];
 const MIN_POINTS = 100;
@@ -49,7 +50,7 @@ export function TopUp() {
     setMockLoading(true);
     try {
       await spectatorApi.createTopUp(parsedPoints);
-      Alert.alert('Thành công', `Đã nạp ${parsedPoints.toLocaleString('vi-VN')} điểm vào tài khoản.`);
+      Alert.alert('Thành công', `Đã nạp ${formatNumber(parsedPoints)} điểm vào tài khoản.`);
       refreshAll();
     } catch (err) {
       const message = err instanceof ApiError ? err.message : 'Không thể nạp điểm, vui lòng thử lại.';
@@ -95,7 +96,7 @@ export function TopUp() {
             <Wallet size={22} color={C.primary} />
             <View style={styles.balanceTextWrap}>
               <Text style={styles.balanceLabel}>Số dư hiện tại</Text>
-              <Text style={styles.balanceValue}>{balance.toLocaleString('vi-VN')} điểm</Text>
+              <Text style={styles.balanceValue}>{formatNumber(balance)} điểm</Text>
             </View>
           </Animated.View>
 
@@ -110,7 +111,7 @@ export function TopUp() {
                   onPress={() => setPoints(String(a))}
                   activeOpacity={0.8}>
                   <Text style={[styles.quickChipText, points === String(a) && styles.quickChipTextSelected]}>
-                    {a.toLocaleString('vi-VN')}
+                    {formatNumber(a)}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -124,7 +125,7 @@ export function TopUp() {
               left={<TextInput.Icon icon="star-outline" />}
             />
             <Text style={styles.costText}>
-              Thành tiền: {cost.toLocaleString('vi-VN')} VNĐ (1.000đ = 1 điểm)
+              Thành tiền: {formatNumber(cost)} VNĐ (1.000đ = 1 điểm)
             </Text>
             {!validPoints && (
               <Text style={styles.errorText}>Số điểm phải là số nguyên và tối thiểu {MIN_POINTS}</Text>
@@ -171,9 +172,9 @@ export function TopUp() {
                 return (
                   <View key={tx.id} style={styles.txRow}>
                     <View style={styles.txInfo}>
-                      <Text style={styles.txPoints}>+{tx.points.toLocaleString('vi-VN')} điểm</Text>
+                      <Text style={styles.txPoints}>+{formatNumber(tx.points)} điểm</Text>
                       <Text style={styles.txMeta}>
-                        {tx.provider === 'payos' ? 'PayOS' : 'Demo'} · {tx.amountVnd.toLocaleString('vi-VN')} VNĐ
+                        {tx.provider === 'payos' ? 'PayOS' : 'Demo'} · {formatNumber(tx.amountVnd)} VNĐ
                       </Text>
                     </View>
                     <Text style={[styles.txStatus, { color: cfg.color }]}>{cfg.label}</Text>

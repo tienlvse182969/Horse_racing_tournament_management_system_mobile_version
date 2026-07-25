@@ -15,7 +15,7 @@ import { ThemeModeSheet } from '@/components/theme-mode-sheet';
 import { useAuth } from '@/context/AuthContext';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useSpectatorPoints, useSpectatorPredictions } from '@/hooks/useSpectatorData';
-import { formatCurrency, formatDate } from '@/mock-data';
+import { formatCurrency, formatDate, formatNumber } from '@/mock-data';
 import { APP_VERSION } from '@/constants/version';
 
 type SettingItem = { Icon: React.ComponentType<{ size?: number; color?: string }>; label: string; onPress: () => void };
@@ -95,7 +95,7 @@ export function SpectatorProfile() {
               <Text style={styles.heroPhone}>{user?.email ?? ''}</Text>
               <View style={styles.heroChip}>
                 <Calendar size={12} color={C.tertiary} />
-                <Text style={styles.heroChipText}>{balance.toLocaleString()} điểm</Text>
+                <Text style={styles.heroChipText}>{formatNumber(balance)} điểm</Text>
               </View>
             </LinearGradient>
           </Animated.View>

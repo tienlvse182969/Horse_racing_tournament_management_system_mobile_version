@@ -39,21 +39,25 @@ export function useSpectatorPoints() {
   const [totalSpent, setTotalSpent] = useState(0);
   const [transactions, setTransactions] = useState<PointTransaction[]>([]);
   const reload = useCallback(() => {
-    spectatorApi.getPoints().then((res) => {
+    return spectatorApi.getPoints().then((res) => {
       setBalance(res.points.currentBalance);
       setTotalEarned(res.points.totalPointsEarned);
       setTotalSpent(res.points.totalPointsSpent);
       setTransactions(res.points.transactions.filter(tx => tx.points > 0).slice(0, 10));
     }).catch(() => {});
   }, []);
-  useEffect(() => { reload(); }, [reload]);
+  useEffect(() => {
+    reload();
+    const interval = setInterval(reload, 8000);
+    return () => clearInterval(interval);
+  }, [reload]);
   return { balance, totalEarned, totalSpent, transactions, reload };
 }
 
 export function useSpectatorPredictions() {
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const reload = useCallback(() => {
-    spectatorApi.listPredictions().then((res) => {
+    return spectatorApi.listPredictions().then((res) => {
       setPredictions(
         res.predictions.map((p) => ({
           id: p.id,
@@ -80,7 +84,11 @@ export function useSpectatorPredictions() {
       );
     }).catch(() => {});
   }, []);
-  useEffect(() => { reload(); }, [reload]);
+  useEffect(() => {
+    reload();
+    const interval = setInterval(reload, 8000);
+    return () => clearInterval(interval);
+  }, [reload]);
   const cancelPrediction = useCallback(async (predictionId: string) => {
     try {
       await spectatorApi.cancelPrediction(predictionId);

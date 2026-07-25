@@ -17,7 +17,7 @@ import { useAuth } from '@/context/AuthContext';
 
 function statusConfig(C: AppColors) {
   return {
-    live:      { label: 'Đang đua',    color: C.tertiary,        bg: C.tertiaryContainer },
+    live:      { label: 'Đang diễn ra',    color: C.tertiary,        bg: C.tertiaryContainer },
     upcoming:  { label: 'Sắp diễn ra', color: C.secondary,       bg: C.secondaryContainer },
     completed: { label: 'Đã kết thúc', color: C.onSurfaceVariant, bg: `${C.onSurfaceVariant}22` },
   } as const;

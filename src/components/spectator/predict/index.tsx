@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Star, Gift } from 'lucide-react-native';
@@ -8,6 +8,7 @@ import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { HeaderActions } from '@/components/header-actions';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useSpectatorPoints, useSpectatorPredictions } from '@/hooks/useSpectatorData';
+import { formatNumber } from '@/mock-data';
 import { PredictForm } from './predict-form';
 import { PredictionHistory } from './history';
 
@@ -17,7 +18,8 @@ export function SpectatorPredict() {
   const { C } = useAppColors();
   const styles = useThemedStyles(createStyles);
   const [tab, setTab] = useState<Tab>('predict');
-  const { balance } = useSpectatorPoints();
+  const [refreshing, setRefreshing] = useState(false);
+  const { balance, reload: reloadPoints } = useSpectatorPoints();
   const { predictions, reload, cancelPrediction } = useSpectatorPredictions();
 
   const totalPoints  = balance;
@@ -28,25 +30,36 @@ export function SpectatorPredict() {
     setTab('history');
   };
 
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([reload(), reloadPoints()]);
+    setRefreshing(false);
+  }, [reload, reloadPoints]);
+
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <LargeHeaderScrollView title="Dự đoán" contentContainerStyle={styles.scroll} rightAction={<HeaderActions />}>
+        <LargeHeaderScrollView
+          title="Dự đoán"
+          contentContainerStyle={styles.scroll}
+          rightAction={<HeaderActions />}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}>
 
           {/* Points banner */}
           <View style={styles.pointsBanner}>
             <View style={styles.pointsItem}>
               <Star size={18} color={C.secondary} />
-              <Text style={styles.pointsValue}>{totalPoints.toLocaleString()}</Text>
-              <Text style={styles.pointsLabel}>Điểm tích lũy</Text>
+              <Text style={styles.pointsValue}>{formatNumber(totalPoints)}</Text>
+              <Text style={styles.pointsLabel}>Số dư ví điểm</Text>
             </View>
             <View style={styles.pointsDivider} />
             <View style={styles.pointsItem}>
               <Gift size={18} color={C.primary} />
               <Text style={[styles.pointsValue, { color: C.primary }]}>
-                {(totalRewards / 1000).toFixed(0)}k
+                {formatNumber(totalRewards)}
               </Text>
-              <Text style={styles.pointsLabel}>Tổng thưởng</Text>
+              <Text style={styles.pointsLabel}>Tổng điểm thưởng nhận được</Text>
             </View>
           </View>
 
@@ -62,7 +75,7 @@ export function SpectatorPredict() {
               style={[styles.tabBtn, tab === 'history' && styles.tabBtnActive]}
               onPress={() => setTab('history')}
               activeOpacity={0.8}>
-              <Text style={[styles.tabBtnText, tab === 'history' && styles.tabBtnTextActive]}>Lịch sử</Text>
+              <Text style={[styles.tabBtnText, tab === 'history' && styles.tabBtnTextActive]}>Các phiếu dự đoán</Text>
             </TouchableOpacity>
           </View>
 

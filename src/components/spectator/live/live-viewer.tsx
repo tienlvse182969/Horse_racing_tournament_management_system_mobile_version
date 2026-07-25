@@ -84,6 +84,22 @@ const DURATION_MS = 18000;
 const SPEEDS = [1, 2, 4] as const;
 const MEDAL_COLORS = ['#C9971C', '#C0C0C0', '#CD7F32'];
 
+const PENALTY_LABELS: Record<string, string> = {
+  warning: 'Cảnh cáo',
+  demote: 'Tụt hạng',
+  disqualify: 'Truất quyền thi đấu',
+  disqualification: 'Truất quyền thi đấu',
+  restart: 'Đua lại',
+  time_ban: 'Cấm thi đấu có thời hạn',
+  permanent_ban: 'Cấm thi đấu vĩnh viễn',
+};
+
+const TARGET_LABELS: Record<'horse' | 'jockey' | 'both', string> = {
+  horse: 'Ngựa',
+  jockey: 'Nài',
+  both: 'Cả hai',
+};
+
 export function LiveViewer({ race, onClose }: Props) {
   const { C } = useAppColors();
   const styles = useThemedStyles(createStyles);
@@ -404,17 +420,38 @@ export function LiveViewer({ race, onClose }: Props) {
                   <Text style={[styles.finishTime, h.isDisqualified && styles.finishTextDisqualified]}>{h.finishTime != null ? `${h.finishTime.toFixed(2)}s` : '—'}</Text>
                 </View>
               ))}
-            {finishExcluded.map(e => {
-              const violation = race.violations?.find(v => v.horseId === e.horse.id);
-              return (
+            {finishExcluded
+              .filter(e => !race.violations?.some(v => v.horseId === e.horse.id))
+              .map(e => (
                 <View key={e.horse.id} style={styles.excludedRow}>
                   <Text style={styles.excludedText} numberOfLines={2}>
-                    #{e.horse.number} {e.horse.name}{' '}
-                    {violation ? `bị tước quyền thi đấu: ${violation.description}` : 'đã vi phạm lỗi nghiêm trọng trong kết quả chung cuộc.'}
+                    #{e.horse.number} {e.horse.name} đã vi phạm lỗi nghiêm trọng trong kết quả chung cuộc.
                   </Text>
                 </View>
-              );
-            })}
+              ))}
+            {showOfficial && (race.violations?.length ?? 0) > 0 && (
+              <>
+                <Text style={styles.violationsTitle}>Vi phạm ghi nhận</Text>
+                {race.violations!.map((v, idx) => (
+                  <View key={idx} style={styles.violationRow}>
+                    <View style={styles.violationHeader}>
+                      <Text style={styles.violationHorse}>
+                        {v.target === 'jockey' ? (v.jockeyName ?? 'Không rõ') : (v.horseName ?? 'Không rõ')}
+                      </Text>
+                      <View style={[styles.targetBadge, v.target === 'jockey' ? styles.targetBadgeJockey : styles.targetBadgeHorse]}>
+                        <Text style={[styles.targetBadgeText, v.target === 'jockey' ? styles.targetBadgeTextJockey : styles.targetBadgeTextHorse]}>
+                          {TARGET_LABELS[v.target]}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={styles.violationDesc}>{v.description}</Text>
+                    {v.penaltyApplied && (
+                      <Text style={styles.violationPenalty}>{PENALTY_LABELS[v.penaltyApplied] ?? v.penaltyApplied}</Text>
+                    )}
+                  </View>
+                ))}
+              </>
+            )}
             <TouchableOpacity style={styles.doneBtn} onPress={onClose} activeOpacity={0.85}>
               <Text style={styles.doneBtnText}>Xong</Text>
             </TouchableOpacity>
@@ -523,6 +560,18 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   finishTextDisqualified: { color: C.error },
   excludedRow:  { backgroundColor: `${C.error}15`, borderRadius: Shape.medium, padding: Spacing.two },
   excludedText: { color: C.error, fontFamily: FontFamily.medium, fontSize: 12 },
+  violationsTitle:  { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 14, marginTop: Spacing.one },
+  violationRow:     { backgroundColor: `${C.error}15`, borderRadius: Shape.medium, padding: Spacing.two, gap: 2 },
+  violationHeader:  { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  violationHorse:   { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 13 },
+  violationDesc:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
+  violationPenalty: { color: C.error, fontFamily: FontFamily.bold, fontSize: 11 },
+  targetBadge:          { borderRadius: Shape.full, paddingHorizontal: 8, paddingVertical: 2, alignSelf: 'flex-start' },
+  targetBadgeJockey:    { backgroundColor: C.secondaryContainer },
+  targetBadgeHorse:     { backgroundColor: C.tertiaryContainer },
+  targetBadgeText:      { fontFamily: FontFamily.bold, fontSize: 10 },
+  targetBadgeTextJockey: { color: C.onSecondaryContainer },
+  targetBadgeTextHorse:  { color: C.onTertiaryContainer },
   doneBtn:     { backgroundColor: C.primary, borderRadius: Shape.full, paddingVertical: 12, alignItems: 'center', marginTop: Spacing.one },
   doneBtnText: { color: C.onPrimary, fontFamily: FontFamily.bold, fontSize: 15 },
   });
