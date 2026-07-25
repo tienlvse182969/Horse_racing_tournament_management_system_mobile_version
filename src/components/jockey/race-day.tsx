@@ -43,7 +43,7 @@ export function RaceDay({ jockeyRace, fullRace, jockeyName }: Props) {
   const { C } = useAppColors();
   const styles = useThemedStyles(createStyles);
   const statusLabel =
-    jockeyRace.status === 'live'      ? 'ĐANG ĐUA'     :
+    jockeyRace.status === 'live'      ? 'ĐANG DIỄN RA'     :
     jockeyRace.status === 'upcoming'  ? 'SẮP DIỄN RA'  :
                                         'KẾT THÚC';
 

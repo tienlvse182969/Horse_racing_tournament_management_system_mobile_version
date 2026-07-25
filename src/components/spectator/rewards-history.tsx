@@ -85,7 +85,7 @@ export function SpectatorRewardsHistory() {
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <LargeHeaderScrollView
-          title="Điểm thưởng"
+          title="Ví điểm của bạn"
           contentContainerStyle={styles.scroll}
           leftAction={
             <Pressable
@@ -107,12 +107,12 @@ export function SpectatorRewardsHistory() {
             <View style={styles.statCard}>
               <Gift size={20} color={C.tertiary} />
               <Text style={[styles.statValue, { color: C.tertiary }]}>{formatNumber(totalEarned)}</Text>
-              <Text style={styles.statLabel}>Tổng đã nhận được</Text>
+              <Text style={styles.statLabel}>Tổng đã nhận</Text>
             </View>
             <View style={styles.statCard}>
               <PiggyBank size={20} color={C.secondary} />
               <Text style={[styles.statValue, { color: C.secondary }]}>{formatNumber(totalSpent)}</Text>
-              <Text style={styles.statLabel}>Tổng tiết kiệm</Text>
+              <Text style={styles.statLabel}>Tổng đã tiêu</Text>
             </View>
           </Animated.View>
 

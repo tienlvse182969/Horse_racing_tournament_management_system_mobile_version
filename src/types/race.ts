@@ -1,8 +1,11 @@
 export type RaceStatus = 'live' | 'upcoming' | 'completed';
 
 export type RaceViolation = {
+  target: 'horse' | 'jockey' | 'both';
   horseId: string | null;
   horseName: string | null;
+  jockeyId: string | null;
+  jockeyName: string | null;
   type: string;
   description: string;
   penaltyApplied: string | null;

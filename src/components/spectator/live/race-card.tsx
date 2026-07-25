@@ -26,7 +26,7 @@ export function RaceCard({ race, onPress }: Props) {
           <View style={styles.cardHeader}>
             <View style={styles.liveBadge}>
               <View style={styles.liveDot} />
-              <Text style={styles.liveBadgeText}>ĐANG ĐUA</Text>
+              <Text style={styles.liveBadgeText}>ĐANG DIỄN RA</Text>
             </View>
             <Text style={[styles.cardNumber, { color: 'rgba(255,255,255,0.5)' }]}>#{race.number}</Text>
           </View>

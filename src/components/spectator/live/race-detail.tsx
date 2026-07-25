@@ -9,7 +9,7 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import type { Race } from '@/types/race';
-import { formatCurrency, formatDate } from '@/utils/format';
+import { formatCurrency, formatDate, formatNumber } from '@/utils/format';
 import { addRaceEventToCalendar } from '@/utils/calendar';
 
 const PENALTY_LABELS: Record<string, string> = {
@@ -20,6 +20,12 @@ const PENALTY_LABELS: Record<string, string> = {
   restart: 'Đua lại',
   time_ban: 'Cấm thi đấu có thời hạn',
   permanent_ban: 'Cấm thi đấu vĩnh viễn',
+};
+
+const TARGET_LABELS: Record<'horse' | 'jockey' | 'both', string> = {
+  horse: 'Ngựa',
+  jockey: 'Nài',
+  both: 'Cả hai',
 };
 
 type Props = { race: Race; onBack: () => void };
@@ -100,12 +106,12 @@ export function RaceDetail({ race, onBack }: Props) {
             colors={isLive ? ['#003520', '#1A5C3A'] : [SC.base, SC.high]}
             style={styles.banner}>
             {isLive && (
-              <View style={styles.liveRow}>
+              <View style={styles.liveBadge}>
                 <View style={styles.liveDot} />
-                <Text style={styles.liveText}>ĐANG DIỄN RA</Text>
+                <Text style={styles.liveBadgeText}>ĐANG DIỄN RA</Text>
               </View>
             )}
-            <Text style={styles.bannerName}>{race.name}</Text>
+            <Text style={[styles.bannerName, isLive && styles.bannerNameLight]}>{race.name}</Text>
             <View style={styles.bannerGrid}>
               <InfoCell label="Địa điểm" value={race.location} light={isLive} />
               <InfoCell label="Khoảng cách" value={`${race.distance}m`} light={isLive} />
@@ -113,7 +119,7 @@ export function RaceDetail({ race, onBack }: Props) {
               <InfoCell label="Mặt đường" value={race.surface} light={isLive} />
               <InfoCell label="Ngày" value={formatDate(race.date)} light={isLive} />
               <InfoCell label="Giờ" value={race.time} light={isLive} />
-              <InfoCell label="Giải thưởng" value={formatCurrency(race.purse)} light={isLive} />
+              <InfoCell label="Giải thưởng" value={formatNumber(race.purse)} light={isLive} />
               <InfoCell label="Kỵ sĩ" value={`${race.entries.length}`} light={isLive} />
             </View>
           </LinearGradient>
@@ -168,7 +174,16 @@ export function RaceDetail({ race, onBack }: Props) {
             <Text style={styles.sectionTitle}>Vi phạm ghi nhận</Text>
             {race.violations!.map((v, idx) => (
               <View key={idx} style={styles.violationRow}>
-                <Text style={styles.violationHorse}>{v.horseName ?? 'Không rõ'}</Text>
+                <View style={styles.violationHeader}>
+                  <Text style={styles.violationHorse}>
+                    {v.target === 'jockey' ? (v.jockeyName ?? 'Không rõ') : (v.horseName ?? 'Không rõ')}
+                  </Text>
+                  <View style={[styles.targetBadge, v.target === 'jockey' ? styles.targetBadgeJockey : styles.targetBadgeHorse]}>
+                    <Text style={[styles.targetBadgeText, v.target === 'jockey' ? styles.targetBadgeTextJockey : styles.targetBadgeTextHorse]}>
+                      {TARGET_LABELS[v.target]}
+                    </Text>
+                  </View>
+                </View>
                 <Text style={styles.violationDesc}>{v.description}</Text>
                 {v.penaltyApplied && (
                   <Text style={styles.violationPenalty}>{PENALTY_LABELS[v.penaltyApplied] ?? v.penaltyApplied}</Text>
@@ -228,10 +243,11 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
 
   // Banner
   banner:     { borderRadius: Shape.large, padding: Spacing.three, gap: Spacing.two },
-  liveRow:    { flexDirection: 'row', alignItems: 'center', gap: Spacing.one },
-  liveDot:    { width: 6, height: 6, borderRadius: 3, backgroundColor: C.error },
-  liveText:   { color: C.error, fontFamily: FontFamily.bold, fontSize: 10, letterSpacing: 1 },
-  bannerName: { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 20 },
+  liveBadge:     { flexDirection: 'row', alignItems: 'center', gap: Spacing.one, alignSelf: 'flex-start', backgroundColor: C.error, borderRadius: Shape.full, paddingHorizontal: 10, paddingVertical: 3 },
+  liveDot:       { width: 6, height: 6, borderRadius: 3, backgroundColor: '#FFFFFF' },
+  liveBadgeText: { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 10, letterSpacing: 0.8 },
+  bannerName:      { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 20 },
+  bannerNameLight: { color: '#FFFFFF' },
   bannerGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.one },
   infoCell:   { width: '46%' },
   infoCellLabel:     { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 10 },
@@ -257,9 +273,16 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   oddsText:     { color: C.onPrimaryContainer, fontFamily: FontFamily.bold, fontSize: 12 },
   finishTime:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
   violationRow:     { backgroundColor: `${C.error}15`, borderRadius: Shape.large, padding: Spacing.two, marginBottom: Spacing.two, gap: 2 },
+  violationHeader:  { flexDirection: 'row', alignItems: 'center', gap: 6 },
   violationHorse:   { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 13 },
   violationDesc:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
   violationPenalty: { color: C.error, fontFamily: FontFamily.bold, fontSize: 11 },
+  targetBadge:          { borderRadius: Shape.full, paddingHorizontal: 8, paddingVertical: 2, alignSelf: 'flex-start' },
+  targetBadgeJockey:    { backgroundColor: C.secondaryContainer },
+  targetBadgeHorse:     { backgroundColor: C.tertiaryContainer },
+  targetBadgeText:      { fontFamily: FontFamily.bold, fontSize: 10 },
+  targetBadgeTextJockey: { color: C.onSecondaryContainer },
+  targetBadgeTextHorse:  { color: C.onTertiaryContainer },
   ticketBtn:          { backgroundColor: C.primary, borderRadius: Shape.full, paddingVertical: 14, alignItems: 'center' },
   ticketBtnText:      { color: C.onPrimary, fontFamily: FontFamily.bold, fontSize: 14 },
   calendarBtn:        { backgroundColor: C.primary, borderRadius: Shape.full, paddingVertical: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: Spacing.two },
