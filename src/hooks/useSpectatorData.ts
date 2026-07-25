@@ -43,7 +43,7 @@ export function useSpectatorPoints() {
       setBalance(res.points.currentBalance);
       setTotalEarned(res.points.totalPointsEarned);
       setTotalSpent(res.points.totalPointsSpent);
-      setTransactions(res.points.transactions.filter(tx => tx.points > 0).slice(0, 10));
+      setTransactions(res.points.transactions.slice(0, 50));
     }).catch(() => {});
   }, []);
   useEffect(() => {
