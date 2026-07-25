@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, TextInput, Alert, Linking, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Gift, Wallet, PiggyBank, ChevronLeft, Plus, X } from 'lucide-react-native';
+import { Gift, Wallet, PiggyBank, ChevronLeft, Plus, X, ArrowDownCircle, ArrowUpCircle } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
@@ -23,6 +23,7 @@ function timeAgo(dateStr: string): string {
 }
 
 const TX_LABEL: Record<string, string> = {
+  topup:                   'Nạp điểm',
   earned_prediction:       'Thưởng dự đoán',
   earned_bonus:            'Thưởng thêm',
   earned_pool_share:       'Chia thưởng pool',
@@ -33,6 +34,12 @@ const TX_LABEL: Record<string, string> = {
   spent_redemption:        'Đổi thưởng',
   spent_viewing_ticket:    'Mua vé xem',
 };
+
+function txStatus(points: number): { label: string; tone: 'credit' | 'debit' | 'neutral' } {
+  if (points > 0) return { label: 'Đã nhận', tone: 'credit' };
+  if (points < 0) return { label: 'Đã trừ', tone: 'debit' };
+  return { label: 'Đã ghi nhận', tone: 'neutral' };
+}
 
 export function SpectatorRewardsHistory() {
   const { C } = useAppColors();
@@ -124,37 +131,50 @@ export function SpectatorRewardsHistory() {
           </Animated.View>
 
           {/* List */}
-          <Text style={styles.sectionTitle}>Chi tiết thưởng</Text>
+          <Text style={styles.sectionTitle}>Lịch sử điểm</Text>
 
           {transactions.length === 0 ? (
             <Animated.View entering={FadeInDown.duration(300)} style={styles.emptyWrap}>
               <Gift size={36} color={C.onSurfaceVariant} />
-              <Text style={styles.emptyText}>Chưa có lịch sử thưởng</Text>
+              <Text style={styles.emptyText}>Chưa có lịch sử điểm</Text>
             </Animated.View>
           ) : (
-            transactions.map((tx, i) => (
+            transactions.map((tx, i) => {
+              const status = txStatus(tx.points);
+              const isDebit = status.tone === 'debit';
+              const Icon = isDebit ? ArrowDownCircle : ArrowUpCircle;
+              const amountColor = isDebit ? C.error : C.primary;
+              return (
               <Animated.View key={tx.id} entering={FadeInDown.delay(i * 40).duration(280)}>
                 <View style={styles.card}>
-                  <View style={styles.iconWrap}>
-                    <Gift size={20} color={C.primary} />
+                  <View style={[styles.iconWrap, { backgroundColor: isDebit ? C.errorContainer : C.primaryContainer }]}>
+                    <Icon size={20} color={amountColor} />
                   </View>
                   <View style={styles.cardContent}>
                     <View style={styles.cardTop}>
                       <Text style={styles.cardTitle} numberOfLines={1}>
                         {tx.note ?? TX_LABEL[tx.type] ?? tx.type}
                       </Text>
-                      <View style={styles.statusBadge}>
-                        <Text style={styles.statusBadgeText}>Đã nhận</Text>
+                      <View style={[styles.statusBadge, { backgroundColor: isDebit ? C.errorContainer : C.tertiaryContainer }]}>
+                        <Text style={[styles.statusBadgeText, { color: isDebit ? C.error : C.onTertiaryContainer }]}>
+                          {status.label}
+                        </Text>
                       </View>
                     </View>
                     <View style={styles.cardFooter}>
                       <Text style={styles.cardTime}>{timeAgo(tx.createdAt)}</Text>
-                      <Text style={styles.cardAmount}>+{formatNumber(tx.points)} pts</Text>
+                      <Text style={[styles.cardAmount, { color: amountColor }]}>
+                        {tx.points > 0 ? '+' : ''}{formatNumber(tx.points)} pts
+                      </Text>
                     </View>
+                    <Text style={styles.balanceAfter}>
+                      Số dư sau giao dịch: {formatNumber(tx.balanceAfter)} pts
+                    </Text>
                   </View>
                 </View>
               </Animated.View>
-            ))
+            );
+            })
           )}
 
         </LargeHeaderScrollView>
@@ -223,6 +243,7 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   cardFooter:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardTime:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
   cardAmount:  { color: C.primary, fontFamily: FontFamily.bold, fontSize: 13 },
+  balanceAfter:{ color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
 
   topUpTrigger: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: Spacing.one, backgroundColor: C.primary, borderRadius: Shape.full, paddingVertical: 13 },
   topUpTriggerText: { color: C.onPrimary, fontFamily: FontFamily.bold, fontSize: 14 },
