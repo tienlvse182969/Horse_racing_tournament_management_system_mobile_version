@@ -15,6 +15,13 @@ export function formatDate(dateStr: string): string {
   return `${day}/${month}`;
 }
 
+export function formatDateFull(dateStr: string): string {
+  const d = new Date(dateStr);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  return `${day}/${month}/${d.getFullYear()}`;
+}
+
 export function isBeforeBanEnd(date: string, time: string, bannedUntil?: string | null): boolean {
   if (!bannedUntil) return false;
   return new Date(`${date}T${time}:00`) < new Date(bannedUntil);

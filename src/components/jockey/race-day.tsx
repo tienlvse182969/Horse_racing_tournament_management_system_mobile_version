@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSharedValue, useFrameCallback, runOnJS } from 'react-native-reanimated';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
@@ -9,7 +10,7 @@ import { ChevronLeft, Ruler, Trophy, Leaf, MapPin, CalendarDays, CalendarPlus } 
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
-import { formatCurrency } from '@/mock-data';
+import { formatNumber } from '@/mock-data';
 import { MedalIcon } from '@/components/ui/medal-icon';
 import { RaceLaneTrack } from '@/components/spectator/live/race-lane-track';
 import { Commentary } from '@/components/spectator/live/commentary';
@@ -23,6 +24,8 @@ import { addRaceEventToCalendar } from '@/utils/calendar';
 // ─── Animation constants (same as LiveViewer) ─────────────────────────────────
 const SPEED_CONSTANT = 0.0000333;
 const MAX_HORSES = 10;
+const HORSE_AVATAR = require('@/assets/images/a-horse-with-long-hair-and-a-white-mane-free-photo.jpeg');
+const RACETRACK_BG = require('@/assets/images/201501saratogaracecourse1_ba078d7fe806c1e7c92def3dd027a88b.jpg');
 
 function formatFinishTime(ms: number): string {
   const totalSecs = ms / 1000;
@@ -86,15 +89,15 @@ export function RaceDay({ jockeyRace, fullRace, jockeyName }: Props) {
 function PreRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRace: Race | null }) {
   const { C } = useAppColors();
   const styles = useThemedStyles(createStyles);
-  const [timeLeft, setTimeLeft] = useState(() => calcTimeLeft(jockeyRace.date, jockeyRace.time));
+  const [countdown, setCountdown] = useState(() => calcRelativeCountdown(jockeyRace.date, jockeyRace.time));
   const [addingToCalendar, setAddingToCalendar] = useState(false);
 
   useEffect(() => {
-    const id = setInterval(() => setTimeLeft(calcTimeLeft(jockeyRace.date, jockeyRace.time)), 1000);
+    const id = setInterval(() => setCountdown(calcRelativeCountdown(jockeyRace.date, jockeyRace.time)), 30_000);
     return () => clearInterval(id);
   }, [jockeyRace.date, jockeyRace.time]);
 
-  const { hh, mm, ss, started } = timeLeft;
+  const { label, started } = countdown;
   const { horse } = jockeyRace.myEntry;
 
   async function addToCalendar() {
@@ -127,33 +130,37 @@ function PreRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRac
       {/* Countdown */}
       <Animated.View entering={FadeIn.duration(400)}>
         <LinearGradient colors={['#1A2A3B', '#1E3A5F']} style={styles.countdownCard}>
-          <Text style={styles.countdownLabel}>{started ? 'ĐÃ ĐẾN GIỜ' : 'Xuất phát sau'}</Text>
-          {!started && (
-            <View style={styles.countdownRow}>
-              <CountdownUnit value={hh} unit="GIỜ" />
-              <Text style={styles.countdownColon}>:</Text>
-              <CountdownUnit value={mm} unit="PHÚT" />
-              <Text style={styles.countdownColon}>:</Text>
-              <CountdownUnit value={ss} unit="GIÂY" />
-            </View>
-          )}
-          {started && <Text style={styles.countdownStarted}>Cuộc đua đang bắt đầu!</Text>}
+          <Text style={styles.countdownLabel}>{started ? 'ĐÃ ĐẾN GIỜ' : 'Diễn ra sau'}</Text>
+          {!started && <Text style={styles.countdownRelative}>{label}</Text>}
+          {started && <Text style={styles.countdownStarted}>Trận đấu đang bắt đầu!</Text>}
         </LinearGradient>
       </Animated.View>
 
-      {/* Venue & meeting */}
+      {/* Location */}
       <Animated.View entering={FadeInDown.delay(80).duration(360)}>
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Địa điểm & Lịch thi đấu</Text>
+        <View style={styles.venueCard}>
+          <Image source={RACETRACK_BG} style={StyleSheet.absoluteFill} contentFit="cover" />
+          <LinearGradient
+            colors={['rgba(20,10,0,0.15)', 'rgba(10,5,0,0.82)']}
+            style={StyleSheet.absoluteFill}
+          />
+          <Text style={styles.venueCardLabel}>Địa điểm</Text>
           <View style={styles.venueRow}>
-            <MapPin size={14} color={C.primary} />
+            <MapPin size={16} color="#FFD9B4" />
             <View style={styles.venueInfo}>
-              <Text style={styles.venueName}>{jockeyRace.trackName ?? jockeyRace.location}</Text>
+              <Text style={styles.venueNameLight}>{jockeyRace.trackName ?? jockeyRace.location}</Text>
               {jockeyRace.trackLocation && (
-                <Text style={styles.venueAddress}>{jockeyRace.trackLocation}</Text>
+                <Text style={styles.venueAddressLight}>{jockeyRace.trackLocation}</Text>
               )}
             </View>
           </View>
+        </View>
+      </Animated.View>
+
+      {/* Schedule */}
+      <Animated.View entering={FadeInDown.delay(120).duration(360)}>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Lịch thi đấu</Text>
           <View style={styles.venueRow}>
             <CalendarDays size={14} color={C.secondary} />
             <View style={styles.venueInfo}>
@@ -166,6 +173,16 @@ function PreRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRac
               </Text>
             </View>
           </View>
+          <TouchableOpacity
+            style={[styles.calendarBtn, addingToCalendar && styles.calendarBtnDisabled]}
+            onPress={addToCalendar}
+            disabled={addingToCalendar}
+            activeOpacity={0.85}>
+            <CalendarPlus size={18} color={C.onPrimary} />
+            <Text style={styles.calendarBtnText}>
+              {addingToCalendar ? 'Đang thêm...' : 'Thêm vào lịch'}
+            </Text>
+          </TouchableOpacity>
         </View>
       </Animated.View>
 
@@ -174,7 +191,9 @@ function PreRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRac
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Con ngựa của bạn</Text>
           <View style={styles.horseRow}>
-            <View style={[styles.horseSwatch, { backgroundColor: horse.color }]} />
+            <View style={[styles.horseSwatch, { borderColor: horse.color }]}>
+              <Image source={HORSE_AVATAR} style={styles.horseAvatarImg} contentFit="cover" />
+            </View>
             <View style={styles.horseInfo}>
               <Text style={styles.horseName}>{horse.name}</Text>
               <Text style={styles.horseMeta}>Số #{horse.number}</Text>
@@ -226,7 +245,7 @@ function PreRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRac
           <View style={styles.conditionsGrid}>
             <ConditionCell icon={<Leaf size={14} color={C.tertiary} />} label="Mặt đường" value={jockeyRace.surface} />
             <ConditionCell icon={<Ruler size={14} color={C.primary} />} label="Cự ly" value={`${jockeyRace.distance}m`} />
-            <ConditionCell icon={<Trophy size={14} color={C.secondary} />} label="Giải thưởng" value={formatCurrency(jockeyRace.purse)} />
+            <ConditionCell icon={<Trophy size={14} color={C.secondary} />} label="Giải thưởng" value={formatNumber(jockeyRace.purse)} />
           </View>
         </View>
       </Animated.View>
@@ -253,20 +272,6 @@ function PreRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRac
           </View>
         </Animated.View>
       )}
-
-      {/* Add to device calendar */}
-      <Animated.View entering={FadeInDown.delay(400).duration(360)}>
-        <TouchableOpacity
-          style={[styles.calendarBtn, addingToCalendar && styles.calendarBtnDisabled]}
-          onPress={addToCalendar}
-          disabled={addingToCalendar}
-          activeOpacity={0.85}>
-          <CalendarPlus size={18} color={C.onPrimary} />
-          <Text style={styles.calendarBtnText}>
-            {addingToCalendar ? 'Đang thêm...' : 'Thêm vào lịch'}
-          </Text>
-        </TouchableOpacity>
-      </Animated.View>
     </ScrollView>
   );
 }
@@ -560,7 +565,7 @@ function PostRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRa
             {position !== undefined && <MedalIcon position={position} size={48} />}
             <View style={{ gap: 4 }}>
               <Text style={styles.resultRankText}>
-                {position !== undefined ? `VỊ TRÍ #${position}` : 'KẾT THÚC'}
+                {position !== undefined ? `HẠNG ${position}` : 'KẾT THÚC'}
               </Text>
               <Text style={styles.resultHorseName}>{horse.name}</Text>
               {finishTime && <Text style={styles.resultTime}>⏱ {finishTime}</Text>}
@@ -569,19 +574,31 @@ function PostRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRa
         </LinearGradient>
       </Animated.View>
 
-      {/* Venue & meeting */}
+      {/* Location */}
       <Animated.View entering={FadeInDown.delay(80).duration(360)}>
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Địa điểm & Lịch thi đấu</Text>
+        <View style={styles.venueCard}>
+          <Image source={RACETRACK_BG} style={StyleSheet.absoluteFill} contentFit="cover" />
+          <LinearGradient
+            colors={['rgba(20,10,0,0.15)', 'rgba(10,5,0,0.82)']}
+            style={StyleSheet.absoluteFill}
+          />
+          <Text style={styles.venueCardLabel}>Địa điểm</Text>
           <View style={styles.venueRow}>
-            <MapPin size={14} color={C.primary} />
+            <MapPin size={16} color="#FFD9B4" />
             <View style={styles.venueInfo}>
-              <Text style={styles.venueName}>{jockeyRace.trackName ?? jockeyRace.location}</Text>
+              <Text style={styles.venueNameLight}>{jockeyRace.trackName ?? jockeyRace.location}</Text>
               {jockeyRace.trackLocation && (
-                <Text style={styles.venueAddress}>{jockeyRace.trackLocation}</Text>
+                <Text style={styles.venueAddressLight}>{jockeyRace.trackLocation}</Text>
               )}
             </View>
           </View>
+        </View>
+      </Animated.View>
+
+      {/* Schedule */}
+      <Animated.View entering={FadeInDown.delay(110).duration(360)}>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Lịch thi đấu</Text>
           <View style={styles.venueRow}>
             <CalendarDays size={14} color={C.secondary} />
             <View style={styles.venueInfo}>
@@ -602,7 +619,9 @@ function PostRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRa
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Con ngựa của bạn</Text>
           <View style={styles.horseRow}>
-            <View style={[styles.horseSwatch, { backgroundColor: horse.color }]} />
+            <View style={[styles.horseSwatch, { borderColor: horse.color }]}>
+              <Image source={HORSE_AVATAR} style={styles.horseAvatarImg} contentFit="cover" />
+            </View>
             <View style={styles.horseInfo}>
               <Text style={styles.horseName}>{horse.name}</Text>
               <Text style={styles.horseMeta}>Số #{horse.number}</Text>
@@ -653,7 +672,7 @@ function PostRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRa
           <View style={styles.conditionsGrid}>
             <ConditionCell icon={<Leaf size={14} color={C.tertiary} />} label="Mặt đường" value={jockeyRace.surface} />
             <ConditionCell icon={<Ruler size={14} color={C.primary} />} label="Cự ly" value={`${jockeyRace.distance}m`} />
-            <ConditionCell icon={<Trophy size={14} color={C.secondary} />} label="Giải thưởng" value={formatCurrency(jockeyRace.purse)} />
+            <ConditionCell icon={<Trophy size={14} color={C.secondary} />} label="Giải thưởng" value={formatNumber(jockeyRace.purse)} />
           </View>
         </View>
       </Animated.View>
@@ -663,7 +682,7 @@ function PostRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRa
         <Animated.View entering={FadeInDown.delay(260).duration(360)}>
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Thu nhập</Text>
-            <Text style={styles.earningsAmount}>+{formatCurrency(prizeEstimate)}</Text>
+            <Text style={styles.earningsAmount}>+{formatNumber(prizeEstimate)}</Text>
             <Text style={styles.earningsNote}>Ước tính phần thưởng</Text>
           </View>
         </Animated.View>
@@ -699,31 +718,11 @@ function PostRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRa
           </View>
         </Animated.View>
       )}
-
-      {/* Return button */}
-      <Animated.View entering={FadeInDown.delay(380).duration(360)}>
-        <TouchableOpacity
-          style={styles.returnBtn}
-          onPress={() => router.push('/jockey/schedule')}
-          activeOpacity={0.85}>
-          <Text style={styles.returnBtnText}>Quay về Lịch đua</Text>
-        </TouchableOpacity>
-      </Animated.View>
     </ScrollView>
   );
 }
 
 // ─── Small helpers ─────────────────────────────────────────────────────────────
-function CountdownUnit({ value, unit }: { value: string; unit: string }) {
-  const styles = useThemedStyles(createStyles);
-  return (
-    <View style={styles.countdownUnit}>
-      <Text style={styles.countdownDigit}>{value}</Text>
-      <Text style={styles.countdownUnitLabel}>{unit}</Text>
-    </View>
-  );
-}
-
 function ConditionCell({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   const styles = useThemedStyles(createStyles);
   return (
@@ -735,15 +734,21 @@ function ConditionCell({ icon, label, value }: { icon: React.ReactNode; label: s
   );
 }
 
-function calcTimeLeft(date: string, time: string) {
+function calcRelativeCountdown(date: string, time: string): { label: string; started: boolean } {
   const target = new Date(`${date}T${time}:00`).getTime();
   const diff = target - Date.now();
-  if (diff <= 0) return { hh: '00', mm: '00', ss: '00', started: true };
-  const totalSecs = Math.floor(diff / 1000);
-  const hh = String(Math.floor(totalSecs / 3600)).padStart(2, '0');
-  const mm = String(Math.floor((totalSecs % 3600) / 60)).padStart(2, '0');
-  const ss = String(totalSecs % 60).padStart(2, '0');
-  return { hh, mm, ss, started: false };
+  if (diff <= 0) return { label: '', started: true };
+
+  const mins  = Math.floor(diff / 60_000);
+  const hours = Math.floor(mins / 60);
+  const days  = Math.floor(hours / 24);
+  const weeks = Math.floor(days / 7);
+
+  if (weeks >= 1) return { label: `${weeks} tuần nữa`, started: false };
+  if (days  >= 1) return { label: `${days} ngày nữa`, started: false };
+  if (hours >= 1) return { label: `${hours} tiếng nữa`, started: false };
+  if (mins  >= 1) return { label: `${mins} phút nữa`, started: false };
+  return { label: 'Chưa đầy 1 phút nữa', started: false };
 }
 
 // ─── Styles ────────────────────────────────────────────────────────────────────
@@ -767,11 +772,7 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   // Countdown
   countdownCard:    { borderRadius: Shape.large, padding: Spacing.three, alignItems: 'center', gap: Spacing.two },
   countdownLabel:   { color: 'rgba(255,255,255,0.6)', fontFamily: FontFamily.medium, fontSize: 13 },
-  countdownRow:     { flexDirection: 'row', alignItems: 'flex-end', gap: Spacing.two },
-  countdownUnit:    { alignItems: 'center', gap: 2 },
-  countdownDigit:   { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 44, letterSpacing: -1 },
-  countdownUnitLabel:{ color: 'rgba(255,255,255,0.5)', fontFamily: FontFamily.medium, fontSize: 9, letterSpacing: 1 },
-  countdownColon:   { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 40, marginBottom: 10 },
+  countdownRelative:{ color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 32, letterSpacing: -0.5 },
   countdownStarted: { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 20 },
 
   // Card
@@ -783,10 +784,15 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   venueInfo:    { flex: 1, gap: 2 },
   venueName:    { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 13 },
   venueAddress: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
+  venueCard:        { borderRadius: Shape.large, padding: Spacing.three, overflow: 'hidden', minHeight: 150, justifyContent: 'flex-end', gap: Spacing.one },
+  venueCardLabel:   { color: 'rgba(255,217,180,0.7)', fontFamily: FontFamily.medium, fontSize: 12 },
+  venueNameLight:   { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 15 },
+  venueAddressLight:{ color: 'rgba(255,255,255,0.75)', fontFamily: FontFamily.regular, fontSize: 12 },
 
   // Horse
   horseRow:  { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  horseSwatch: { width: 56, height: 56, borderRadius: Shape.medium },
+  horseSwatch: { width: 56, height: 56, borderRadius: Shape.medium, borderWidth: 2, overflow: 'hidden' },
+  horseAvatarImg: { width: '100%', height: '100%' },
   horseInfo: { flex: 1, gap: 4 },
   horseName: { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 18 },
   horseMeta: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 13 },

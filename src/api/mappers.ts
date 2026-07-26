@@ -83,16 +83,16 @@ export function mapInvitation(dto: InvitationDto): Invitation {
   const dt = dto.race.scheduledAt ? new Date(dto.race.scheduledAt) : new Date();
   return {
     id: dto.id,
-    horse: { name: dto.horse.name, breed: '-', age: 4, color: '#72D79A', penaltyStatus: dto.horse.penaltyStatus },
+    horse: { name: dto.horse.name, breed: dto.horse.breed, age: dto.horse.age, color: '#72D79A', penaltyStatus: dto.horse.penaltyStatus },
     race: {
       id: dto.race.id,
       name: dto.race.name,
       date: dt.toISOString().slice(0, 10),
       time: dt.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-      location: '-',
-      distance: 1600,
-      surface: 'Cỏ',
-      purse: 0,
+      location: dto.race.location,
+      distance: dto.race.distance ?? 1600,
+      surface: dto.race.surface ?? 'Cỏ',
+      purse: dto.race.purse,
     },
     ownerName: dto.owner.fullName,
     message: dto.message,

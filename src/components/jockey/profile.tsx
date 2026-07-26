@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Zap, Trophy, Award, ChartBar, ChevronRight, LogOut, UserPen, Lock, Info, X, Timer, SunMoon } from 'lucide-react-native';
+import { ArrowLeft, Zap, Trophy, Award, ChartBar, ChevronRight, LogOut, UserPen, Lock, Info, X, SunMoon } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
@@ -12,14 +12,14 @@ import { ThemeModeSheet } from '@/components/theme-mode-sheet';
 import { useAuth } from '@/context/AuthContext';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useJockeyRaces } from '@/hooks/useJockeyData';
-import { formatCurrency } from '@/mock-data';
+import { formatDateFull, formatNumber } from '@/mock-data';
 import { APP_VERSION } from '@/constants/version';
 
 type IconComp = React.ComponentType<{ size?: number; color?: string }>;
 
 type SettingItem = { Icon: IconComp; label: string; onPress: () => void };
 
-const POS_LABEL: Record<number, string> = { 1: 'Vô địch', 2: 'Nhì', 3: 'Ba' };
+const POS_LABEL: Record<number, string> = { 1: 'Giải Nhất', 2: 'Giải Nhì', 3: 'Giải Ba' };
 
 export function JockeyProfile() {
   const { user, logout } = useAuth();
@@ -70,7 +70,7 @@ export function JockeyProfile() {
 
   type StatCard = { label: string; value: string | number; Icon: IconComp; color: string };
   const careerStats: StatCard[] = [
-    { label: 'Cuộc đua đã xong', value: completedCount, Icon: Zap,      color: C.primary   },
+    { label: 'Trận đấu đã hoàn thành', value: completedCount, Icon: Zap,      color: C.primary   },
     { label: 'Chiến thắng',      value: wins,           Icon: Trophy,   color: C.secondary },
     { label: 'Vào top 3',        value: podiums,        Icon: Award,    color: '#CD7F32'   },
     { label: 'Tỷ lệ thắng',     value: `${winRate}%`,  Icon: ChartBar, color: C.tertiary  },
@@ -113,7 +113,7 @@ export function JockeyProfile() {
                   </Text>
                   {user?.licenseExpiry && (
                     <Text style={styles.heroLicense}>
-                      Hạn: {new Date(user.licenseExpiry).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                      Hạn: {formatDateFull(user.licenseExpiry)}
                     </Text>
                   )}
                 </View>
@@ -156,20 +156,15 @@ export function JockeyProfile() {
                       <Text style={styles.historyRace}>{r.raceName}</Text>
                       <View style={styles.historyMeta}>
                         <Text style={styles.historyMetaText}>
-                          {new Date(r.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                          {formatDateFull(r.date)}
                         </Text>
                         <Text style={styles.historyMetaDot}>·</Text>
                         <Text style={styles.historyMetaText}>{r.horse}</Text>
-                        <Text style={styles.historyMetaDot}>·</Text>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-                          <Timer size={10} color={C.onSurfaceVariant} />
-                          <Text style={styles.historyMetaText}>{r.time}</Text>
-                        </View>
                       </View>
                     </View>
                     <View style={styles.historyRight}>
                       <Text style={[styles.historyPos, { color: pc.color }]}>{posLabel}</Text>
-                      <Text style={styles.historyEarnings}>+{formatCurrency(r.earnings)}</Text>
+                      <Text style={styles.historyEarnings}>+{formatNumber(r.earnings)}</Text>
                     </View>
                   </View>
                 </Animated.View>

@@ -159,7 +159,7 @@ export function PenaltyDetail({ penalty, loading }: { penalty: PenaltyDetailDto 
                 <View style={styles.card}>
                   <View style={styles.cardTitleRow}>
                     <Flag size={16} color={C.tertiary} />
-                    <Text style={styles.cardTitle}>Cuộc đua liên quan</Text>
+                    <Text style={styles.cardTitle}>Trận đấu liên quan</Text>
                   </View>
                   <Text style={styles.raceName}>{penalty.race.name}</Text>
                   <Text style={styles.raceDate}>{formatFullDate(penalty.race.scheduledAt)}</Text>

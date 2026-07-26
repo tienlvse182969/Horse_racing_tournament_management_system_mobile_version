@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView, BlurTargetView } from 'expo-blur';
 import { Hand, Zap, Trophy, ChartBar, Mail, MapPin, Clock, ArrowLeftRight, Award } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
@@ -39,6 +40,7 @@ function buildCountdownLabel(date: string, time: string): string {
 }
 
 export function JockeyHome() {
+  const heroBgRef = useRef<View>(null);
   const { user } = useAuth();
   const { C } = useAppColors();
   const styles = useThemedStyles(createStyles);
@@ -62,7 +64,7 @@ export function JockeyHome() {
 
   type HeroStat = { label: string; value: string | number; Icon: React.ComponentType<{ size?: number; color?: string }> };
   const heroStats: HeroStat[] = [
-    { label: 'Cuộc đua đã xong', value: completedCount, Icon: Zap      },
+    { label: 'Trận đấu đã hoàn thành', value: completedCount, Icon: Zap      },
     { label: 'Chiến thắng',      value: wins,           Icon: Trophy   },
     { label: 'Vào top 3',        value: podiums,        Icon: Award    },
     { label: 'Tỷ lệ thắng',     value: `${winRate}%`,  Icon: ChartBar },
@@ -76,13 +78,15 @@ export function JockeyHome() {
           {/* Hero stats card */}
           <Animated.View entering={FadeIn.duration(380)}>
             <View style={styles.heroCard}>
-              <Image source={HERO_BG} style={StyleSheet.absoluteFill} contentFit="cover" />
-              <LinearGradient
-                colors={['rgba(35,17,0,0.55)', 'rgba(15,7,0,0.85)']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={StyleSheet.absoluteFill}
-              />
+              <BlurTargetView ref={heroBgRef} style={StyleSheet.absoluteFill}>
+                <Image source={HERO_BG} style={StyleSheet.absoluteFill} contentFit="cover" />
+                <LinearGradient
+                  colors={['rgba(35,17,0,0.55)', 'rgba(15,7,0,0.85)']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                />
+              </BlurTargetView>
 
               <View style={styles.heroTop}>
                 <View>
@@ -101,11 +105,17 @@ export function JockeyHome() {
 
               <View style={styles.statsRow}>
                 {heroStats.map(s => (
-                  <View key={s.label} style={styles.statBox}>
+                  <BlurView
+                    key={s.label}
+                    blurTarget={heroBgRef}
+                    blurMethod="dimezisBlurView"
+                    intensity={40}
+                    tint="dark"
+                    style={styles.statBox}>
                     <s.Icon size={18} color="rgba(255,217,180,0.8)" />
                     <Text style={styles.statValue}>{s.value}</Text>
                     <Text style={styles.statLabel}>{s.label}</Text>
-                  </View>
+                  </BlurView>
                 ))}
               </View>
             </View>
@@ -161,7 +171,7 @@ export function JockeyHome() {
                 </View>
                 {todayRace.status === 'live' ? (
                   <Text style={styles.raceDayLivePos}>
-                    VỊ TRÍ #{todayRace.myEntry.position ?? '–'}
+                    HẠNG {todayRace.myEntry.position ?? '–'}
                   </Text>
                 ) : (
                   <RaceDayCountdown date={todayRace.date} time={todayRace.time} />
@@ -183,8 +193,8 @@ export function JockeyHome() {
           {/* Upcoming races */}
           <Animated.View entering={FadeInDown.delay(160).duration(320)} style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Cuộc đua sắp tới</Text>
-              <TouchableOpacity onPress={() => router.push('/jockey/schedule')}>
+              <Text style={styles.sectionTitle}>Trận đấu sắp tới</Text>
+              <TouchableOpacity onPress={() => router.push('/jockey/assigned')}>
                 <Text style={styles.sectionLink}>Xem tất cả</Text>
               </TouchableOpacity>
             </View>
@@ -255,7 +265,7 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   heroAvatar:    { width: 56, height: 56, borderRadius: Shape.medium, backgroundColor: 'rgba(255,217,180,0.15)', borderWidth: 1.5, borderColor: 'rgba(255,217,180,0.3)', justifyContent: 'center', alignItems: 'center' },
   heroInitials:  { color: '#FFD9B4', fontFamily: FontFamily.bold, fontSize: 22 },
   statsRow:      { flexDirection: 'row', gap: Spacing.two },
-  statBox:       { flex: 1, backgroundColor: 'rgba(255,217,180,0.1)', borderRadius: Shape.large, padding: Spacing.two, alignItems: 'center', gap: 2 },
+  statBox:       { flex: 1, backgroundColor: 'rgba(255,217,180,0.1)', borderRadius: Shape.large, padding: Spacing.two, alignItems: 'center', gap: 2, overflow: 'hidden' },
   statValue:     { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 18 },
   statLabel:     { color: 'rgba(255,217,180,0.6)', fontFamily: FontFamily.regular, fontSize: 10, textAlign: 'center' },
 

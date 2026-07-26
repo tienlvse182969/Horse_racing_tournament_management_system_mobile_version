@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Flag, Ruler } from 'lucide-react-native';
+import { Flag, Ruler, Calendar } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
@@ -10,7 +10,7 @@ import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { JockeyHeaderActions } from '@/components/jockey-header-actions';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useJockeyRaces } from '@/hooks/useJockeyData';
-import { formatCurrency, isBeforeBanEnd } from '@/mock-data';
+import { formatCurrency, formatDateFull, isBeforeBanEnd } from '@/mock-data';
 import type { JockeyRace } from '@/mock-data/jockey';
 import { JockeySuspensionBanner } from '@/components/jockey/jockey-suspension-banner';
 import { useAuth } from '@/context/AuthContext';
@@ -24,9 +24,9 @@ function statusConfig(C: AppColors) {
 }
 
 function rankLabel(rank: number): string {
-  if (rank === 1) return '1st';
-  if (rank === 2) return '2nd';
-  if (rank === 3) return '3rd';
+  if (rank === 1) return 'Hạng Nhất';
+  if (rank === 2) return 'Hạng Nhì';
+  if (rank === 3) return 'Hạng Ba';
   return `#${rank}`;
 }
 
@@ -80,6 +80,11 @@ function RaceCard({ race, index }: { race: JockeyRace; index: number }) {
             <Text style={styles.detailLabel}>Cự ly</Text>
             <Text style={styles.detailValue}>{race.distance}m</Text>
           </View>
+          <View style={styles.detailItem}>
+            <Calendar size={12} color={C.onSurfaceVariant} />
+            <Text style={styles.detailLabel}>Ngày</Text>
+            <Text style={styles.detailValue}>{formatDateFull(race.date)}</Text>
+          </View>
         </View>
 
         {/* Result section */}
@@ -94,7 +99,7 @@ function RaceCard({ race, index }: { race: JockeyRace; index: number }) {
               <Text style={styles.resultMeta}>⏱ {race.myEntry.finishTime}</Text>
             )}
             {race.purse > 0 && (
-              <Text style={styles.resultPrize}>🏆 {formatCurrency(race.purse)}</Text>
+              <Text style={styles.resultPrize}>Giải thưởng: {formatCurrency(race.purse)}</Text>
             )}
           </View>
         )}
@@ -139,7 +144,7 @@ export function JockeyAssignedRaces() {
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <LargeHeaderScrollView
-          title="Cuộc đua"
+          title="Trận đấu"
           contentContainerStyle={styles.scroll}
           rightAction={<JockeyHeaderActions />}
           refreshing={refreshing}
@@ -154,8 +159,8 @@ export function JockeyAssignedRaces() {
           {!loading && races.length === 0 && (
             <Animated.View entering={FadeInDown.duration(300)} style={styles.emptyWrap}>
               <Flag size={40} color={C.onSurfaceVariant} />
-              <Text style={styles.emptyText}>Chưa có cuộc đua nào</Text>
-              <Text style={styles.emptySubText}>Các cuộc đua được phân công sẽ hiện ở đây</Text>
+              <Text style={styles.emptyText}>Chưa có trận đấu nào</Text>
+              <Text style={styles.emptySubText}>Các trận đấu được phân công sẽ hiện ở đây</Text>
             </Animated.View>
           )}
 

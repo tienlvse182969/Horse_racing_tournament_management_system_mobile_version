@@ -83,7 +83,7 @@ export function laneColor(laneNumber: number): string {
 // ── Trạng thái 1 ngựa tại thời điểm t của animation ───────────────────────────
 export interface HorseFrame {
   horse: RaceSimHorse;
-  progress: number; // 0..1 toàn cuộc đua
+  progress: number; // 0..1 toàn trận đấu
   pos: OvalPoint;
   color: string;
   facingLeft: boolean; // hướng đầu ngựa theo chiều di chuyển

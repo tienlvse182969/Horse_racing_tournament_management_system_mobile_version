@@ -29,8 +29,8 @@ export interface InvitationDto {
   status: 'pending' | 'accepted' | 'declined';
   message?: string;
   createdAt: string;
-  horse: { id: string; name: string; penaltyStatus: PenaltyStatusDto };
-  race: { id: string; name: string; scheduledAt?: string; status: string };
+  horse: { id: string; name: string; breed: string; age: number; penaltyStatus: PenaltyStatusDto };
+  race: { id: string; name: string; scheduledAt?: string; status: string; distance?: number; surface?: string; location: string; purse: number };
   owner: { id: string; fullName: string };
 }
 

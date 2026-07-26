@@ -83,21 +83,6 @@ export function SpectatorLive() {
 
           {tab === 'races' && (
             <>
-              {/* Continue watching banner — shown whenever there's a live race, regardless of filter */}
-              {liveRaces.length > 0 && (
-                <TouchableOpacity
-                  style={styles.liveNowBanner}
-                  onPress={() => setWatchingRace(liveRaces[0])}
-                  activeOpacity={0.85}>
-                  <View style={styles.liveNowDot} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.liveNowLabel}>Cuộc đua đang diễn ra</Text>
-                    <Text style={styles.liveNowName} numberOfLines={1}>{liveRaces[0].name}</Text>
-                  </View>
-                  <Text style={styles.liveNowCta}>Tiếp tục xem →</Text>
-                </TouchableOpacity>
-              )}
-
               {/* Filter chips */}
               <View style={styles.filterRow}>
                 {(['all', 'live', 'upcoming', 'completed'] as FilterStatus[]).map(f => (

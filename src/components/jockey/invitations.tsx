@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
 import { MailX, Zap, Clock, CircleCheck, CircleX, MapPin, ArrowLeftRight, Trophy, Handshake, Calendar, MessageSquare, X, Check } from 'lucide-react-native';
 import Animated, { FadeInDown, useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated';
 
@@ -9,11 +10,13 @@ import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { JockeyHeaderActions } from '@/components/jockey-header-actions';
 import { JockeySuspensionBanner } from '@/components/jockey/jockey-suspension-banner';
 import type { Invitation, InvitationStatus } from '@/mock-data';
-import { formatCurrency, formatDate, isBeforeBanEnd } from '@/mock-data';
+import { formatCurrency, formatDateFull, isBeforeBanEnd } from '@/mock-data';
 import { useAuth } from '@/context/AuthContext';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useJockeyInvitations } from '@/hooks/useJockeyData';
 import { ActivityIndicator } from 'react-native';
+
+const HORSE_AVATAR = require('@/assets/images/a-horse-with-long-hair-and-a-white-mane-free-photo.jpeg');
 
 type FilterType = 'all' | InvitationStatus;
 type StatusIcon = React.ComponentType<{ size?: number; color?: string }>;
@@ -141,7 +144,7 @@ function InvitationCard({
     { Icon: Trophy,       label: 'Giải thưởng', value: formatCurrency(inv.race.purse) },
     { Icon: Handshake,    label: 'Chủ ngựa',   value: inv.ownerName },
     { Icon: Calendar,     label: 'Lời mời gửi', value:
-        new Date(inv.sentAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) + ' ' +
+        formatDateFull(inv.sentAt) + ' ' +
         new Date(inv.sentAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) },
   ];
 
@@ -149,8 +152,8 @@ function InvitationCard({
     <View style={[styles.card, locked && styles.cardLocked]}>
       {/* Header row */}
       <TouchableOpacity style={styles.cardHeader} onPress={onToggle} disabled={locked} activeOpacity={0.85}>
-        <View style={[styles.horseIcon, { backgroundColor: `${inv.horse.color}22`, borderColor: `${inv.horse.color}55` }]}>
-          <Zap size={22} color={inv.horse.color} />
+        <View style={[styles.horseIcon, { borderColor: `${inv.horse.color}55` }]}>
+          <Image source={HORSE_AVATAR} style={styles.horseAvatarImg} contentFit="cover" />
         </View>
         <View style={styles.cardInfo}>
           <View style={styles.cardTitleRow}>
@@ -163,7 +166,7 @@ function InvitationCard({
           <Text style={styles.raceName}>{inv.race.name}</Text>
           <View style={styles.raceMeta}>
             <Clock size={11} color={C.onSurfaceVariant} />
-            <Text style={styles.raceMetaText}>{formatDate(inv.race.date)} · {inv.race.time}</Text>
+            <Text style={styles.raceMetaText}>{formatDateFull(inv.race.date)} · {inv.race.time}</Text>
           </View>
         </View>
         <View style={[styles.chevron, isExpanded && styles.chevronUp]}>
@@ -231,7 +234,8 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   card:        { backgroundColor: SC.high, borderRadius: Shape.large, overflow: 'hidden', marginBottom: 0 },
   cardLocked:  { opacity: 0.45 },
   cardHeader:  { flexDirection: 'row', alignItems: 'flex-start', padding: Spacing.two, gap: Spacing.two },
-  horseIcon:   { width: 48, height: 48, borderRadius: Shape.medium, borderWidth: 2, justifyContent: 'center', alignItems: 'center', flexShrink: 0 },
+  horseIcon:   { width: 48, height: 48, borderRadius: Shape.medium, borderWidth: 2, justifyContent: 'center', alignItems: 'center', flexShrink: 0, overflow: 'hidden' },
+  horseAvatarImg:{ width: '100%', height: '100%' },
   cardInfo:    { flex: 1, gap: 3 },
   cardTitleRow:{ flexDirection: 'row', alignItems: 'center', gap: Spacing.one, flexWrap: 'wrap' },
   horseName:   { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15, flex: 1 },

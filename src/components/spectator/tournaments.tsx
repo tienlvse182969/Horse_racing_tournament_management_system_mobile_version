@@ -11,10 +11,7 @@ import { HeaderActions } from '@/components/header-actions';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useSpectatorTournaments } from '@/hooks/useSpectatorData';
 import type { TournamentDto } from '@/api/spectator.api';
-
-function fmtDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
+import { formatDateFull } from '@/mock-data';
 
 function statusConfig(C: AppColors) {
   return {
@@ -48,7 +45,7 @@ function TournamentCard({ t, index, onPress }: { t: TournamentDto; index: number
           <View style={styles.metaRow}>
             <Calendar size={12} color={C.onSurfaceVariant} />
             <Text style={styles.metaText}>
-              {fmtDate(t.startDate)} – {fmtDate(t.endDate)}
+              {formatDateFull(t.startDate)} – {formatDateFull(t.endDate)}
             </Text>
           </View>
         </View>

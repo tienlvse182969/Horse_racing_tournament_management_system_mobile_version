@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, BackHandler } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Ellipse } from 'react-native-svg';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, Easing } from 'react-native-reanimated';
@@ -83,6 +84,7 @@ type Props = { race: Race; onClose: () => void };
 const DURATION_MS = 18000;
 const SPEEDS = [1, 2, 4] as const;
 const MEDAL_COLORS = ['#C9971C', '#C0C0C0', '#CD7F32'];
+const HORSE_AVATAR = require('@/assets/images/a-horse-with-long-hair-and-a-white-mane-free-photo.jpeg');
 
 const PENALTY_LABELS: Record<string, string> = {
   warning: 'Cảnh cáo',
@@ -316,7 +318,7 @@ export function LiveViewer({ race, onClose }: Props) {
             <ActivityIndicator size="small" color={C.tertiary} />
             <Text style={styles.waitingText}>
               {waitingReason === 'not-started'
-                ? 'Chờ trọng tài bắt đầu cuộc đua...'
+                ? 'Chờ trọng tài bắt đầu trận đấu...'
                 : 'Đang tải dữ liệu đua trực tiếp...'}
             </Text>
           </View>
@@ -413,6 +415,7 @@ export function LiveViewer({ race, onClose }: Props) {
                   ]}>
                     {h.isDisqualified ? '—' : `#${h.rank}`}
                   </Text>
+                  <Image source={HORSE_AVATAR} style={styles.finishAvatar} contentFit="cover" />
                   <Text style={[styles.finishHorseName, h.isDisqualified && styles.finishTextDisqualified]} numberOfLines={1}>{h.horseName}</Text>
                   {!!h.jockeyName && (
                     <Text style={[styles.finishJockey, h.isDisqualified && styles.finishTextDisqualified]} numberOfLines={1}>{h.jockeyName}</Text>
@@ -554,6 +557,7 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   finishRow:   { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, backgroundColor: SC.lowest, borderRadius: Shape.medium, padding: Spacing.two },
   finishRowDisqualified: { backgroundColor: `${C.error}15` },
   finishRank:  { width: 24, textAlign: 'center', fontSize: 14 },
+  finishAvatar: { width: 28, height: 28, borderRadius: Shape.full },
   finishHorseName: { flex: 1, color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 13 },
   finishJockey:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
   finishTime:      { width: 60, textAlign: 'right', color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 12 },
