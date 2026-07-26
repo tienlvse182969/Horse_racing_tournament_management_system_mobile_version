@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, BackHandler } from 'react-native';
 import { LiveViewer } from './live-viewer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, CalendarPlus } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
@@ -31,9 +32,11 @@ const TARGET_LABELS: Record<'horse' | 'jockey' | 'both', string> = {
 type Props = { race: Race; onBack: () => void };
 
 const MEDAL_COLORS = ['#C9971C', '#C0C0C0', '#CD7F32'];
+const RACETRACK_BG = require('@/assets/images/201501saratogaracecourse1_ba078d7fe806c1e7c92def3dd027a88b.jpg');
+const HORSE_AVATAR = require('@/assets/images/a-horse-with-long-hair-and-a-white-mane-free-photo.jpeg');
 
 export function RaceDetail({ race, onBack }: Props) {
-  const { C, SC } = useAppColors();
+  const { C } = useAppColors();
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const [isWatching, setIsWatching] = useState(false);
@@ -102,27 +105,52 @@ export function RaceDetail({ race, onBack }: Props) {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Banner */}
         <Animated.View entering={FadeInDown.duration(320)}>
-          <LinearGradient
-            colors={isLive ? ['#003520', '#1A5C3A'] : [SC.base, SC.high]}
-            style={styles.banner}>
+          <View style={styles.banner}>
+            <Image source={RACETRACK_BG} style={StyleSheet.absoluteFill} contentFit="cover" />
+            <LinearGradient
+              colors={['rgba(20,10,0,0.35)', 'rgba(10,5,0,0.85)']}
+              style={StyleSheet.absoluteFill}
+            />
             {isLive && (
               <View style={styles.liveBadge}>
                 <View style={styles.liveDot} />
                 <Text style={styles.liveBadgeText}>ĐANG DIỄN RA</Text>
               </View>
             )}
-            <Text style={[styles.bannerName, isLive && styles.bannerNameLight]}>{race.name}</Text>
+            <Text style={[styles.bannerName, styles.bannerNameLight]}>{race.name}</Text>
             <View style={styles.bannerGrid}>
-              <InfoCell label="Địa điểm" value={race.location} light={isLive} />
-              <InfoCell label="Khoảng cách" value={`${race.distance}m`} light={isLive} />
-              <InfoCell label="Số vòng" value={`${race.laps} vòng`} light={isLive} />
-              <InfoCell label="Mặt đường" value={race.surface} light={isLive} />
-              <InfoCell label="Ngày" value={formatDate(race.date)} light={isLive} />
-              <InfoCell label="Giờ" value={race.time} light={isLive} />
-              <InfoCell label="Giải thưởng" value={formatNumber(race.purse)} light={isLive} />
-              <InfoCell label="Kỵ sĩ" value={`${race.entries.length}`} light={isLive} />
+              <InfoCell label="Địa điểm" value={race.location} light />
+              <InfoCell label="Khoảng cách" value={`${race.distance}m`} light />
+              <InfoCell label="Số vòng" value={`${race.laps} vòng`} light />
+              <InfoCell label="Mặt đường" value={race.surface} light />
+              <InfoCell label="Ngày" value={formatDate(race.date)} light />
+              <InfoCell label="Giờ" value={race.time} light />
+              <InfoCell label="Giải thưởng" value={formatNumber(race.purse)} light />
+              <InfoCell label="Kỵ sĩ" value={`${race.entries.length}`} light />
             </View>
-          </LinearGradient>
+            {race.status === 'upcoming' && (
+              <TouchableOpacity
+                style={[styles.calendarBtn, addingToCalendar && styles.calendarBtnDisabled]}
+                onPress={addToCalendar}
+                disabled={addingToCalendar}
+                activeOpacity={0.8}>
+                <CalendarPlus size={18} color={C.onPrimary} />
+                <Text style={styles.calendarBtnText}>
+                  {addingToCalendar ? 'Đang thêm...' : 'Thêm vào lịch'}
+                </Text>
+              </TouchableOpacity>
+            )}
+            {isLive && (
+              <TouchableOpacity style={styles.ticketBtn} onPress={() => setIsWatching(true)}>
+                <Text style={styles.ticketBtnText}>Xem trực tiếp</Text>
+              </TouchableOpacity>
+            )}
+            {isCompleted && (
+              <TouchableOpacity style={styles.ticketBtn} onPress={() => setIsWatching(true)}>
+                <Text style={styles.ticketBtnText}>Xem lại mô phỏng đua</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </Animated.View>
 
         {/* Entries */}
@@ -135,7 +163,7 @@ export function RaceDetail({ race, onBack }: Props) {
           </Text>
           {isPendingReview && (
             <Text style={styles.pendingReviewText}>
-              Cuộc đua đã kết thúc. Đang chờ trọng tài kiểm tra VAR và xác nhận kết quả trước khi công bố...
+              Trận đấu đã kết thúc. Đang chờ trọng tài kiểm tra VAR và xác nhận kết quả trước khi công bố...
             </Text>
           )}
           {sortedEntries.map((entry, idx) => (
@@ -151,7 +179,9 @@ export function RaceDetail({ race, onBack }: Props) {
                   ? null
                   : <Text style={[styles.rankNum, idx < 3 && { color: MEDAL_COLORS[idx] }]}>#{idx + 1}</Text>}
               </View>
-              <View style={[styles.horseColor, { backgroundColor: entry.horse.color }]} />
+              <View style={[styles.horseAvatar, { borderColor: entry.horse.color }]}>
+                <Image source={HORSE_AVATAR} style={styles.horseAvatarImg} contentFit="cover" />
+              </View>
               <View style={styles.entryInfo}>
                 <Text style={[styles.entryHorseName, entry.isDisqualified && styles.entryTextDisqualified]}>
                   {entry.horse.name}
@@ -193,28 +223,6 @@ export function RaceDetail({ race, onBack }: Props) {
           </Animated.View>
         )}
 
-        {isLive && (
-          <TouchableOpacity style={styles.ticketBtn} onPress={() => setIsWatching(true)}>
-            <Text style={styles.ticketBtnText}>Xem trực tiếp</Text>
-          </TouchableOpacity>
-        )}
-        {isCompleted && (
-          <TouchableOpacity style={styles.ticketBtn} onPress={() => setIsWatching(true)}>
-            <Text style={styles.ticketBtnText}>Xem lại mô phỏng đua</Text>
-          </TouchableOpacity>
-        )}
-        {race.status === 'upcoming' && (
-          <TouchableOpacity
-            style={[styles.calendarBtn, addingToCalendar && styles.calendarBtnDisabled]}
-            onPress={addToCalendar}
-            disabled={addingToCalendar}
-            activeOpacity={0.8}>
-            <CalendarPlus size={18} color={C.onPrimary} />
-            <Text style={styles.calendarBtnText}>
-              {addingToCalendar ? 'Đang thêm...' : 'Thêm vào lịch'}
-            </Text>
-          </TouchableOpacity>
-        )}
       </ScrollView>
     </Animated.View>
   );
@@ -242,7 +250,7 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   scroll:      { padding: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.five },
 
   // Banner
-  banner:     { borderRadius: Shape.large, padding: Spacing.three, gap: Spacing.two },
+  banner:     { borderRadius: Shape.large, padding: Spacing.three, gap: Spacing.two, overflow: 'hidden' },
   liveBadge:     { flexDirection: 'row', alignItems: 'center', gap: Spacing.one, alignSelf: 'flex-start', backgroundColor: C.error, borderRadius: Shape.full, paddingHorizontal: 10, paddingVertical: 3 },
   liveDot:       { width: 6, height: 6, borderRadius: 3, backgroundColor: '#FFFFFF' },
   liveBadgeText: { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 10, letterSpacing: 0.8 },
@@ -264,7 +272,8 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   entryRank:    { width: 32, alignItems: 'center' },
   rankNum:      { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 16 },
   rankDash:     { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 16 },
-  horseColor:   { width: 4, height: 40, borderRadius: 2 },
+  horseAvatar:  { width: 40, height: 40, borderRadius: Shape.full, borderWidth: 2, overflow: 'hidden' },
+  horseAvatarImg:{ width: '100%', height: '100%' },
   entryInfo:    { flex: 1 },
   entryHorseName:{ color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 14 },
   entryJockey:  { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12, marginTop: 2 },

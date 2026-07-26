@@ -1,10 +1,13 @@
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useHorseLeaderboard } from '@/hooks/useHorseLeaderboard';
 import { MedalIcon } from '@/components/ui/medal-icon';
+
+const HORSE_AVATAR = require('@/assets/images/a-horse-with-long-hair-and-a-white-mane-free-photo.jpeg');
 
 export function Leaderboard({ standalone = true }: { standalone?: boolean }) {
   const { C } = useAppColors();
@@ -45,20 +48,13 @@ export function Leaderboard({ standalone = true }: { standalone?: boolean }) {
                 ? <MedalIcon position={entry.rank} size={16} />
                 : <Text style={styles.rankText}>{entry.rank}</Text>}
             </View>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{entry.horseName.charAt(0)}</Text>
-            </View>
+            <Image source={HORSE_AVATAR} style={styles.avatar} contentFit="cover" />
             <View style={styles.entryInfo}>
               <Text style={styles.entryName}>{entry.horseName}</Text>
-              <Text style={styles.entryMeta}>{entry.firstPlaceWins}W / {entry.totalPublishedRaces} đua · {entry.winRate.toFixed(0)}%</Text>
+              <Text style={styles.entryMeta}>{entry.firstPlaceWins} bàn thắng / {entry.totalPublishedRaces} trận đấu</Text>
             </View>
             <View style={styles.entryRight}>
-              <Text style={styles.winRate}>{entry.winRate.toFixed(0)}%</Text>
-              {(entry.ownerName ?? entry.latestRaceName) && (
-                <Text style={styles.entrySubtitle} numberOfLines={1}>
-                  {entry.ownerName ? `Chủ: ${entry.ownerName}` : entry.latestRaceName}
-                </Text>
-              )}
+              <Text style={styles.winRate}>Tỷ lệ thắng: {entry.winRate.toFixed(0)}%</Text>
             </View>
           </View>
         </Animated.View>
@@ -93,14 +89,12 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   entryRow:  { flexDirection: 'row', alignItems: 'center', backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, gap: Spacing.two },
   rank:      { width: 20, alignItems: 'center' },
   rankText:  { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 14, textAlign: 'center' },
-  avatar:    { width: 36, height: 36, borderRadius: Shape.full, backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center' },
-  avatarText:{ color: C.primary, fontFamily: FontFamily.bold, fontSize: 14 },
+  avatar:    { width: 36, height: 36, borderRadius: Shape.full, backgroundColor: SC.highest },
   entryInfo: { flex: 1 },
   entryName: { color: C.onSurface, fontFamily: FontFamily.medium, fontSize: 13 },
   entryMeta: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11, marginTop: 2 },
-  entryRight:{ alignItems: 'flex-end', gap: 2, maxWidth: 110 },
+  entryRight:{ alignItems: 'flex-end' },
   winRate:      { color: C.primary, fontFamily: FontFamily.bold, fontSize: 13 },
-  entrySubtitle:{ color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 10 },
   emptyText: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 13, textAlign: 'center', paddingVertical: Spacing.four },
   });
 }

@@ -88,7 +88,7 @@ export function TicketConfirmation({ race, onBack, onWatch }: Props) {
         {/* Countdown */}
         {!isStarted && timeLeft && (
           <Animated.View entering={FadeInDown.delay(160).duration(350)} style={styles.countdownCard}>
-            <Text style={styles.countdownLabel}>Cuộc đua bắt đầu sau</Text>
+            <Text style={styles.countdownLabel}>Trận đấu bắt đầu sau</Text>
             <View style={styles.countdownRow}>
               <CountUnit value={timeLeft.h} unit="giờ" />
               <Text style={styles.countdownSep}>:</Text>
@@ -106,7 +106,7 @@ export function TicketConfirmation({ race, onBack, onWatch }: Props) {
             onPress={isStarted ? onWatch : undefined}
             activeOpacity={isStarted ? 0.75 : 1}>
             <Text style={[styles.watchBtnText, !isStarted && styles.watchBtnTextDisabled]}>
-              {isStarted ? 'Xem trực tiếp ngay' : 'Sẽ mở khi cuộc đua bắt đầu'}
+              {isStarted ? 'Xem trực tiếp ngay' : 'Sẽ mở khi trận đấu bắt đầu'}
             </Text>
           </TouchableOpacity>
 
@@ -126,7 +126,7 @@ export function TicketConfirmation({ race, onBack, onWatch }: Props) {
 
           <TouchableOpacity
             style={styles.secondaryBtn}
-            onPress={() => Alert.alert('Chia sẻ vé', `Mã vé của bạn: #${ticketCode}\nCuộc đua: ${race.name}\nNgày: ${formatDate(race.date)} lúc ${race.time}`)}>
+            onPress={() => Alert.alert('Chia sẻ vé', `Mã vé của bạn: #${ticketCode}\nTrận đấu: ${race.name}\nNgày: ${formatDate(race.date)} lúc ${race.time}`)}>
             <Share2 size={16} color={C.primary} />
             <Text style={styles.secondaryBtnText}>Chia sẻ vé</Text>
           </TouchableOpacity>

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Zap, Trophy, Award, Timer } from 'lucide-react-native';
+import { Zap, Trophy, Award } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
@@ -13,12 +14,14 @@ import { useJockeyRaces } from '@/hooks/useJockeyData';
 import { useHorseLeaderboard } from '@/hooks/useHorseLeaderboard';
 import { useRaceLeaderboard } from '@/hooks/useRaceLeaderboard';
 import { useAuth } from '@/context/AuthContext';
-import { formatCurrency, formatNumber } from '@/mock-data';
+import { formatDateFull, formatNumber } from '@/mock-data';
 import { MedalIcon } from '@/components/ui/medal-icon';
+
+const HORSE_AVATAR = require('@/assets/images/a-horse-with-long-hair-and-a-white-mane-free-photo.jpeg');
 
 type Tab = 'personal' | 'leaderboard';
 
-const POS_LABEL: Record<number, string> = { 1: 'Vô địch', 2: 'Nhì', 3: 'Ba' };
+const POS_LABEL: Record<number, string> = { 1: 'Giải Nhất', 2: 'Giải Nhì', 3: 'Giải Ba' };
 
 type TabDef = { key: Tab; Icon: React.ComponentType<{ size?: number; color?: string }>; label: string };
 const TABS: TabDef[] = [
@@ -87,7 +90,7 @@ function PersonalContent() {
 
   type StatBox = { label: string; value: string | number; Icon: React.ComponentType<{ size?: number; color?: string }> };
   const statBoxes: StatBox[] = [
-    { label: 'Cuộc đua',    value: personalResults.length, Icon: Zap   },
+    { label: 'Trận đấu',    value: personalResults.length, Icon: Zap   },
     { label: 'Chiến thắng', value: wins,                   Icon: Trophy },
     { label: 'Podium',      value: podiums,                Icon: Award  },
   ];
@@ -126,23 +129,18 @@ function PersonalContent() {
                 <Text style={styles.resultRace}>{r.raceName}</Text>
                 <View style={styles.resultMeta}>
                   <Text style={styles.resultMetaText}>
-                    {new Date(r.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                    {formatDateFull(r.date)}
                   </Text>
                   <Text style={styles.resultMetaDot}>·</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
                     <Zap size={10} color={C.onSurfaceVariant} />
                     <Text style={styles.resultMetaText}>{r.horse}</Text>
                   </View>
-                  <Text style={styles.resultMetaDot}>·</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-                    <Timer size={10} color={C.onSurfaceVariant} />
-                    <Text style={styles.resultMetaText}>{r.time}</Text>
-                  </View>
                 </View>
               </View>
               <View style={styles.resultRight}>
                 <Text style={[styles.resultPos, { color: pc.color }]}>{posLabel}</Text>
-                <Text style={styles.resultEarnings}>+{formatCurrency(r.earnings)}</Text>
+                <Text style={styles.resultEarnings}>+{formatNumber(r.earnings)}</Text>
               </View>
             </View>
           </Animated.View>
@@ -189,7 +187,7 @@ function RaceLeaderboardCard({ raceId, currentJockeyId }: { raceId: string; curr
     return (
       <View style={styles.lbRaceCard}>
         <Text style={styles.lbRaceTitle}>{leaderboard?.raceName ?? ''}</Text>
-        <Text style={styles.emptyText}>Kết quả chưa được công bố cho cuộc đua này.</Text>
+        <Text style={styles.emptyText}>Kết quả chưa được công bố cho trận đấu này.</Text>
       </View>
     );
   }
@@ -256,8 +254,12 @@ function RaceLeaderboardCard({ raceId, currentJockeyId }: { raceId: string; curr
 }
 
 function LeaderboardContent() {
+  const { C } = useAppColors();
   const styles = useThemedStyles(createStyles);
   const { entries, loading } = useHorseLeaderboard(20);
+  const PODIUM_COLORS = [C.secondary, C.onSurfaceVariant, C.primary];
+  const PODIUM_BG     = [C.secondaryContainer, `${C.onSurfaceVariant}25`, C.primaryContainer];
+  const top3 = entries.slice(0, 3);
 
   return (
     <>
@@ -265,6 +267,22 @@ function LeaderboardContent() {
 
       {!loading && entries.length === 0 && (
         <Text style={styles.emptyText}>Chưa có dữ liệu xếp hạng</Text>
+      )}
+
+      {/* Podium */}
+      {top3.length > 0 && (
+        <Animated.View entering={FadeInDown.duration(340)} style={styles.podiumRow}>
+          {[1, 0, 2].map(i => top3[i] ? (
+            <View key={i} style={styles.podiumItem}>
+              <View style={[styles.podiumAvatar, { backgroundColor: PODIUM_BG[i] }]}>
+                <Text style={[styles.podiumRank, { color: PODIUM_COLORS[i] }]}>{i + 1}</Text>
+              </View>
+              <Text style={styles.podiumName} numberOfLines={1}>{top3[i].horseName}</Text>
+              <Text style={styles.podiumWins}>{top3[i].firstPlaceWins} thắng</Text>
+              <View style={[styles.podiumBase, { height: i === 0 ? 72 : i === 1 ? 56 : 40, backgroundColor: PODIUM_BG[i] }]} />
+            </View>
+          ) : <View key={i} style={styles.podiumItem} />)}
+        </Animated.View>
       )}
 
       {entries.map((horse, i) => {
@@ -278,19 +296,15 @@ function LeaderboardContent() {
                   <Text style={styles.rankNum}>{horse.rank}</Text>
                 )}
               </View>
+              <Image source={HORSE_AVATAR} style={styles.rankAvatar} contentFit="cover" />
               <View style={styles.rankInfo}>
                 <Text style={styles.rankName}>{horse.horseName}</Text>
                 <Text style={styles.rankStats}>
-                  {horse.firstPlaceWins} thắng / {horse.totalPublishedRaces} đua · {horse.winRate}%
+                  {horse.firstPlaceWins} bàn thắng / {horse.totalPublishedRaces} trận đấu
                 </Text>
               </View>
               <View style={styles.rankRight}>
-                <Text style={styles.rankWinRate}>{horse.winRate.toFixed(0)}%</Text>
-                {(horse.ownerName ?? horse.latestRaceName) && (
-                  <Text style={styles.rankSubtitle} numberOfLines={1}>
-                    {horse.ownerName ? `Chủ: ${horse.ownerName}` : horse.latestRaceName}
-                  </Text>
-                )}
+                <Text style={styles.rankWinRate}>Tỷ lệ thắng: {horse.winRate.toFixed(0)}%</Text>
               </View>
             </View>
           </Animated.View>
@@ -338,16 +352,25 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   resultPos:      { fontFamily: FontFamily.bold, fontSize: 14 },
   resultEarnings: { color: C.secondary, fontFamily: FontFamily.bold, fontSize: 12 },
 
+  // Podium
+  podiumRow:   { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: Spacing.two, marginBottom: Spacing.one },
+  podiumItem:  { flex: 1, alignItems: 'center', gap: Spacing.one },
+  podiumAvatar:{ width: 48, height: 48, borderRadius: Shape.full, justifyContent: 'center', alignItems: 'center' },
+  podiumRank:  { fontFamily: FontFamily.bold, fontSize: 22 },
+  podiumName:  { color: C.onSurface, fontFamily: FontFamily.medium, fontSize: 11, textAlign: 'center' },
+  podiumWins:  { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 10 },
+  podiumBase:  { width: '100%', borderRadius: Shape.medium },
+
   // Leaderboard rows
   rankRow:        { flexDirection: 'row', alignItems: 'center', backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, gap: Spacing.two, marginBottom: Spacing.two },
   rankIcon:       { width: 36, height: 36, borderRadius: Shape.medium, backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center' },
+  rankAvatar:     { width: 36, height: 36, borderRadius: Shape.full, backgroundColor: SC.highest },
   rankNum:        { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 14 },
   rankInfo:       { flex: 1, gap: 3 },
   rankName:       { color: C.onSurface, fontFamily: FontFamily.medium, fontSize: 14 },
   rankStats:      { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
-  rankRight:      { alignItems: 'flex-end', gap: 2, maxWidth: 110 },
+  rankRight:      { alignItems: 'flex-end' },
   rankWinRate:    { color: C.secondary, fontFamily: FontFamily.bold, fontSize: 13 },
-  rankSubtitle:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 10 },
   emptyText:      { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 13, textAlign: 'center', paddingVertical: Spacing.four },
 
   // Full per-race leaderboard

@@ -92,7 +92,7 @@ export function PredictForm({ onSubmitted }: Props) {
     return (
       <View style={styles.emptyBox}>
         <Target size={40} color={C.onSurfaceVariant} />
-        <Text style={styles.emptyText}>Hiện không có cuộc đua nào đang mở dự đoán</Text>
+        <Text style={styles.emptyText}>Hiện không có trận đấu nào đang mở dự đoán</Text>
       </View>
     );
   }
@@ -100,7 +100,7 @@ export function PredictForm({ onSubmitted }: Props) {
   return (
     <View style={styles.root}>
       {/* Step 1: Race selection */}
-      <Text style={styles.stepLabel}>Bước 1 — Chọn cuộc đua</Text>
+      <Text style={styles.stepLabel}>Bước 1 — Chọn trận đấu</Text>
       <View style={styles.raceList}>
         {predictableRaces.map(race => {
           const isSelected = selectedRaceId === race.id;
@@ -231,7 +231,7 @@ export function PredictForm({ onSubmitted }: Props) {
 
             <View style={styles.modalInfoBox}>
               <View style={styles.modalInfoRow}>
-                <Text style={styles.modalInfoLabel}>Cuộc đua</Text>
+                <Text style={styles.modalInfoLabel}>Trận đấu</Text>
                 <Text style={styles.modalInfoValue} numberOfLines={1}>{selectedRace?.name}</Text>
               </View>
               <View style={styles.modalInfoRow}>

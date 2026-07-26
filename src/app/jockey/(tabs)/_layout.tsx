@@ -52,7 +52,7 @@ export default function JockeyTabsLayout() {
       <Tabs.Screen
         name="assigned"
         options={{
-          title: 'Cuộc đua',
+          title: 'Trận đấu',
           tabBarIcon: tabIcon(Flag),
           tabBarBadge: upcomingRaceCount > 0 ? upcomingRaceCount : undefined,
         }}

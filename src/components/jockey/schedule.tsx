@@ -137,13 +137,13 @@ export function JockeySchedule() {
           {/* Selected day races */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>
-              Ngày {selectedDay}/{viewMonth + 1} · {selectedRaces.length} cuộc đua
+              Ngày {selectedDay}/{viewMonth + 1} · {selectedRaces.length} trận đấu
             </Text>
 
             {selectedRaces.length === 0 ? (
               <View style={styles.empty}>
                 <Calendar size={36} color={C.onSurfaceVariant} style={{ opacity: 0.4 }} />
-                <Text style={styles.emptyText}>Không có cuộc đua nào</Text>
+                <Text style={styles.emptyText}>Không có trận đấu nào</Text>
               </View>
             ) : (
               selectedRaces.map((race, i) => {
