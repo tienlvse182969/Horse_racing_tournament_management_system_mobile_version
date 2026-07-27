@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
+import { Image } from 'expo-image';
 import { Ban, CircleCheck, CircleX, CircleDashed, Clock } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
@@ -6,6 +7,8 @@ import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { formatDate, formatNumber } from '@/mock-data';
 import type { Prediction } from '@/mock-data/predictions';
+
+const HORSE_AVATAR = require('@/assets/images/a-horse-with-long-hair-and-a-white-mane-free-photo.jpeg');
 
 type StatusIcon = React.ComponentType<{ size?: number; color?: string }>;
 
@@ -67,12 +70,14 @@ export function PredictionHistory({ predictions, onCancel }: Props) {
               </View>
               <Text style={styles.cardRace}>{pred.raceName}</Text>
               <View style={styles.cardPickRow}>
+                <Text style={styles.cardPick}>Ngựa đã chọn: </Text>
+                <Image source={HORSE_AVATAR} style={styles.pickAvatar} contentFit="cover" />
                 <Text style={styles.cardPick}>
                   #{pred.predictedHorseNumber} {pred.predictedHorseName}
                 </Text>
               </View>
               {pred.contribution ? (
-                <Text style={styles.cardStake}>{formatNumber(pred.contribution)} điểm</Text>
+                <Text style={styles.cardStake}>Điểm thưởng: {formatNumber(pred.contribution)} điểm</Text>
               ) : null}
               {pred.reward ? (
                 <Text style={styles.cardReward}>+{formatNumber(pred.reward)} điểm</Text>
@@ -115,6 +120,7 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   cardDate:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
   cardRace:    { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15 },
   cardPickRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  pickAvatar:  { width: 24, height: 24, borderRadius: Shape.full },
   cardPick:    { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 13 },
   cardStake:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
   cardReward:  { color: C.primary, fontFamily: FontFamily.bold, fontSize: 14 },

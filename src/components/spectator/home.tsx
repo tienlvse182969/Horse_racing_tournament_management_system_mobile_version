@@ -90,12 +90,12 @@ export function SpectatorHome() {
                   <View style={styles.liveCardHeader}>
                     <View style={styles.liveBadge}>
                       <View style={styles.liveDot} />
-                      <Text style={styles.liveBadgeText}>TRỰC TIẾP</Text>
+                      <Text style={styles.liveBadgeText}>ĐANG DIỄN RA</Text>
                     </View>
                     <Text style={styles.liveCardName}>{liveRace.name}</Text>
                   </View>
                   <Text style={styles.liveCardMeta}>
-                    {liveRace.location} · {liveRace.distance}m · {formatCurrency(liveRace.purse)}
+                    {liveRace.location} · Cự ly {liveRace.distance}m
                   </Text>
                   {liveRace.entries.filter(e => e.position).length > 0 && (
                     <View style={styles.liveLeaderRow}>
@@ -109,7 +109,6 @@ export function SpectatorHome() {
                       </View>
                     </View>
                   )}
-                  <Text style={styles.liveCardCta}>Xem trực tiếp →</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </Animated.View>
@@ -139,10 +138,6 @@ export function SpectatorHome() {
                     <View style={styles.metaItem}>
                       <Route size={12} color={C.onSurfaceVariant} />
                       <Text style={styles.metaText}>{race.distance}m</Text>
-                    </View>
-                    <View style={styles.metaItem}>
-                      <Trophy size={12} color={C.onSurfaceVariant} />
-                      <Text style={styles.metaText}>{formatCurrency(race.purse)}</Text>
                     </View>
                   </View>
                   <TouchableOpacity

@@ -11,8 +11,8 @@ export function formatCurrency(amount: number): string {
 }
 
 export function formatDate(dateStr: string): string {
-  const [, month, day] = dateStr.split('-');
-  return `${day}/${month}`;
+  const [year, month, day] = dateStr.split('-');
+  return `${day}/${month}/${year}`;
 }
 
 export function formatDateFull(dateStr: string): string {

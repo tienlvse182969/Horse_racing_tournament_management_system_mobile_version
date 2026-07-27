@@ -5,7 +5,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Ellipse } from 'react-native-svg';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, Easing } from 'react-native-reanimated';
-import { X } from 'lucide-react-native';
+import { X, Trophy } from 'lucide-react-native';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
@@ -408,13 +408,16 @@ export function LiveViewer({ race, onClose }: Props) {
               })
               .map(h => (
                 <View key={h.horseId} style={[styles.finishRow, h.isDisqualified && styles.finishRowDisqualified]}>
-                  <Text style={[
-                    styles.finishRank,
-                    !h.isDisqualified && h.rank <= 3 && { color: MEDAL_COLORS[h.rank - 1] },
-                    h.isDisqualified && styles.finishTextDisqualified,
-                  ]}>
-                    {h.isDisqualified ? '—' : `#${h.rank}`}
-                  </Text>
+                  <View style={styles.finishRankWrap}>
+                    {!h.isDisqualified && h.rank <= 3 && <Trophy size={13} color={MEDAL_COLORS[h.rank - 1]} />}
+                    <Text style={[
+                      styles.finishRank,
+                      !h.isDisqualified && h.rank <= 3 && { color: MEDAL_COLORS[h.rank - 1] },
+                      h.isDisqualified && styles.finishTextDisqualified,
+                    ]}>
+                      {h.isDisqualified ? '—' : h.rank}
+                    </Text>
+                  </View>
                   <Image source={HORSE_AVATAR} style={styles.finishAvatar} contentFit="cover" />
                   <Text style={[styles.finishHorseName, h.isDisqualified && styles.finishTextDisqualified]} numberOfLines={1}>{h.horseName}</Text>
                   {!!h.jockeyName && (
@@ -556,7 +559,8 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   updatedNotice: { color: C.tertiary, fontFamily: FontFamily.medium, fontSize: 12, backgroundColor: `${C.tertiary}15`, borderRadius: Shape.medium, padding: Spacing.two, marginBottom: Spacing.one },
   finishRow:   { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, backgroundColor: SC.lowest, borderRadius: Shape.medium, padding: Spacing.two },
   finishRowDisqualified: { backgroundColor: `${C.error}15` },
-  finishRank:  { width: 24, textAlign: 'center', fontSize: 14 },
+  finishRankWrap: { width: 34, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 2 },
+  finishRank:  { textAlign: 'center', fontSize: 14 },
   finishAvatar: { width: 28, height: 28, borderRadius: Shape.full },
   finishHorseName: { flex: 1, color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 13 },
   finishJockey:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },

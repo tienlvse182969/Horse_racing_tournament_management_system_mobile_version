@@ -4,7 +4,7 @@ import { LiveViewer } from './live-viewer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, CalendarPlus } from 'lucide-react-native';
+import { ArrowLeft, CalendarPlus, Trophy } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
@@ -168,17 +168,21 @@ export function RaceDetail({ race, onBack }: Props) {
           )}
           {sortedEntries.map((entry, idx) => (
             <View key={entry.horse.id} style={[styles.entryRow, entry.isDisqualified && styles.entryRowDisqualified]}>
-              <View style={styles.entryRank}>
-                {entry.isDisqualified
-                  ? <Text style={styles.entryTextDisqualified}>—</Text>
-                  : entry.position
-                  ? <Text style={[styles.rankNum, entry.position <= 3 && { color: MEDAL_COLORS[entry.position - 1] }]}>#{entry.position}</Text>
-                  : isCompleted
-                  ? <Text style={styles.rankDash}>—</Text>
-                  : isUpcoming
-                  ? null
-                  : <Text style={[styles.rankNum, idx < 3 && { color: MEDAL_COLORS[idx] }]}>#{idx + 1}</Text>}
-              </View>
+              {!isUpcoming && (
+                <View style={styles.entryRank}>
+                  {entry.isDisqualified
+                    ? <Text style={styles.entryTextDisqualified}>—</Text>
+                    : entry.position
+                    ? (entry.position <= 3
+                      ? <><Trophy size={14} color={MEDAL_COLORS[entry.position - 1]} /><Text style={[styles.rankNum, { color: MEDAL_COLORS[entry.position - 1] }]}>{entry.position}</Text></>
+                      : <Text style={styles.rankNum}>#{entry.position}</Text>)
+                    : isCompleted
+                    ? <Text style={styles.rankDash}>—</Text>
+                    : (idx < 3
+                      ? <><Trophy size={14} color={MEDAL_COLORS[idx]} /><Text style={[styles.rankNum, { color: MEDAL_COLORS[idx] }]}>{idx + 1}</Text></>
+                      : <Text style={styles.rankNum}>#{idx + 1}</Text>)}
+                </View>
+              )}
               <View style={[styles.horseAvatar, { borderColor: entry.horse.color }]}>
                 <Image source={HORSE_AVATAR} style={styles.horseAvatarImg} contentFit="cover" />
               </View>
@@ -269,7 +273,7 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   entryRow:     { flexDirection: 'row', alignItems: 'center', backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, marginBottom: Spacing.two, gap: Spacing.two },
   entryRowDisqualified: { backgroundColor: `${C.error}15` },
   entryTextDisqualified: { color: C.error },
-  entryRank:    { width: 32, alignItems: 'center' },
+  entryRank:    { width: 36, flexDirection: 'row', alignItems: 'center', gap: 3 },
   rankNum:      { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 16 },
   rankDash:     { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 16 },
   horseAvatar:  { width: 40, height: 40, borderRadius: Shape.full, borderWidth: 2, overflow: 'hidden' },
