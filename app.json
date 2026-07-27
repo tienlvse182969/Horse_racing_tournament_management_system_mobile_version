@@ -22,7 +22,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.horse_racing_tournament_management_system_mobile_version"
+      "package": "com.anonymous.horse_racing_tournament_management_system_mobile_version",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",
@@ -31,6 +32,7 @@
     "newArchEnabled": false,
     "plugins": [
       "expo-router",
+      "expo-notifications",
       [
         "expo-calendar",
         {
