@@ -23,7 +23,11 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.anonymous.horse_racing_tournament_management_system_mobile_version",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "permissions": [
+        "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR"
+      ]
     },
     "web": {
       "output": "static",
@@ -54,6 +58,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "a9b28041-fea6-4468-99a4-34f5937f5cb9"
+      }
+    },
+    "owner": "maykhoi614"
   }
 }
