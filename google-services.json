@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "835408412124",
+    "project_id": "wdp301-2acca",
+    "storage_bucket": "wdp301-2acca.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:835408412124:android:f720e982c5100f0b89e319",
+        "android_client_info": {
+          "package_name": "com.anonymous.horse_racing_tournament_management_system_mobile_version"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDqvlhMnj8ikDsPPxhqxswwVQgI0JXhw84"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -23,6 +23,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.anonymous.horse_racing_tournament_management_system_mobile_version",
+      "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.READ_CALENDAR",
         "android.permission.WRITE_CALENDAR"
@@ -35,6 +36,7 @@
     "newArchEnabled": false,
     "plugins": [
       "expo-router",
+      "expo-notifications",
       [
         "expo-calendar",
         {
