@@ -1,20 +1,28 @@
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
 const PUSH_TOKEN_KEY = 'horse-racing-expo-push-token';
 const PUSH_ENABLED_KEY = 'horse-racing-push-enabled';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+// expo-notifications throws on import for remote/Android push under Expo Go (SDK 53+).
+// Skip requiring it entirely there; dev-client/standalone builds load it normally.
+const isExpoGo = Constants.appOwnership === 'expo';
+const Notifications: typeof import('expo-notifications') | null = isExpoGo
+  ? null
+  : (require('expo-notifications') as typeof import('expo-notifications'));
+
+if (Notifications) {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
 
 function getProjectId(): string | undefined {
   return (
@@ -24,7 +32,7 @@ function getProjectId(): string | undefined {
 }
 
 export async function setupAndroidNotificationChannel(): Promise<void> {
-  if (Platform.OS !== 'android') return;
+  if (!Notifications || Platform.OS !== 'android') return;
   await Notifications.setNotificationChannelAsync('default', {
     name: 'Thông báo',
     importance: Notifications.AndroidImportance.MAX,
@@ -34,6 +42,10 @@ export async function setupAndroidNotificationChannel(): Promise<void> {
 }
 
 export async function registerForPushNotificationsAsync(): Promise<string | null> {
+  if (!Notifications) {
+    return null;
+  }
+
   if (!(await isPushNotificationsEnabled())) {
     return null;
   }
@@ -82,6 +94,9 @@ export async function setPushNotificationsEnabled(enabled: boolean): Promise<voi
 }
 
 export function addNotificationTapListener(handler: (data: Record<string, unknown>) => void) {
+  if (!Notifications) {
+    return { remove: () => {} };
+  }
   return Notifications.addNotificationResponseReceivedListener((response) => {
     handler(response.notification.request.content.data ?? {});
   });

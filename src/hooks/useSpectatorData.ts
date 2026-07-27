@@ -56,7 +56,9 @@ export function useSpectatorPoints() {
 
 export function useSpectatorPredictions() {
   const [predictions, setPredictions] = useState<Prediction[]>([]);
-  const reload = useCallback(() => {
+  const [loading, setLoading] = useState(true);
+  const reload = useCallback((showLoading = true) => {
+    if (showLoading) setLoading(true);
     return spectatorApi.listPredictions().then((res) => {
       setPredictions(
         res.predictions.map((p) => ({
@@ -82,23 +84,23 @@ export function useSpectatorPredictions() {
           contribution: p.contribution,
         })),
       );
-    }).catch(() => {});
+    }).catch(() => {}).finally(() => { if (showLoading) setLoading(false); });
   }, []);
   useEffect(() => {
     reload();
-    const interval = setInterval(reload, 8000);
+    const interval = setInterval(() => reload(false), 8000);
     return () => clearInterval(interval);
   }, [reload]);
   const cancelPrediction = useCallback(async (predictionId: string) => {
     try {
       await spectatorApi.cancelPrediction(predictionId);
-      reload();
+      reload(false);
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Không thể hủy dự đoán';
       Alert.alert('Không thể hủy', message);
     }
   }, [reload]);
-  return { predictions, reload, cancelPrediction };
+  return { predictions, loading, reload, cancelPrediction };
 }
 
 export function useSpectatorTopUps() {
@@ -112,8 +114,9 @@ export function useSpectatorTopUps() {
 
 export function useSpectatorNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
   const reload = useCallback(() => {
-    spectatorApi.listNotifications().then((res) => {
+    return spectatorApi.listNotifications().then((res) => {
       setNotifications(
         res.notifications.map((n) => ({
           id: n.id,
@@ -124,10 +127,10 @@ export function useSpectatorNotifications() {
           read: n.isRead,
         })),
       );
-    }).catch(() => {});
+    }).catch(() => {}).finally(() => setLoading(false));
   }, []);
   useEffect(() => { reload(); }, [reload]);
-  return { notifications, setNotifications, reload };
+  return { notifications, loading, setNotifications, reload };
 }
 
 export function useSpectatorTournaments() {

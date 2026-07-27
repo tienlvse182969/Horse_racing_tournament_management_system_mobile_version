@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -46,7 +46,7 @@ export function JockeyHome() {
   const styles = useThemedStyles(createStyles);
   const stats = useJockeyDashboard();
   const { invitations } = useJockeyInvitations();
-  const { races: jockeyRaces } = useJockeyRaces();
+  const { races: jockeyRaces, loading } = useJockeyRaces();
   const { balance: pointsBalance } = useJockeyPoints();
   const pendingCount = stats.pendingInvitations || invitations.filter(i => i.status === 'pending').length;
   const today = new Date().toISOString().slice(0, 10);
@@ -74,6 +74,8 @@ export function JockeyHome() {
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <LargeHeaderScrollView title="RaceTrack VN" bangers contentContainerStyle={styles.scroll} rightAction={<JockeyHeaderActions />}>
+
+          {loading && <ActivityIndicator color={C.primary} style={{ marginVertical: Spacing.three }} />}
 
           {/* Hero stats card */}
           <Animated.View entering={FadeIn.duration(380)}>

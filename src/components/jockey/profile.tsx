@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, Pressable, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, Pressable, Switch, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Zap, Trophy, Award, ChartBar, ChevronRight, LogOut, UserPen, Lock, Info, X, SunMoon, Bell } from 'lucide-react-native';
@@ -36,7 +36,7 @@ export function JockeyProfile() {
     3: { iconColor: '#CD7F32', bg: '#3A2010', color: '#FFAB60' },
   }), [C]);
 
-  const { races } = useJockeyRaces();
+  const { races, loading } = useJockeyRaces();
   const raceHistory = races
     .filter(r => r.status === 'completed' && r.myEntry.position)
     .map(r => ({
@@ -136,6 +136,8 @@ export function JockeyProfile() {
               ))}
             </View>
           </Animated.View>
+
+          {loading && <ActivityIndicator color={C.primary} style={{ marginVertical: Spacing.three }} />}
 
           {/* Race history */}
           <Animated.View entering={FadeInDown.delay(200).duration(320)} style={styles.section}>

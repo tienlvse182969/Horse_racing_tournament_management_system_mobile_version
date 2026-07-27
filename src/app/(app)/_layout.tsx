@@ -19,11 +19,13 @@ export default function AppLayout() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    if (user?.role === 'spectator') {
-      spectatorApi.listNotifications().then((res) => {
-        setUnreadCount(res.notifications.filter((n) => !n.isRead).length);
-      }).catch(() => {});
-    }
+    if (user?.role !== 'spectator') return;
+    const load = () => spectatorApi.listNotifications().then((res) => {
+      setUnreadCount(res.notifications.filter((n) => !n.isRead).length);
+    }).catch(() => {});
+    load();
+    const interval = setInterval(load, 8000);
+    return () => clearInterval(interval);
   }, [user]);
 
   if (loading) {

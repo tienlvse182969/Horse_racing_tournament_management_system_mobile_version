@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Gift, Flag, Target, Trophy, Bell } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -37,7 +37,7 @@ export function JockeyNotifications() {
   const { C } = useAppColors();
   const styles = useThemedStyles(createStyles);
   const TYPE_CONFIG = typeConfig(C);
-  const { notifications: items, setNotifications } = useJockeyNotifications();
+  const { notifications: items, loading, setNotifications } = useJockeyNotifications();
   const unread = items.filter(n => !n.read).length;
 
   const markAllRead = () => {
@@ -53,6 +53,8 @@ export function JockeyNotifications() {
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <LargeHeaderScrollView title="Thông báo" contentContainerStyle={styles.scroll} rightAction={<JockeyHeaderActions />}>
+
+          {loading && <ActivityIndicator color={C.primary} style={{ marginVertical: Spacing.three }} />}
 
           {/* Header row */}
           <View style={styles.listHeader}>

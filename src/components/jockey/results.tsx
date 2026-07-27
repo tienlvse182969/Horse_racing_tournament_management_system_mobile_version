@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -72,7 +72,7 @@ function PersonalContent() {
     3: { iconColor: '#CD7F32', bg: '#3A2010', color: '#FFAB60' },
   };
   const { user } = useAuth();
-  const { races } = useJockeyRaces();
+  const { races, loading } = useJockeyRaces();
   const personalResults = races
     .filter(r => r.status === 'completed' && r.myEntry.position)
     .map(r => ({
@@ -110,6 +110,8 @@ function PersonalContent() {
           ))}
         </View>
       </LinearGradient>
+
+      {loading && <ActivityIndicator color={C.primary} style={{ marginVertical: Spacing.three }} />}
 
       {/* History */}
       <Text style={styles.historyTitle}>Lịch sử thi đấu</Text>
@@ -172,13 +174,14 @@ function fmtRaceTime(sec: number | null): string {
 }
 
 function RaceLeaderboardCard({ raceId, currentJockeyId }: { raceId: string; currentJockeyId?: string }) {
+  const { C } = useAppColors();
   const styles = useThemedStyles(createStyles);
   const { leaderboard, loading } = useRaceLeaderboard(raceId);
 
   if (loading) {
     return (
       <View style={styles.lbRaceCard}>
-        <Text style={styles.emptyText}>Đang tải bảng xếp hạng…</Text>
+        <ActivityIndicator color={C.primary} style={{ marginVertical: Spacing.two }} />
       </View>
     );
   }
@@ -264,6 +267,8 @@ function LeaderboardContent() {
   return (
     <>
       <Text style={styles.historyTitle}>Bảng xếp hạng ngựa</Text>
+
+      {loading && <ActivityIndicator color={C.primary} style={{ marginVertical: Spacing.three }} />}
 
       {!loading && entries.length === 0 && (
         <Text style={styles.emptyText}>Chưa có dữ liệu xếp hạng</Text>

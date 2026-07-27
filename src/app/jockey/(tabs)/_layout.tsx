@@ -20,17 +20,19 @@ export default function JockeyTabsLayout() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    if (user?.role === 'jockey') {
-      jockeyApi.listInvitations('pending').then((res) => {
-        setPendingCount(res.invitations.length);
-      }).catch(() => {});
-      jockeyApi.dashboard().then((res) => {
-        setUpcomingRaceCount(res.upcomingRaces);
-      }).catch(() => {});
-      jockeyApi.listNotifications().then((res) => {
-        setUnreadCount(res.notifications.filter((n) => !n.isRead).length);
-      }).catch(() => {});
-    }
+    if (user?.role !== 'jockey') return;
+    jockeyApi.listInvitations('pending').then((res) => {
+      setPendingCount(res.invitations.length);
+    }).catch(() => {});
+    jockeyApi.dashboard().then((res) => {
+      setUpcomingRaceCount(res.upcomingRaces);
+    }).catch(() => {});
+    const loadUnread = () => jockeyApi.listNotifications().then((res) => {
+      setUnreadCount(res.notifications.filter((n) => !n.isRead).length);
+    }).catch(() => {});
+    loadUnread();
+    const interval = setInterval(loadUnread, 8000);
+    return () => clearInterval(interval);
   }, [user]);
 
   return (

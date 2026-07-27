@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, Pressable, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, Pressable, Switch, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -26,7 +26,7 @@ export function SpectatorProfile() {
   const { C, SC } = useAppColors();
   const styles = useThemedStyles(createStyles);
   const { balance } = useSpectatorPoints();
-  const { predictions } = useSpectatorPredictions();
+  const { predictions, loading } = useSpectatorPredictions();
   const [aboutVisible, setAboutVisible] = useState(false);
   const [themeVisible, setThemeVisible] = useState(false);
   const notificationSetting = useNotificationSetting();
@@ -111,22 +111,7 @@ export function SpectatorProfile() {
             </View>
           </Animated.View>
 
-          {/* Prediction accuracy bar */}
-          <Animated.View entering={FadeInDown.delay(140).duration(320)} style={styles.section}>
-            <Text style={styles.sectionTitle}>Tỷ lệ đoán trúng & sai</Text>
-            <View style={styles.barRow}>
-              {won > 0 && (
-                <View style={[styles.barSeg, { flex: won, backgroundColor: C.tertiary }]} />
-              )}
-              {lost > 0 && (
-                <View style={[styles.barSeg, { flex: lost, backgroundColor: C.error }]} />
-              )}
-            </View>
-            <View style={styles.barLegend}>
-              <LegendItem color={C.tertiary} label={`Trúng (${won})`} />
-              <LegendItem color={C.error}    label={`Sai (${lost})`} />
-            </View>
-          </Animated.View>
+          {loading && <ActivityIndicator color={C.primary} style={{ marginVertical: Spacing.three }} />}
 
           {/* Recent predictions */}
           <Animated.View entering={FadeInDown.delay(200).duration(320)} style={styles.section}>
@@ -204,16 +189,6 @@ export function SpectatorProfile() {
   );
 }
 
-function LegendItem({ color, label }: { color: string; label: string }) {
-  const styles = useThemedStyles(createStyles);
-  return (
-    <View style={styles.legendItem}>
-      <View style={[styles.legendDot, { backgroundColor: color }]} />
-      <Text style={styles.legendText}>{label}</Text>
-    </View>
-  );
-}
-
 function createStyles(C: AppColors, SC: SurfaceColors) {
   return StyleSheet.create({
   root:    { flex: 1, backgroundColor: SC.lowest },
@@ -235,15 +210,8 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   statValue:  { color: C.primary, fontFamily: FontFamily.bold, fontSize: 16 },
   statLabel:  { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 10, textAlign: 'center' },
 
-  // Win rate bar
   section:     { gap: Spacing.two },
   sectionTitle:{ color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15 },
-  barRow:      { flexDirection: 'row', height: 10, borderRadius: Shape.full, overflow: 'hidden', gap: 1 },
-  barSeg:      { borderRadius: Shape.full },
-  barLegend:   { flexDirection: 'row', gap: Spacing.three },
-  legendItem:  { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  legendDot:   { width: 8, height: 8, borderRadius: 4 },
-  legendText:  { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
 
   // Predictions
   predRow:      { flexDirection: 'row', alignItems: 'center', backgroundColor: SC.high, borderRadius: Shape.medium, padding: Spacing.two, gap: Spacing.two, marginBottom: Spacing.one },

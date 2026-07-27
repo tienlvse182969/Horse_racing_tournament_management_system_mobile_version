@@ -107,8 +107,9 @@ export function useJockeyPoints() {
 
 export function useJockeyNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
   const reload = useCallback(() => {
-    jockeyApi.listNotifications().then((res) => {
+    return jockeyApi.listNotifications().then((res) => {
       setNotifications(
         res.notifications.map((n) => ({
           id: n.id,
@@ -119,10 +120,10 @@ export function useJockeyNotifications() {
           read: n.isRead,
         })),
       );
-    }).catch(() => {});
+    }).catch(() => {}).finally(() => setLoading(false));
   }, []);
   useEffect(() => { reload(); }, [reload]);
-  return { notifications, setNotifications, reload };
+  return { notifications, loading, setNotifications, reload };
 }
 
 export function useJockeyRaceDetail(id: string): { jockeyRace: JockeyRace | null; fullRace: Race | null } {
