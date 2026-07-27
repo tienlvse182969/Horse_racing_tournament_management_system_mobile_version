@@ -1,13 +1,13 @@
 import '@/global.css';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ThemeProvider as NavThemeProvider, Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
 import { PaperProvider } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
+import { StartupSplash } from '@/components/startup-splash';
 import { FONT_ASSETS } from '@/constants/theme';
 
 import { AuthProvider } from '@/context/AuthContext';
@@ -39,12 +39,15 @@ export default function RootLayout() {
 
 function ThemedApp() {
   const { paperTheme, navTheme, resolvedScheme } = useAppTheme();
+  const [showStartupSplash, setShowStartupSplash] = useState(true);
 
   return (
     <PaperProvider theme={paperTheme}>
       <NavThemeProvider value={navTheme}>
         <StatusBar style={resolvedScheme === 'dark' ? 'light' : 'dark'} />
-        <AnimatedSplashOverlay />
+        {showStartupSplash && (
+          <StartupSplash onFinish={() => setShowStartupSplash(false)} />
+        )}
         <Stack screenOptions={{ headerShown: false }} />
       </NavThemeProvider>
     </PaperProvider>

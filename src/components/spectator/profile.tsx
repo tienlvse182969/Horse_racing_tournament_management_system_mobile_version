@@ -54,7 +54,7 @@ export function SpectatorProfile() {
     { label: 'Dự đoán',     value: total,                           Icon: Target      },
     { label: 'Đoán đúng',   value: won,                             Icon: CircleCheck },
     { label: 'Đoán sai',    value: lost,                            Icon: CircleX     },
-    { label: 'Điểm thưởng', value: `${(balance / 1000).toFixed(0)}k`, Icon: Star     },
+    { label: 'Điểm thưởng', value: formatNumber(  balance),            Icon: Star     },
     { label: 'Tỷ lệ đúng',  value: `${winPct}%`,                   Icon: ChartBar    },
     { label: 'Đang chờ',    value: pending,                         Icon: Clock       },
   ];
@@ -93,10 +93,6 @@ export function SpectatorProfile() {
               </View>
               <Text style={styles.heroName}>{displayName}</Text>
               <Text style={styles.heroPhone}>{user?.email ?? ''}</Text>
-              <View style={styles.heroChip}>
-                <Calendar size={12} color={C.tertiary} />
-                <Text style={styles.heroChipText}>{formatNumber(balance)} điểm</Text>
-              </View>
             </LinearGradient>
           </Animated.View>
 

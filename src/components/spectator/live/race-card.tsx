@@ -5,7 +5,7 @@ import { Zap, Clock, MapPin, Route, Trophy, User } from 'lucide-react-native';
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import type { Race } from '@/types/race';
-import { formatCurrency, formatDate } from '@/utils/format';
+import { formatCurrency, formatDate, formatNumber } from '@/utils/format';
 
 type Props = { race: Race; onPress: () => void };
 
@@ -28,7 +28,6 @@ export function RaceCard({ race, onPress }: Props) {
               <View style={styles.liveDot} />
               <Text style={styles.liveBadgeText}>ĐANG DIỄN RA</Text>
             </View>
-            <Text style={[styles.cardNumber, { color: 'rgba(255,255,255,0.5)' }]}>#{race.number}</Text>
           </View>
           <Text style={styles.liveCardName}>{race.name}</Text>
           <Text style={styles.liveCardMeta}>
@@ -38,7 +37,7 @@ export function RaceCard({ race, onPress }: Props) {
           <View style={styles.infoRow}>
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>Giải thưởng</Text>
-              <Text style={styles.liveInfoValue}>{formatCurrency(race.purse)}</Text>
+              <Text style={styles.liveInfoValue}>{formatNumber(race.purse)} đ</Text>
             </View>
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>Kỵ sĩ</Text>
@@ -66,7 +65,6 @@ export function RaceCard({ race, onPress }: Props) {
           <View style={styles.upcomingBadge}>
             <Text style={styles.upcomingBadgeText}>SẮP DIỄN RA</Text>
           </View>
-          <Text style={styles.cardNumber}>#{race.number}</Text>
         </View>
         <Text style={styles.cardName}>{race.name}</Text>
         <View style={styles.metaRow}>
@@ -96,13 +94,15 @@ export function RaceCard({ race, onPress }: Props) {
             </View>
           )}
         </View>
-        <Text style={styles.cardNumber}>#{race.number}</Text>
       </View>
       <Text style={styles.cardName}>{race.name}</Text>
       <Text style={styles.completedMeta}>{race.location} · {formatDate(race.date)}</Text>
       {top3.map((entry, i) => (
         <View key={entry.horse.id} style={styles.resultRow}>
-          <View style={styles.medalWrap}><Text style={[styles.rankLabel, { color: MEDAL_COLORS[i] }]}>#{i + 1}</Text></View>
+          <View style={styles.medalWrap}>
+            <Trophy size={13} color={MEDAL_COLORS[i]} />
+            <Text style={[styles.rankLabel, { color: MEDAL_COLORS[i] }]}>{i + 1}</Text>
+          </View>
           <View style={[styles.horseDot, { backgroundColor: entry.horse.color }]} />
           <Text style={styles.horseName}>{entry.horse.name}</Text>
           <Text style={styles.finishTime}>{entry.finishTime}</Text>
@@ -149,7 +149,7 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   publishedBadgeText: { color: C.tertiary, fontFamily: FontFamily.bold, fontSize: 10, letterSpacing: 0.8 },
   completedMeta:      { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
   resultRow:          { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  medalWrap:          { width: 22, alignItems: 'center' },
+  medalWrap:          { width: 32, flexDirection: 'row', alignItems: 'center', gap: 3 },
   rankLabel:          { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 12 },
   leaderNameRow:      { flexDirection: 'row', alignItems: 'center', gap: 4 },
   horseDot:           { width: 8, height: 8, borderRadius: 4 },

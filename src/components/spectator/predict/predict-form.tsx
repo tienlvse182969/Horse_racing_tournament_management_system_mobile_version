@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert, TextInput, Modal, Pressable } from 'react-native';
-import { CircleCheck, Circle, Target, Coins, X } from 'lucide-react-native';
+import { Image } from 'expo-image';
+import { CircleCheck, Circle, Target, Coins, X, Calendar, Clock } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
@@ -9,6 +10,8 @@ import { formatCurrency, formatDate, formatNumber } from '@/mock-data';
 import { useSpectatorPoints, useSpectatorRaces } from '@/hooks/useSpectatorData';
 import { spectatorApi } from '@/api/spectator.api';
 import { NumberWheelPicker } from '@/components/ui/number-wheel-picker';
+
+const HORSE_AVATAR = require('@/assets/images/a-horse-with-long-hair-and-a-white-mane-free-photo.jpeg');
 
 type Props = { onSubmitted: () => void };
 
@@ -104,30 +107,31 @@ export function PredictForm({ onSubmitted }: Props) {
       <View style={styles.raceList}>
         {predictableRaces.map(race => {
           const isSelected = selectedRaceId === race.id;
+          const isLive = race.status === 'live';
           return (
             <TouchableOpacity
               key={race.id}
               style={[styles.raceItem, isSelected && styles.raceItemSelected]}
               onPress={() => handleSelectRace(race.id)}
-              activeOpacity={0.8}>
-              <View style={styles.raceItemLeft}>
+              activeOpacity={0.85}>
+              <View style={styles.raceItemHeader}>
+                <View style={[styles.raceBadge, isLive ? styles.raceBadgeLive : styles.raceBadgeUpcoming]}>
+                  <Text style={[styles.raceBadgeText, isLive ? styles.raceBadgeTextLive : styles.raceBadgeTextUpcoming]}>
+                    {isLive ? 'ĐANG DIỄN RA' : 'SẮP DIỄN RA'}
+                  </Text>
+                </View>
                 {isSelected
                   ? <CircleCheck size={20} color={C.primary} />
                   : <Circle size={20} color={C.onSurfaceVariant} />}
-                <View style={styles.raceItemText}>
-                  <Text style={[styles.raceItemName, isSelected && styles.raceItemNameSelected]} numberOfLines={1}>
-                    {race.name}
-                  </Text>
-                  <Text style={styles.raceItemMeta}>
-                    {formatDate(race.date)} · {race.time} · {formatCurrency(race.purse)}
-                  </Text>
-                </View>
               </View>
-              {race.status === 'live' && (
-                <View style={styles.livePill}>
-                  <Text style={styles.livePillText}>LIVE</Text>
-                </View>
-              )}
+              <Text style={[styles.raceItemName, isSelected && styles.raceItemNameSelected]} numberOfLines={1}>
+                {race.name}
+              </Text>
+              <View style={styles.raceMetaRow}>
+                <RaceMetaChip Icon={Calendar} text={formatDate(race.date)} />
+                <RaceMetaChip Icon={Clock} text={race.time} />
+                <RaceMetaChip Icon={Coins} text={`${formatNumber(race.purse)} điểm`} />
+              </View>
             </TouchableOpacity>
           );
         })}
@@ -146,12 +150,12 @@ export function PredictForm({ onSubmitted }: Props) {
                   style={[styles.horseItem, isSelected && styles.horseItemSelected]}
                   onPress={() => setSelectedHorseId(entry.horse.id)}
                   activeOpacity={0.8}>
-                  <View style={[styles.horseColorCircle, { backgroundColor: entry.horse.color }]}>
-                    <Text style={styles.horseNumber}>{entry.horse.number}</Text>
+                  <View style={[styles.horseAvatar, { borderColor: entry.horse.color }]}>
+                    <Image source={HORSE_AVATAR} style={styles.horseAvatarImg} contentFit="cover" />
                   </View>
                   <View style={styles.horseInfo}>
                     <Text style={[styles.horseName, isSelected && styles.horseNameSelected]}>
-                      {entry.horse.name}
+                      #{entry.horse.number} - {entry.horse.name}
                     </Text>
                     {!!entry.jockeyName && <Text style={styles.jockeyName}>{entry.jockeyName}</Text>}
                   </View>
@@ -275,6 +279,17 @@ export function PredictForm({ onSubmitted }: Props) {
   );
 }
 
+function RaceMetaChip({ Icon, text }: { Icon: React.ComponentType<{ size?: number; color?: string }>; text: string }) {
+  const { C } = useAppColors();
+  const styles = useThemedStyles(createStyles);
+  return (
+    <View style={styles.raceMetaChip}>
+      <Icon size={11} color={C.onSurfaceVariant} />
+      <Text style={styles.raceMetaChipText}>{text}</Text>
+    </View>
+  );
+}
+
 function createStyles(C: AppColors, SC: SurfaceColors) {
   return StyleSheet.create({
   root: { gap: Spacing.three },
@@ -282,21 +297,28 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   stepLabel: { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 12, letterSpacing: 0.5, marginBottom: Spacing.one },
 
   raceList:            { gap: Spacing.two },
-  raceItem:            { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, gap: Spacing.two, borderWidth: 1, borderColor: 'transparent' },
+  raceItem:            { backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.three, gap: Spacing.two, borderWidth: 1, borderColor: 'transparent' },
   raceItemSelected:    { backgroundColor: C.primaryContainer, borderColor: C.primary },
-  raceItemLeft:        { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, flex: 1 },
-  raceItemText:        { flex: 1 },
-  raceItemName:        { color: C.onSurface, fontFamily: FontFamily.medium, fontSize: 13 },
+  raceItemHeader:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  raceBadge:           { borderRadius: Shape.full, paddingHorizontal: 10, paddingVertical: 3 },
+  raceBadgeLive:       { backgroundColor: C.error },
+  raceBadgeUpcoming:   { backgroundColor: `${C.secondary}30` },
+  raceBadgeText:       { fontFamily: FontFamily.bold, fontSize: 10, letterSpacing: 0.8 },
+  raceBadgeTextLive:   { color: '#FFFFFF' },
+  raceBadgeTextUpcoming:{ color: C.secondary },
+  raceItemName:        { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 16 },
   raceItemNameSelected:{ color: C.onPrimaryContainer },
-  raceItemMeta:        { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11, marginTop: 2 },
-  livePill:            { backgroundColor: C.error, borderRadius: Shape.full, paddingHorizontal: 8, paddingVertical: 2 },
-  livePillText:        { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 9, letterSpacing: 0.8 },
+  raceMetaRow:         { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.one },
+  raceMetaChip:        { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: `${C.onSurfaceVariant}15`, borderRadius: Shape.full, paddingHorizontal: 8, paddingVertical: 3 },
+  raceMetaChipText:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
 
   horseList:        { gap: Spacing.two },
   horseItem:        { flexDirection: 'row', alignItems: 'center', backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, gap: Spacing.two, borderWidth: 1, borderColor: 'transparent' },
   horseItemSelected:{ backgroundColor: C.primaryContainer, borderColor: C.primary },
   horseColorCircle: { width: 36, height: 36, borderRadius: Shape.full, justifyContent: 'center', alignItems: 'center' },
-  horseNumber:      { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 13 },
+  horseNumber:      { color: C.onSurface, fontFamily: FontFamily.medium, fontSize: 13 },
+  horseAvatar:      { width: 36, height: 36, borderRadius: Shape.full, borderWidth: 2, overflow: 'hidden' },
+  horseAvatarImg:   { width: '100%', height: '100%' },
   horseInfo:        { flex: 1 },
   horseName:        { color: C.onSurface, fontFamily: FontFamily.medium, fontSize: 13 },
   horseNameSelected:{ color: C.onPrimaryContainer },

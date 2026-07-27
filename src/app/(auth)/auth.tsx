@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -10,12 +10,15 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
+import { Image } from 'expo-image';
+import { BlurView, BlurTargetView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { Zap, Users } from 'lucide-react-native';
-import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
-import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
+import { Shape, Spacing, FontFamily } from '@/constants/theme';
+import { AuthColor } from '@/components/auth/auth-theme';
 import { AuthHeader } from '@/components/auth/auth-header';
 import { AuthTabSwitcher } from '@/components/auth/auth-tab-switcher';
 import { LoginForm } from '@/components/auth/login-form';
@@ -27,6 +30,8 @@ import { ApiError } from '@/api/client';
 import * as authApi from '@/api/auth.api';
 import { APP_VERSION } from '@/constants/version';
 
+const AUTH_BG = require('@/assets/images/authen.jpg');
+
 function redirectForRole(role: string) {
   if (role === 'jockey') router.replace('/jockey/home' as never);
   else if (role === 'spectator') router.replace('/(app)/home' as never);
@@ -35,8 +40,7 @@ function redirectForRole(role: string) {
 
 export default function AuthScreen() {
   const { login, registerSpectator } = useAuth();
-  const { C } = useAppColors();
-  const styles = useThemedStyles(createStyles);
+  const blurTargetRef = useRef<View>(null);
   const [activeTab, setActiveTab] = useState<Tab>('login');
   const [registerRole, setRegisterRole] = useState<RegisterRole | null>(null);
   const [email, setEmail] = useState('');
@@ -48,8 +52,8 @@ export default function AuthScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const isJockey = registerRole === 'jockey';
-  const roleColor = (activeTab === 'login' || isJockey) ? C.primary : C.tertiary;
-  const onRoleColor = (activeTab === 'login' || isJockey) ? C.onPrimary : C.onTertiary;
+  const roleColor = (activeTab === 'login' || isJockey) ? AuthColor.primary : AuthColor.tertiary;
+  const onRoleColor = (activeTab === 'login' || isJockey) ? AuthColor.onPrimary : AuthColor.onTertiary;
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
@@ -87,9 +91,17 @@ export default function AuthScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.root}>
+      <BlurTargetView ref={blurTargetRef} style={StyleSheet.absoluteFill}>
+        <Image source={AUTH_BG} style={StyleSheet.absoluteFill} contentFit="cover" />
+        <LinearGradient
+          colors={['rgba(8,6,3,0.55)', 'rgba(8,6,3,0.35)', 'rgba(8,6,3,0.8)']}
+          locations={[0, 0.45, 1]}
+          style={StyleSheet.absoluteFill}
+        />
+      </BlurTargetView>
+
       <SafeAreaView style={styles.safeArea}>
-        <AuthHeader />
         <KeyboardAvoidingView
           style={styles.flex}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -98,68 +110,78 @@ export default function AuthScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
 
-            <Animated.View entering={FadeInDown.duration(380)}>
-              <Text style={styles.screenTitle}>
-                {activeTab === 'login' ? 'Đăng nhập' : 'Đăng ký tài khoản'}
-              </Text>
+            <Animated.View entering={FadeInDown.duration(420)}>
+              <AuthHeader
+                tagline={activeTab === 'login' ? 'Chào mừng trở lại đường đua' : 'Tham gia cộng đồng đua ngựa'}
+              />
             </Animated.View>
 
-            <Animated.View entering={FadeInDown.delay(60).duration(380)}>
-              <AuthTabSwitcher activeTab={activeTab} onTabChange={handleTabChange} />
-            </Animated.View>
+            <Animated.View entering={FadeInDown.delay(80).duration(420)} style={styles.cardWrap}>
+              <BlurView
+                blurTarget={blurTargetRef}
+                intensity={55}
+                tint="dark"
+                blurMethod="dimezisBlurView"
+                style={styles.card}>
+                <View style={styles.cardTint} pointerEvents="none" />
+                <View style={styles.cardContent}>
+                  <AuthTabSwitcher activeTab={activeTab} onTabChange={handleTabChange} />
 
-            {error && <Text style={styles.errorText}>{error}</Text>}
+                  {error && <Text style={styles.errorText}>{error}</Text>}
 
-            {activeTab === 'login' && (
-              <LoginForm
-                email={email}
-                password={password}
-                onEmailChange={setEmail}
-                onPasswordChange={setPassword}
-              />
-            )}
-
-            {activeTab === 'register' && registerRole === null && (
-              <RegisterRoleSelection onSelect={setRegisterRole} />
-            )}
-
-            {activeTab === 'register' && registerRole !== null && (
-              <RegisterForm
-                registerRole={registerRole}
-                onChangeRole={() => setRegisterRole(null)}
-                name={name}
-                email={regEmail}
-                password={regPassword}
-                onNameChange={setName}
-                onEmailChange={setRegEmail}
-                onPasswordChange={setRegPassword}
-              />
-            )}
-
-            {(activeTab === 'login' || registerRole !== null) && (
-              <Animated.View entering={FadeIn.delay(140).duration(380)}>
-                <TouchableOpacity
-                  style={[styles.submitBtn, { backgroundColor: roleColor }]}
-                  onPress={handleSubmit}
-                  disabled={loading}
-                  activeOpacity={0.85}>
-                  {loading ? (
-                    <ActivityIndicator color={onRoleColor} />
-                  ) : activeTab === 'login' ? (
-                    <Text style={[styles.submitText, { color: onRoleColor }]}>Đăng nhập</Text>
-                  ) : (
-                    <View style={styles.submitInner}>
-                      {isJockey
-                        ? <Zap size={16} color={onRoleColor} />
-                        : <Users size={16} color={onRoleColor} />}
-                      <Text style={[styles.submitText, { color: onRoleColor }]}>
-                        {isJockey ? 'Đăng ký Kỵ sĩ' : 'Đăng ký Khán Giả'}
-                      </Text>
-                    </View>
+                  {activeTab === 'login' && (
+                    <LoginForm
+                      email={email}
+                      password={password}
+                      onEmailChange={setEmail}
+                      onPasswordChange={setPassword}
+                    />
                   )}
-                </TouchableOpacity>
-              </Animated.View>
-            )}
+
+                  {activeTab === 'register' && registerRole === null && (
+                    <RegisterRoleSelection onSelect={setRegisterRole} />
+                  )}
+
+                  {activeTab === 'register' && registerRole !== null && (
+                    <RegisterForm
+                      registerRole={registerRole}
+                      onChangeRole={() => setRegisterRole(null)}
+                      name={name}
+                      email={regEmail}
+                      password={regPassword}
+                      onNameChange={setName}
+                      onEmailChange={setRegEmail}
+                      onPasswordChange={setRegPassword}
+                    />
+                  )}
+
+                  {(activeTab === 'login' || registerRole !== null) && (
+                    <Animated.View entering={FadeIn.delay(140).duration(380)}>
+                      <TouchableOpacity
+                        style={[styles.submitBtn, { backgroundColor: roleColor }]}
+                        onPress={handleSubmit}
+                        disabled={loading}
+                        activeOpacity={0.85}>
+                        {loading ? (
+                          <ActivityIndicator color={onRoleColor} />
+                        ) : activeTab === 'login' ? (
+                          <Text style={[styles.submitText, { color: onRoleColor }]}>Đăng nhập</Text>
+                        ) : (
+                          <View style={styles.submitInner}>
+                            {isJockey
+                              ? <Zap size={16} color={onRoleColor} />
+                              : <Users size={16} color={onRoleColor} />}
+                            <Text style={[styles.submitText, { color: onRoleColor }]}>
+                              {isJockey ? 'Đăng ký Kỵ sĩ' : 'Đăng ký Khán Giả'}
+                            </Text>
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    </Animated.View>
+                  )}
+                </View>
+              </BlurView>
+            </Animated.View>
 
             <Text style={styles.versionText}>Phiên bản {APP_VERSION}</Text>
           </ScrollView>
@@ -169,17 +191,25 @@ export default function AuthScreen() {
   );
 }
 
-function createStyles(C: AppColors, SC: SurfaceColors) {
-  return StyleSheet.create({
-  container:   { flex: 1, backgroundColor: SC.low },
-  safeArea:    { flex: 1 },
-  flex:        { flex: 1 },
-  scroll:      { padding: Spacing.three, paddingBottom: Spacing.five },
-  screenTitle: { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 28, marginBottom: Spacing.three, marginTop: Spacing.two },
-  submitBtn:   { borderRadius: Shape.full, height: 52, justifyContent: 'center', alignItems: 'center', marginTop: Spacing.two, marginBottom: Spacing.two },
+const styles = StyleSheet.create({
+  root:     { flex: 1, backgroundColor: '#000000' },
+  safeArea: { flex: 1 },
+  flex:     { flex: 1 },
+  scroll:   { flexGrow: 1, justifyContent: 'center', padding: Spacing.three, paddingVertical: Spacing.five },
+
+  cardWrap: { width: '100%', maxWidth: 440, alignSelf: 'center' },
+  card: {
+    borderRadius: Shape.extraLarge,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: AuthColor.border,
+  },
+  cardTint: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: AuthColor.cardTint },
+  cardContent: { padding: Spacing.four },
+
+  submitBtn:   { borderRadius: Shape.full, height: 52, justifyContent: 'center', alignItems: 'center', marginTop: Spacing.two },
   submitInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   submitText:  { fontFamily: FontFamily.bold, fontSize: 16, letterSpacing: 0.5 },
-  errorText:   { color: C.error, fontFamily: FontFamily.medium, fontSize: 13, marginBottom: Spacing.two },
-  versionText:      { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12, textAlign: 'center', marginTop: Spacing.two },
-  });
-}
+  errorText:   { color: AuthColor.error, fontFamily: FontFamily.medium, fontSize: 13, marginBottom: Spacing.two },
+  versionText: { color: AuthColor.textFaint, fontFamily: FontFamily.regular, fontSize: 12, textAlign: 'center', marginTop: Spacing.four },
+});
