@@ -22,7 +22,11 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.horse_racing_tournament_management_system_mobile_version"
+      "package": "com.anonymous.horse_racing_tournament_management_system_mobile_version",
+      "permissions": [
+        "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR"
+      ]
     },
     "web": {
       "output": "static",
@@ -52,6 +56,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "a9b28041-fea6-4468-99a4-34f5937f5cb9"
+      }
+    },
+    "owner": "maykhoi614"
   }
 }
