@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Gift, Flag, Target, Trophy, Bell } from 'lucide-react-native';
@@ -11,6 +10,7 @@ import type { Notification, NotificationType } from '@/mock-data';
 import { formatCurrency } from '@/mock-data';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useJockeyNotifications } from '@/hooks/useJockeyData';
+import { markAllNotificationsRead, markNotificationRead } from '@/api/notifications.api';
 
 type NotifIconComp = React.ComponentType<{ size?: number; color?: string }>;
 
@@ -40,8 +40,14 @@ export function JockeyNotifications() {
   const { notifications: items, setNotifications } = useJockeyNotifications();
   const unread = items.filter(n => !n.read).length;
 
-  const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  const markRead    = (id: string) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  const markAllRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    markAllNotificationsRead().catch(() => {});
+  };
+  const markRead = (id: string) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    markNotificationRead(id).catch(() => {});
+  };
 
   return (
     <View style={styles.root}>

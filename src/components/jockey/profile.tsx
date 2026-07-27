@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, Pressable } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, Pressable, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Zap, Trophy, Award, ChartBar, ChevronRight, LogOut, UserPen, Lock, Info, X, SunMoon } from 'lucide-react-native';
+import { ArrowLeft, Zap, Trophy, Award, ChartBar, ChevronRight, LogOut, UserPen, Lock, Info, X, SunMoon, Bell } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
@@ -14,6 +14,7 @@ import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useJockeyRaces } from '@/hooks/useJockeyData';
 import { formatDateFull, formatNumber } from '@/mock-data';
 import { APP_VERSION } from '@/constants/version';
+import { useNotificationSetting } from '@/hooks/useNotificationSetting';
 
 type IconComp = React.ComponentType<{ size?: number; color?: string }>;
 
@@ -27,6 +28,7 @@ export function JockeyProfile() {
   const styles = useThemedStyles(createStyles);
   const [aboutVisible, setAboutVisible] = useState(false);
   const [themeVisible, setThemeVisible] = useState(false);
+  const notificationSetting = useNotificationSetting();
 
   const POS_CONFIG: Record<number, { iconColor: string; bg: string; color: string }> = useMemo(() => ({
     1: { iconColor: C.secondary, bg: C.secondaryContainer, color: C.secondary },
@@ -175,6 +177,19 @@ export function JockeyProfile() {
           {/* Settings */}
           <Animated.View entering={FadeInDown.delay(440).duration(320)} style={styles.section}>
             <Text style={styles.sectionTitle}>Cài đặt</Text>
+            <View style={styles.settingRow}>
+              <View style={styles.settingIconWrap}>
+                <Bell size={20} color={C.onSurfaceVariant} />
+              </View>
+              <Text style={styles.settingLabel}>Thông báo</Text>
+              <Switch
+                value={notificationSetting.enabled}
+                disabled={notificationSetting.loading}
+                onValueChange={() => notificationSetting.toggle().catch(() => {})}
+                trackColor={{ false: SC.highest, true: C.primaryContainer }}
+                thumbColor={notificationSetting.enabled ? C.primary : C.onSurfaceVariant}
+              />
+            </View>
             {SETTINGS.map(s => (
               <TouchableOpacity key={s.label} style={styles.settingRow} activeOpacity={0.75} onPress={s.onPress}>
                 <View style={styles.settingIconWrap}>

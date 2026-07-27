@@ -1,7 +1,7 @@
 import '@/global.css';
 
 import { useEffect, useState } from 'react';
-import { ThemeProvider as NavThemeProvider, Stack } from 'expo-router';
+import { router, ThemeProvider as NavThemeProvider, Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
 import { PaperProvider } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
@@ -10,8 +10,9 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StartupSplash } from '@/components/startup-splash';
 import { FONT_ASSETS } from '@/constants/theme';
 
-import { AuthProvider } from '@/context/AuthContext';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { AppThemeProvider, useAppTheme } from '@/context/ThemeContext';
+import { addNotificationTapListener } from '@/lib/push-notifications';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -39,7 +40,19 @@ export default function RootLayout() {
 
 function ThemedApp() {
   const { paperTheme, navTheme, resolvedScheme } = useAppTheme();
+  const { user } = useAuth();
   const [showStartupSplash, setShowStartupSplash] = useState(true);
+
+  useEffect(() => {
+    const subscription = addNotificationTapListener(() => {
+      if (user?.role === 'jockey') {
+        router.push('/jockey/(tabs)/notifications' as never);
+        return;
+      }
+      router.push('/(app)/notifications' as never);
+    });
+    return () => subscription.remove();
+  }, [user?.role]);
 
   return (
     <PaperProvider theme={paperTheme}>

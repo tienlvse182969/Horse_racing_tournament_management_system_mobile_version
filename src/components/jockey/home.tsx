@@ -194,7 +194,7 @@ export function JockeyHome() {
           <Animated.View entering={FadeInDown.delay(160).duration(320)} style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Trận đấu sắp tới</Text>
-              <TouchableOpacity onPress={() => router.push('/jockey/assigned')}>
+              <TouchableOpacity onPress={() => router.push('/jockey/(tabs)/assigned' as never)}>
                 <Text style={styles.sectionLink}>Xem tất cả</Text>
               </TouchableOpacity>
             </View>

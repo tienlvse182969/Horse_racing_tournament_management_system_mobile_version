@@ -1,6 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import * as authApi from '@/api/auth.api';
+import * as notificationsApi from '@/api/notifications.api';
 import type { AuthUser } from '@/api/auth.api';
+import {
+  clearStoredPushToken,
+  getStoredPushToken,
+  registerForPushNotificationsAsync,
+} from '@/lib/push-notifications';
 
 const PENALTY_POLL_INTERVAL_MS = 8000;
 
@@ -40,6 +46,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(interval);
   }, [user?.id]);
 
+  useEffect(() => {
+    if (!user || (user.role !== 'spectator' && user.role !== 'jockey')) return;
+    registerForPushNotificationsAsync()
+      .then((token) => {
+        if (token) return notificationsApi.registerDeviceToken(token);
+      })
+      .catch(() => {});
+  }, [user?.id, user?.role]);
+
   const login = useCallback(async (email: string, password: string) => {
     setError(null);
     const { user: me } = await authApi.login(email, password);
@@ -62,6 +77,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
+    const pushToken = await getStoredPushToken();
+    if (pushToken) {
+      await notificationsApi.unregisterDeviceToken(pushToken).catch(() => {});
+      await clearStoredPushToken().catch(() => {});
+    }
     await authApi.logout();
     setUser(null);
   }, []);

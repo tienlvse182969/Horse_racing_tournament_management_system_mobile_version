@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, Pressable } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, Pressable, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   ArrowLeft, Calendar, Target, CircleCheck, CircleX, Star, ChartBar,
-  Clock, ChevronRight, LogOut, Lock, Info, X, Wallet, SunMoon,
+  Clock, ChevronRight, LogOut, Lock, Info, X, Wallet, SunMoon, Bell,
 } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
@@ -17,6 +17,7 @@ import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useSpectatorPoints, useSpectatorPredictions } from '@/hooks/useSpectatorData';
 import { formatCurrency, formatDate, formatNumber } from '@/mock-data';
 import { APP_VERSION } from '@/constants/version';
+import { useNotificationSetting } from '@/hooks/useNotificationSetting';
 
 type SettingItem = { Icon: React.ComponentType<{ size?: number; color?: string }>; label: string; onPress: () => void };
 
@@ -28,6 +29,7 @@ export function SpectatorProfile() {
   const { predictions } = useSpectatorPredictions();
   const [aboutVisible, setAboutVisible] = useState(false);
   const [themeVisible, setThemeVisible] = useState(false);
+  const notificationSetting = useNotificationSetting();
 
   const STATUS_CONFIG = useMemo(() => ({
     won:     { color: C.tertiary,  bg: C.tertiaryContainer,  label: 'Đúng' },
@@ -148,6 +150,19 @@ export function SpectatorProfile() {
           {/* Settings */}
           <Animated.View entering={FadeInDown.delay(260).duration(320)} style={styles.section}>
             <Text style={styles.sectionTitle}>Cài đặt</Text>
+            <View style={styles.settingRow}>
+              <View style={styles.settingIconWrap}>
+                <Bell size={20} color={C.onSurfaceVariant} />
+              </View>
+              <Text style={styles.settingLabel}>Thông báo</Text>
+              <Switch
+                value={notificationSetting.enabled}
+                disabled={notificationSetting.loading}
+                onValueChange={() => notificationSetting.toggle().catch(() => {})}
+                trackColor={{ false: SC.highest, true: C.primaryContainer }}
+                thumbColor={notificationSetting.enabled ? C.primary : C.onSurfaceVariant}
+              />
+            </View>
             {SETTINGS.map(s => (
               <TouchableOpacity key={s.label} style={styles.settingRow} activeOpacity={0.75} onPress={s.onPress}>
                 <View style={styles.settingIconWrap}>
