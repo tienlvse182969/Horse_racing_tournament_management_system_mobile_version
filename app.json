@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "horse_racing_tournament_management_system_mobile_version",
+    "name": "RacetrackVN",
     "slug": "horse_racing_tournament_management_system_mobile_version",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/RacetrackVN_logo.png",
     "scheme": "horseracingtournamentmanagementsystemmobileversion",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
+      "icon": "./assets/images/RacetrackVN_logo.png",
       "infoPlist": {
         "NSCalendarsUsageDescription": "Ứng dụng cần quyền truy cập lịch để thêm sự kiện đua ngựa.",
         "NSCalendarsFullAccessUsageDescription": "Ứng dụng cần quyền truy cập lịch để thêm sự kiện đua ngựa."
@@ -16,10 +16,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#170A0A",
+        "foregroundImage": "./assets/images/RacetrackVN_logo.png"
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.anonymous.horse_racing_tournament_management_system_mobile_version",
@@ -46,11 +44,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
-          "android": {
-            "image": "./assets/images/splash-icon.png",
-            "imageWidth": 76
-          }
+          "backgroundColor": "#170A0A",
+          "image": "./assets/images/RacetrackVN_logo.png",
+          "imageWidth": 200
         }
       ],
       "expo-video"
