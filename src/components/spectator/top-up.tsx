@@ -15,9 +15,9 @@ import { spectatorApi } from '@/api/spectator.api';
 import { ApiError } from '@/api/client';
 import { formatNumber } from '@/mock-data';
 
-const QUICK_AMOUNTS = [100, 500, 1000, 5000];
+const QUICK_AMOUNTS = [100_000, 500_000, 1_000_000, 5_000_000];
 const MIN_POINTS = 100;
-const VND_PER_POINT = 1000;
+const VND_PER_POINT = 0.01;
 
 function statusLabel(C: AppColors): Record<string, { label: string; color: string }> {
   return {
@@ -35,13 +35,13 @@ export function TopUp() {
   const STATUS_LABEL = statusLabel(C);
   const { balance, reload: reloadPoints } = useSpectatorPoints();
   const { topUps, reload: reloadTopUps } = useSpectatorTopUps();
-  const [points, setPoints] = useState('500');
+  const [points, setPoints] = useState('100000');
   const [mockLoading, setMockLoading] = useState(false);
   const [payosLoading, setPayosLoading] = useState(false);
 
   const parsedPoints = parseInt(points, 10) || 0;
   const validPoints = Number.isInteger(parsedPoints) && parsedPoints >= MIN_POINTS;
-  const cost = parsedPoints * VND_PER_POINT;
+  const cost = Math.ceil(parsedPoints * VND_PER_POINT);
 
   const refreshAll = () => { reloadPoints(); reloadTopUps(); };
 
