@@ -1,30 +1,42 @@
 import { View, Text, StyleSheet } from 'react-native';
 
-import { Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
-import { useThemedStyles } from '@/hooks/use-theme';
+import { FontFamily, Spacing } from '@/constants/theme';
+import { AuthColor } from './auth-theme';
 
-export function AuthHeader() {
-  const styles = useThemedStyles(createStyles);
+type Props = { tagline: string };
+
+export function AuthHeader({ tagline }: Props) {
   return (
     <View style={styles.header}>
       <Text style={styles.appName}>RaceTrack VN</Text>
+      <Text style={styles.tagline}>{tagline}</Text>
     </View>
   );
 }
 
-function createStyles(C: AppColors, SC: SurfaceColors) {
-  return StyleSheet.create({
-    header: {
-      paddingVertical: Spacing.three,
-      paddingHorizontal: Spacing.three,
-      backgroundColor: SC.high,
-    },
-    appName: {
-      color: C.primary,
-      fontFamily: FontFamily.bangers,
-      fontSize: 32,
-      letterSpacing: 3,
-      textAlign: 'center',
-    },
-  });
-}
+const styles = StyleSheet.create({
+  header: {
+    alignItems: 'center',
+    marginBottom: Spacing.four,
+  },
+  appName: {
+    color: '#FFFFFF',
+    fontFamily: FontFamily.bangers,
+    fontSize: 40,
+    letterSpacing: 3,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.45)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
+  },
+  tagline: {
+    color: AuthColor.textMuted,
+    fontFamily: FontFamily.medium,
+    fontSize: 14,
+    marginTop: Spacing.one,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+});

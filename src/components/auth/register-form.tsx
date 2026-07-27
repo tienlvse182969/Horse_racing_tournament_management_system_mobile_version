@@ -4,8 +4,8 @@ import { TextInput } from 'react-native-paper';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { Zap, Users, User, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
 
-import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
-import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
+import { Shape, Spacing, FontFamily } from '@/constants/theme';
+import { AuthColor, withAlpha } from './auth-theme';
 import type { RegisterRole } from './types';
 
 type Props = {
@@ -29,20 +29,27 @@ export function RegisterForm({
   onEmailChange,
   onPasswordChange,
 }: Props) {
-  const { C } = useAppColors();
-  const styles = useThemedStyles(createStyles);
   const [pwVisible, setPwVisible] = useState(false);
 
-  const isJockey       = registerRole === 'jockey';
-  const accentColor    = isJockey ? C.primary : C.tertiary;
-  const containerColor = isJockey ? C.primaryContainer : C.tertiaryContainer;
-  const inputTheme     = isJockey ? undefined : { colors: { primary: C.tertiary } };
+  const isJockey    = registerRole === 'jockey';
+  const accentColor = isJockey ? AuthColor.primary : AuthColor.tertiary;
+  const badgeFill    = withAlpha(isJockey ? AuthColor.primary : AuthColor.tertiary, '26');
+  const inputTheme = {
+    colors: {
+      primary: accentColor,
+      onSurfaceVariant: AuthColor.textMuted,
+      outline: AuthColor.borderStrong,
+      onSurface: AuthColor.text,
+      background: AuthColor.fieldFill,
+      error: AuthColor.error,
+    },
+  };
 
   return (
     <Animated.View entering={FadeIn.duration(220)}>
       <Animated.View entering={FadeInDown.duration(300)} style={styles.form}>
         <View style={styles.roleBadgeRow}>
-          <View style={[styles.roleBadge, { backgroundColor: containerColor }]}>
+          <View style={[styles.roleBadge, { backgroundColor: badgeFill }]}>
             {isJockey
               ? <Zap size={16} color={accentColor} />
               : <Users size={16} color={accentColor} />}
@@ -66,8 +73,9 @@ export function RegisterForm({
           value={name}
           onChangeText={onNameChange}
           mode="outlined"
-          left={<TextInput.Icon icon={({ color, size }) => <User color={color} size={size} />} />}
+          left={<TextInput.Icon icon={({ size }) => <User color={AuthColor.textMuted} size={size} />} />}
           theme={inputTheme}
+          textColor={AuthColor.text}
         />
         <TextInput
           label="Email"
@@ -76,8 +84,9 @@ export function RegisterForm({
           mode="outlined"
           keyboardType="email-address"
           autoCapitalize="none"
-          left={<TextInput.Icon icon={({ color, size }) => <Mail color={color} size={size} />} />}
+          left={<TextInput.Icon icon={({ size }) => <Mail color={AuthColor.textMuted} size={size} />} />}
           theme={inputTheme}
+          textColor={AuthColor.text}
         />
         <TextInput
           label="Mật khẩu"
@@ -85,32 +94,31 @@ export function RegisterForm({
           onChangeText={onPasswordChange}
           mode="outlined"
           secureTextEntry={!pwVisible}
-          left={<TextInput.Icon icon={({ color, size }) => <Lock color={color} size={size} />} />}
+          left={<TextInput.Icon icon={({ size }) => <Lock color={AuthColor.textMuted} size={size} />} />}
           right={
             <TextInput.Icon
-              icon={({ color, size }) =>
+              icon={({ size }) =>
                 pwVisible
-                  ? <EyeOff color={color} size={size} />
-                  : <Eye color={color} size={size} />
+                  ? <EyeOff color={AuthColor.textMuted} size={size} />
+                  : <Eye color={AuthColor.textMuted} size={size} />
               }
               onPress={() => setPwVisible(v => !v)}
             />
           }
           theme={inputTheme}
+          textColor={AuthColor.text}
         />
       </Animated.View>
     </Animated.View>
   );
 }
 
-function createStyles(C: AppColors, SC: SurfaceColors) {
-  return StyleSheet.create({
-    form: { gap: Spacing.two, marginBottom: Spacing.two },
-    roleBadgeRow:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.one },
-    roleBadge:      { flexDirection: 'row', alignItems: 'center', gap: Spacing.one, paddingVertical: 6, paddingHorizontal: Spacing.two, borderRadius: Shape.full },
-    roleBadgeLabel: { fontFamily: FontFamily.medium, fontSize: 13 },
-    changeRoleBtn:  { paddingVertical: 6, paddingHorizontal: Spacing.one },
-    changeRoleText: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 13, textDecorationLine: 'underline' },
-    notice: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 13, marginBottom: Spacing.one },
-  });
-}
+const styles = StyleSheet.create({
+  form: { gap: Spacing.two, marginBottom: Spacing.two },
+  roleBadgeRow:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.one },
+  roleBadge:      { flexDirection: 'row', alignItems: 'center', gap: Spacing.one, paddingVertical: 6, paddingHorizontal: Spacing.two, borderRadius: Shape.full },
+  roleBadgeLabel: { fontFamily: FontFamily.medium, fontSize: 13 },
+  changeRoleBtn:  { paddingVertical: 6, paddingHorizontal: Spacing.one },
+  changeRoleText: { color: AuthColor.textMuted, fontFamily: FontFamily.regular, fontSize: 13, textDecorationLine: 'underline' },
+  notice: { color: AuthColor.textMuted, fontFamily: FontFamily.regular, fontSize: 13, marginBottom: Spacing.one },
+});

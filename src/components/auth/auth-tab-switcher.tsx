@@ -7,8 +7,8 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 
-import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
-import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
+import { Shape, Spacing, FontFamily } from '@/constants/theme';
+import { AuthColor } from './auth-theme';
 import type { Tab } from './types';
 
 type Props = {
@@ -17,8 +17,6 @@ type Props = {
 };
 
 export function AuthTabSwitcher({ activeTab, onTabChange }: Props) {
-  const { C } = useAppColors();
-  const styles = useThemedStyles(createStyles);
   const containerWRef    = useRef(0);
   const containerWShared = useSharedValue(0);
   const pillOffset       = useSharedValue(0);
@@ -45,14 +43,14 @@ export function AuthTabSwitcher({ activeTab, onTabChange }: Props) {
 
   return (
     <Animated.View style={styles.tabContainer} onLayout={handleLayout}>
-      <Animated.View style={[styles.activePill, { backgroundColor: C.primary }, pillStyle]} />
+      <Animated.View style={[styles.activePill, { backgroundColor: activeTab === 'login' ? AuthColor.primary : AuthColor.tertiary }, pillStyle]} />
       <TouchableOpacity style={styles.tabItem} onPress={() => handlePress('login')}>
-        <Text style={[styles.tabText, activeTab === 'login' && styles.tabTextActive]}>
+        <Text style={[styles.tabText, activeTab === 'login' && [styles.tabTextActive, { color: AuthColor.onPrimary }]]}>
           Đăng nhập
         </Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.tabItem} onPress={() => handlePress('register')}>
-        <Text style={[styles.tabText, activeTab === 'register' && styles.tabTextActive]}>
+        <Text style={[styles.tabText, activeTab === 'register' && [styles.tabTextActive, { color: AuthColor.onTertiary }]]}>
           Đăng ký
         </Text>
       </TouchableOpacity>
@@ -60,17 +58,18 @@ export function AuthTabSwitcher({ activeTab, onTabChange }: Props) {
   );
 }
 
-function createStyles(C: AppColors, SC: SurfaceColors) {
-  return StyleSheet.create({
+const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: SC.base,
+    backgroundColor: AuthColor.chipFill,
     borderRadius: Shape.full,
     padding: 4,
     position: 'relative',
     height: 48,
     alignItems: 'center',
     marginBottom: Spacing.three,
+    borderWidth: 1,
+    borderColor: AuthColor.border,
   },
   activePill: {
     position: 'absolute',
@@ -86,7 +85,6 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
     alignItems: 'center',
     zIndex: 1,
   },
-  tabText:       { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 14 },
-  tabTextActive: { color: C.onPrimary },
-  });
-}
+  tabText:       { color: AuthColor.textMuted, fontFamily: FontFamily.medium, fontSize: 14 },
+  tabTextActive: { fontFamily: FontFamily.bold },
+});
