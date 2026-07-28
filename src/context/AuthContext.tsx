@@ -15,7 +15,7 @@ interface AuthContextValue {
   loading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<AuthUser>;
-  registerSpectator: (email: string, password: string, fullName: string) => Promise<AuthUser>;
+  registerSpectator: (email: string, password: string, fullName: string, phone?: string) => Promise<AuthUser>;
   updateProfile: (input: { fullName?: string; phone?: string }) => Promise<AuthUser>;
   logout: () => Promise<void>;
   clearError: () => void;
@@ -63,9 +63,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return me;
   }, []);
 
-  const registerSpectator = useCallback(async (email: string, password: string, fullName: string) => {
+  const registerSpectator = useCallback(async (email: string, password: string, fullName: string, phone?: string) => {
     setError(null);
-    const { user: me } = await authApi.registerSpectator(email, password, fullName);
+    const { user: me } = await authApi.registerSpectator(email, password, fullName, phone);
     setUser(me);
     return me;
   }, []);
