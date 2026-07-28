@@ -45,7 +45,7 @@ export function SpectatorRewardsHistory() {
   const { C } = useAppColors();
   const styles = useThemedStyles(createStyles);
   const { balance, totalEarned, totalSpent, transactions, reload } = useSpectatorPoints();
-  const [topUpPoints, setTopUpPoints] = useState('100');
+  const [topUpPoints, setTopUpPoints] = useState('100000');
   const [submitting, setSubmitting] = useState(false);
   const [topUpVisible, setTopUpVisible] = useState(false);
 
@@ -191,14 +191,14 @@ export function SpectatorRewardsHistory() {
               <X size={20} color={C.onSurfaceVariant} />
             </Pressable>
             <Text style={styles.topUpTitle}>Nạp thêm điểm thưởng</Text>
-            <Text style={styles.topUpSub}>1000 VND = 1 điểm · tối thiểu 100 điểm</Text>
+            <Text style={styles.topUpSub}>1000 VND = 100000 điểm · tối thiểu 100 điểm</Text>
             <TextInput
               style={styles.topUpInput}
               keyboardType="number-pad"
               value={topUpPoints}
               editable={!submitting}
               onChangeText={setTopUpPoints}
-              placeholder="100"
+              placeholder="100000"
               placeholderTextColor={C.onSurfaceVariant}
             />
             <View style={styles.topUpActions}>
