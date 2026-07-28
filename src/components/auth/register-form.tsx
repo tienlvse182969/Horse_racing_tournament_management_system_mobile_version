@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { TextInput } from 'react-native-paper';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { Zap, Users, User, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
+import { Zap, Users, User, Mail, Lock, Eye, EyeOff, FileText, X } from 'lucide-react-native';
+import * as DocumentPicker from 'expo-document-picker';
 
 import { Shape, Spacing, FontFamily } from '@/constants/theme';
 import { AuthColor, withAlpha } from './auth-theme';
@@ -14,9 +15,11 @@ type Props = {
   name: string;
   email: string;
   password: string;
+  licenseDocument: DocumentPicker.DocumentPickerAsset | null;
   onNameChange: (v: string) => void;
   onEmailChange: (v: string) => void;
   onPasswordChange: (v: string) => void;
+  onLicenseDocumentChange: (doc: DocumentPicker.DocumentPickerAsset | null) => void;
 };
 
 export function RegisterForm({
@@ -25,13 +28,28 @@ export function RegisterForm({
   name,
   email,
   password,
+  licenseDocument,
   onNameChange,
   onEmailChange,
   onPasswordChange,
+  onLicenseDocumentChange,
 }: Props) {
   const [pwVisible, setPwVisible] = useState(false);
 
   const isJockey    = registerRole === 'jockey';
+
+  async function handlePickDocument() {
+    const result = await DocumentPicker.getDocumentAsync({ type: 'application/pdf' });
+    if (result.canceled || !result.assets?.length) return;
+
+    const asset = result.assets[0];
+    if (asset.size && asset.size > 10 * 1024 * 1024) {
+      Alert.alert('Tệp quá lớn', 'Vui lòng chọn file PDF dưới 10MB.');
+      return;
+    }
+    onLicenseDocumentChange(asset);
+  }
+
   const accentColor = isJockey ? AuthColor.primary : AuthColor.tertiary;
   const badgeFill    = withAlpha(isJockey ? AuthColor.primary : AuthColor.tertiary, '26');
   const inputTheme = {
@@ -108,6 +126,26 @@ export function RegisterForm({
           theme={inputTheme}
           textColor={AuthColor.text}
         />
+
+        {isJockey && (
+          <View>
+            <Text style={styles.fieldLabel}>Hồ sơ/chứng chỉ kỵ sĩ (PDF)</Text>
+            {licenseDocument ? (
+              <View style={styles.fileRow}>
+                <FileText size={18} color={accentColor} />
+                <Text style={styles.fileName} numberOfLines={1}>{licenseDocument.name}</Text>
+                <TouchableOpacity onPress={() => onLicenseDocumentChange(null)} hitSlop={8}>
+                  <X size={16} color={AuthColor.textMuted} />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity style={styles.uploadBtn} onPress={handlePickDocument} activeOpacity={0.85}>
+                <FileText size={18} color={accentColor} />
+                <Text style={[styles.uploadText, { color: accentColor }]}>Chọn file PDF</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </Animated.View>
     </Animated.View>
   );
@@ -121,4 +159,29 @@ const styles = StyleSheet.create({
   changeRoleBtn:  { paddingVertical: 6, paddingHorizontal: Spacing.one },
   changeRoleText: { color: AuthColor.textMuted, fontFamily: FontFamily.regular, fontSize: 13, textDecorationLine: 'underline' },
   notice: { color: AuthColor.textMuted, fontFamily: FontFamily.regular, fontSize: 13, marginBottom: Spacing.one },
+  fieldLabel: { color: AuthColor.textMuted, fontFamily: FontFamily.regular, fontSize: 13, marginBottom: 6 },
+  uploadBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: AuthColor.borderStrong,
+    borderRadius: Shape.medium,
+    paddingVertical: 12,
+    paddingHorizontal: Spacing.two,
+  },
+  uploadText: { fontFamily: FontFamily.medium, fontSize: 14 },
+  fileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+    borderWidth: 1,
+    borderColor: AuthColor.borderStrong,
+    borderRadius: Shape.medium,
+    paddingVertical: 10,
+    paddingHorizontal: Spacing.two,
+    backgroundColor: AuthColor.fieldFill,
+  },
+  fileName: { flex: 1, color: AuthColor.text, fontFamily: FontFamily.regular, fontSize: 13 },
 });

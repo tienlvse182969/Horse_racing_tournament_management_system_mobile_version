@@ -18,6 +18,7 @@ import { useJockeyDashboard, useJockeyInvitations, useJockeyPoints, useJockeyRac
 import { formatCurrency, formatDate, formatNumber } from '@/mock-data';
 
 const HERO_BG = require('@/assets/images/Meisho-Tabaru-Takarazuka-Kinen-scaled.png');
+const JOCKEY_AVATAR = require('@/assets/images/jockey_avt.jpg');
 
 function RaceDayCountdown({ date, time }: { date: string; time: string }) {
   const styles = useThemedStyles(createStyles);
@@ -55,7 +56,6 @@ export function JockeyHome() {
     .filter(r => r.status === 'upcoming' && r.date !== today)
     .slice(0, 3);
   const displayName = user?.fullName ?? 'Kỵ sĩ';
-  const initials = displayName.split(' ').map(w => w[0]).join('').slice(-2).toUpperCase();
   const completedRaces = jockeyRaces.filter(r => r.status === 'completed' && r.myEntry.position);
   const completedCount = completedRaces.length;
   const wins = completedRaces.filter(r => r.myEntry.position === 1).length;
@@ -101,7 +101,7 @@ export function JockeyHome() {
                   </Text>
                 </View>
                 <View style={styles.heroAvatar}>
-                  <Text style={styles.heroInitials}>{initials}</Text>
+                  <Image source={JOCKEY_AVATAR} style={styles.heroAvatarImg} contentFit="cover" />
                 </View>
               </View>
 
@@ -264,8 +264,8 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   heroGreetingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   heroGreeting:  { color: 'rgba(255,217,180,0.7)', fontFamily: FontFamily.medium, fontSize: 12 },
   heroName:      { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 22, letterSpacing: -0.3 },
-  heroAvatar:    { width: 56, height: 56, borderRadius: Shape.medium, backgroundColor: 'rgba(255,217,180,0.15)', borderWidth: 1.5, borderColor: 'rgba(255,217,180,0.3)', justifyContent: 'center', alignItems: 'center' },
-  heroInitials:  { color: '#FFD9B4', fontFamily: FontFamily.bold, fontSize: 22 },
+  heroAvatar:    { width: 56, height: 56, borderRadius: Shape.medium, backgroundColor: 'rgba(255,217,180,0.15)', borderWidth: 1.5, borderColor: 'rgba(255,217,180,0.3)', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  heroAvatarImg: { width: '100%', height: '100%' },
   statsRow:      { flexDirection: 'row', gap: Spacing.two },
   statBox:       { flex: 1, backgroundColor: 'rgba(255,217,180,0.1)', borderRadius: Shape.large, padding: Spacing.two, alignItems: 'center', gap: 2, overflow: 'hidden' },
   statValue:     { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 18 },

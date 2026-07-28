@@ -1,15 +1,17 @@
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
+import { Image } from 'expo-image';
 
-import { Shape, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { Shape, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { useThemedStyles } from '@/hooks/use-theme';
-import { currentJockey } from '@/mock-data';
+
+const JOCKEY_AVATAR = require('@/assets/images/jockey_avt.jpg');
 
 export function JockeyAvatarButton() {
   const styles = useThemedStyles(createStyles);
   return (
     <TouchableOpacity style={styles.btn} onPress={() => router.push('/jockey-profile')} activeOpacity={0.75}>
-      <Text style={styles.initials}>{currentJockey.initials}</Text>
+      <Image source={JOCKEY_AVATAR} style={styles.avatarImg} contentFit="cover" />
     </TouchableOpacity>
   );
 }
@@ -23,11 +25,11 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
       backgroundColor: SC.highest,
       justifyContent: 'center',
       alignItems: 'center',
+      overflow: 'hidden',
     },
-    initials: {
-      color: C.primary,
-      fontFamily: FontFamily.bold,
-      fontSize: 12,
+    avatarImg: {
+      width: '100%',
+      height: '100%',
     },
   });
 }

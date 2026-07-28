@@ -10,7 +10,7 @@ import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { JockeyHeaderActions } from '@/components/jockey-header-actions';
 import { JockeySuspensionBanner } from '@/components/jockey/jockey-suspension-banner';
 import type { Invitation, InvitationStatus } from '@/mock-data';
-import { formatCurrency, formatDateFull, isBeforeBanEnd } from '@/mock-data';
+import { formatNumber, formatDateFull, isBeforeBanEnd } from '@/mock-data';
 import { useAuth } from '@/context/AuthContext';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useJockeyInvitations } from '@/hooks/useJockeyData';
@@ -141,11 +141,9 @@ function InvitationCard({
     { Icon: Zap,          label: 'Giống ngựa', value: `${inv.horse.breed} · ${inv.horse.age} tuổi` },
     { Icon: MapPin,       label: 'Địa điểm',   value: inv.race.location },
     { Icon: ArrowLeftRight, label: 'Cự ly',    value: `${inv.race.distance}m · ${inv.race.surface}` },
-    { Icon: Trophy,       label: 'Giải thưởng', value: formatCurrency(inv.race.purse) },
+    { Icon: Trophy,       label: 'Giải thưởng', value: `${formatNumber(inv.race.purse)} đ` },
     { Icon: Handshake,    label: 'Chủ ngựa',   value: inv.ownerName },
-    { Icon: Calendar,     label: 'Lời mời gửi', value:
-        formatDateFull(inv.sentAt) + ' ' +
-        new Date(inv.sentAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) },
+    { Icon: Calendar,     label: 'Ngày thi đấu', value: `${formatDateFull(inv.race.date)} · ${inv.race.time}` },
   ];
 
   return (
@@ -166,7 +164,9 @@ function InvitationCard({
           <Text style={styles.raceName}>{inv.race.name}</Text>
           <View style={styles.raceMeta}>
             <Clock size={11} color={C.onSurfaceVariant} />
-            <Text style={styles.raceMetaText}>{formatDateFull(inv.race.date)} · {inv.race.time}</Text>
+            <Text style={styles.raceMetaText}>
+              {formatDateFull(inv.sentAt)} · {new Date(inv.sentAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+            </Text>
           </View>
         </View>
         <View style={[styles.chevron, isExpanded && styles.chevronUp]}>
@@ -182,7 +182,7 @@ function InvitationCard({
               <View key={row.label} style={styles.detailRow}>
                 <row.Icon size={14} color={C.onSurfaceVariant} />
                 <Text style={styles.detailLabel}>{row.label}</Text>
-                <Text style={styles.detailValue}>{row.value}</Text>
+                <Text style={styles.detailValue} numberOfLines={1}>{row.value}</Text>
               </View>
             ))}
           </View>

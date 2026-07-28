@@ -59,7 +59,7 @@ export function JockeyNotifications() {
           {/* Header row */}
           <View style={styles.listHeader}>
             <Text style={styles.listTitle}>
-              {unread > 0 ? `${unread} chưa đọc` : 'Tất cả đã đọc'}
+              {unread > 0 ? `${unread} chưa đọc` : 'Không có thông báo mới'}
             </Text>
             {unread > 0 && (
               <TouchableOpacity onPress={markAllRead}>

@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Calendar, Target, CircleCheck, CircleX, Star, ChartBar,
-  Clock, ChevronRight, LogOut, Lock, Info, X, Wallet, SunMoon, Bell,
+  Clock, ChevronRight, LogOut, Lock, Info, X, Wallet, SunMoon, Bell, User,
 } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
@@ -41,7 +41,6 @@ export function SpectatorProfile() {
   }), [C, SC]);
 
   const SETTINGS: SettingItem[] = [
-    { Icon: Wallet, label: 'Nạp điểm',     onPress: () => router.push('/top-up' as never) },
     { Icon: Lock, label: 'Đổi mật khẩu', onPress: () => router.push('/change-password' as never) },
     { Icon: SunMoon, label: 'Giao diện', onPress: () => setThemeVisible(true) },
     { Icon: Info, label: 'Về ứng dụng',   onPress: () => setAboutVisible(true) },
@@ -64,7 +63,6 @@ export function SpectatorProfile() {
 
   const recentPreds = predictions.slice(0, 4);
   const displayName = user?.fullName ?? 'Khán giả';
-  const initials = displayName.split(' ').map(w => w[0]).join('').slice(-2).toUpperCase();
 
   const handleLogout = () =>
     Alert.alert('Đăng xuất', 'Bạn có chắc muốn đăng xuất?', [
@@ -88,7 +86,7 @@ export function SpectatorProfile() {
               end={{ x: 1, y: 1 }}
               style={styles.hero}>
               <View style={styles.heroAvatar}>
-                <Text style={styles.heroInitials}>{initials}</Text>
+                <User size={32} color={C.tertiary} />
               </View>
               <Text style={styles.heroName}>{displayName}</Text>
               <Text style={styles.heroPhone}>{user?.email ?? ''}</Text>
@@ -195,7 +193,6 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   // Hero
   hero:        { borderRadius: Shape.large, padding: Spacing.three, alignItems: 'center', gap: Spacing.two },
   heroAvatar:  { width: 72, height: 72, borderRadius: Shape.full, backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center', marginBottom: Spacing.one },
-  heroInitials:{ color: C.tertiary, fontFamily: FontFamily.bold, fontSize: 28 },
   heroName:    { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 22 },
   heroPhone:   { color: 'rgba(255,255,255,0.65)', fontFamily: FontFamily.regular, fontSize: 13 },
   heroChip:    { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(0,0,0,0.25)', borderRadius: Shape.full, paddingHorizontal: 12, paddingVertical: 5 },

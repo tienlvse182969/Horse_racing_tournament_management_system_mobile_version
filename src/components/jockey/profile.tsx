@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, Pressable, Switch, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Image } from 'expo-image';
 import { Zap, Trophy, Award, ChartBar, ChevronRight, LogOut, UserPen, Lock, Info, X, SunMoon, Bell } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
@@ -16,6 +17,8 @@ import { useJockeyRaces } from '@/hooks/useJockeyData';
 import { formatDateFull, formatNumber } from '@/mock-data';
 import { APP_VERSION } from '@/constants/version';
 import { useNotificationSetting } from '@/hooks/useNotificationSetting';
+
+const JOCKEY_AVATAR = require('@/assets/images/jockey_avt.jpg');
 
 type IconComp = React.ComponentType<{ size?: number; color?: string }>;
 
@@ -51,7 +54,6 @@ export function JockeyProfile() {
     }));
 
   const displayName = user?.fullName ?? 'Jockey';
-  const initials = displayName.split(' ').map(w => w[0]).join('').slice(-2).toUpperCase();
 
   const SETTINGS: SettingItem[] = [
     { Icon: UserPen, label: 'Chỉnh sửa hồ sơ', onPress: () => router.push('/edit-profile' as never) },
@@ -97,7 +99,7 @@ export function JockeyProfile() {
               <View style={styles.heroBg} />
               <View style={styles.heroRow}>
                 <View style={styles.heroAvatar}>
-                  <Text style={styles.heroInitials}>{initials}</Text>
+                  <Image source={JOCKEY_AVATAR} style={styles.heroAvatarImg} contentFit="cover" />
                 </View>
                 <View style={styles.heroInfo}>
                   <View style={styles.heroRoleRow}>
@@ -240,8 +242,8 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   heroCard:    { borderRadius: Shape.large, padding: Spacing.three, overflow: 'hidden' },
   heroBg:      { position: 'absolute', right: -32, top: -32, width: 128, height: 128, borderRadius: Shape.full, backgroundColor: 'rgba(255,217,180,0.08)' },
   heroRow:     { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
-  heroAvatar:  { width: 80, height: 80, borderRadius: Shape.medium, backgroundColor: 'rgba(255,217,180,0.15)', borderWidth: 2, borderColor: 'rgba(255,217,180,0.3)', justifyContent: 'center', alignItems: 'center' },
-  heroInitials:{ color: '#FFD9B4', fontFamily: FontFamily.bold, fontSize: 32 },
+  heroAvatar:  { width: 80, height: 80, borderRadius: Shape.medium, backgroundColor: 'rgba(255,217,180,0.15)', borderWidth: 2, borderColor: 'rgba(255,217,180,0.3)', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  heroAvatarImg:{ width: '100%', height: '100%' },
   heroInfo:    { flex: 1, gap: 3 },
   heroRoleRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   heroRole:    { color: 'rgba(255,217,180,0.7)', fontFamily: FontFamily.medium, fontSize: 11 },
