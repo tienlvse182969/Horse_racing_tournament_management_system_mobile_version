@@ -88,12 +88,11 @@ const HORSE_AVATAR = require('@/assets/images/a-horse-with-long-hair-and-a-white
 
 const PENALTY_LABELS: Record<string, string> = {
   warning: 'Cảnh cáo',
-  demote: 'Tụt hạng',
-  disqualify: 'Truất quyền thi đấu',
-  disqualification: 'Truất quyền thi đấu',
-  restart: 'Đua lại',
+  result_void: 'Hủy kết quả',
+  disqualify: 'Hủy kết quả',
+  disqualification: 'Hủy kết quả',
   time_ban: 'Cấm thi đấu có thời hạn',
-  permanent_ban: 'Cấm thi đấu vĩnh viễn',
+  permanent_ban: 'Cấm thi đấu vô thời hạn',
 };
 
 const TARGET_LABELS: Record<'horse' | 'jockey' | 'both', string> = {
