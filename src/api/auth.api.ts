@@ -44,6 +44,14 @@ export async function changePassword(oldPassword: string, newPassword: string): 
   return apiPost<{ message: string }>('/api/auth/change-password', { oldPassword, newPassword });
 }
 
+export async function forgotPassword(email: string): Promise<{ message: string }> {
+  return apiPost<{ message: string }>('/api/auth/forgot-password', { email });
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+  return apiPost<{ message: string }>('/api/auth/reset-password', { token, newPassword });
+}
+
 export async function updateProfile(input: { fullName?: string; phone?: string }): Promise<{ user: AuthUser }> {
   return apiPatch<{ user: AuthUser }>('/api/auth/me', input);
 }

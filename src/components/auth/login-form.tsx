@@ -11,6 +11,7 @@ type Props = {
   password: string;
   onEmailChange: (v: string) => void;
   onPasswordChange: (v: string) => void;
+  onForgotPress?: () => void;
 };
 
 const inputTheme = {
@@ -24,7 +25,7 @@ const inputTheme = {
   },
 };
 
-export function LoginForm({ email, password, onEmailChange, onPasswordChange }: Props) {
+export function LoginForm({ email, password, onEmailChange, onPasswordChange, onForgotPress }: Props) {
   const [pwVisible, setPwVisible] = useState(false);
 
   return (
@@ -57,7 +58,7 @@ export function LoginForm({ email, password, onEmailChange, onPasswordChange }: 
         theme={inputTheme}
         textColor={AuthColor.text}
       />
-      <TouchableOpacity style={styles.forgotBtn}>
+      <TouchableOpacity style={styles.forgotBtn} onPress={onForgotPress}>
         <Text style={styles.forgotText}>Quên mật khẩu?</Text>
       </TouchableOpacity>
     </Animated.View>
