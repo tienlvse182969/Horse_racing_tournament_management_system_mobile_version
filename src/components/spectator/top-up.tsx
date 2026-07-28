@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TextInput } from 'react-native-paper';
-import { ArrowLeft, Wallet, Zap, CreditCard } from 'lucide-react-native';
+import { Wallet, Zap, CreditCard } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
+import { BackButton } from '@/components/back-button';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useSpectatorPoints, useSpectatorTopUps } from '@/hooks/useSpectatorData';
 import { spectatorApi } from '@/api/spectator.api';
@@ -85,11 +85,7 @@ export function TopUp() {
         <LargeHeaderScrollView
           title="Nạp điểm"
           contentContainerStyle={styles.scroll}
-          leftAction={
-            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-              <ArrowLeft size={22} color={C.onSurface} />
-            </TouchableOpacity>
-          }>
+          leftAction={<BackButton />}>
 
           {/* Current balance */}
           <Animated.View entering={FadeIn.duration(300)} style={styles.balanceCard}>
@@ -196,10 +192,6 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   safeArea:{ flex: 1 },
   scroll:  { paddingHorizontal: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.five },
 
-  backBtn: {
-    width: 34, height: 34, borderRadius: Shape.full,
-    backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center',
-  },
 
   balanceCard:    { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.three },
   balanceTextWrap:{ flex: 1 },

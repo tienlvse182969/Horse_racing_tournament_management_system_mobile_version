@@ -2,12 +2,13 @@ import { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, Pressable, Switch, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Zap, Trophy, Award, ChartBar, ChevronRight, LogOut, UserPen, Lock, Info, X, SunMoon, Bell } from 'lucide-react-native';
+import { Zap, Trophy, Award, ChartBar, ChevronRight, LogOut, UserPen, Lock, Info, X, SunMoon, Bell } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
+import { BackButton } from '@/components/back-button';
 import { ThemeModeSheet } from '@/components/theme-mode-sheet';
 import { useAuth } from '@/context/AuthContext';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
@@ -84,11 +85,7 @@ export function JockeyProfile() {
         <LargeHeaderScrollView
           title="Hồ sơ"
           contentContainerStyle={styles.scroll}
-          leftAction={
-            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-              <ArrowLeft size={22} color={C.onSurface} />
-            </TouchableOpacity>
-          }>
+          leftAction={<BackButton />}>
 
           {/* Profile hero */}
           <Animated.View entering={FadeIn.duration(380)}>
@@ -238,8 +235,6 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   root:    { flex: 1, backgroundColor: SC.lowest },
   safeArea:{ flex: 1 },
   scroll:  { paddingHorizontal: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.five },
-
-  backBtn: { width: 34, height: 34, borderRadius: Shape.full, backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center' },
 
   // Hero
   heroCard:    { borderRadius: Shape.large, padding: Spacing.three, overflow: 'hidden' },

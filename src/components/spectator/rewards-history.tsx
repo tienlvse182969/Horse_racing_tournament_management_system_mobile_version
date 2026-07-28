@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, TextInput, Alert, Linking, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Gift, Wallet, PiggyBank, ChevronLeft, Plus, X, ArrowDownCircle, ArrowUpCircle } from 'lucide-react-native';
+import { Gift, Wallet, PiggyBank, Plus, X, ArrowDownCircle, ArrowUpCircle } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { router } from 'expo-router';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
+import { BackButton } from '@/components/back-button';
 import { AvatarTabButton } from '@/components/avatar-tab-button';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useSpectatorPoints } from '@/hooks/useSpectatorData';
@@ -94,14 +94,7 @@ export function SpectatorRewardsHistory() {
         <LargeHeaderScrollView
           title="Ví điểm của bạn"
           contentContainerStyle={styles.scroll}
-          leftAction={
-            <Pressable
-              style={styles.backBtn}
-              onPress={() => router.back()}
-              android_ripple={{ color: '#ffffff22', radius: 20, borderless: true }}>
-              <ChevronLeft size={24} color={C.onSurface} />
-            </Pressable>
-          }
+          leftAction={<BackButton />}
           rightAction={<AvatarTabButton />}>
 
           {/* Points overview */}
@@ -227,7 +220,6 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   statValue: { color: C.primary, fontFamily: FontFamily.bold, fontSize: 16 },
   statLabel: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11, lineHeight: 14 },
 
-  backBtn:      { width: 34, height: 34, borderRadius: Shape.full, justifyContent: 'center', alignItems: 'center' },
   sectionTitle: { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15, marginTop: Spacing.one },
 
   emptyWrap: { alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.five },

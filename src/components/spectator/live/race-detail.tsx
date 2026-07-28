@@ -4,10 +4,11 @@ import { LiveViewer } from './live-viewer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, CalendarPlus, Trophy } from 'lucide-react-native';
+import { CalendarPlus, Trophy } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { BackButton } from '@/components/back-button';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import type { Race } from '@/types/race';
 import { formatCurrency, formatDate, formatNumber } from '@/utils/format';
@@ -95,11 +96,9 @@ export function RaceDetail({ race, onBack }: Props) {
     <Animated.View entering={FadeIn.duration(200)} style={styles.root}>
       {/* Header — respects Android status bar */}
       <View style={[styles.header, { paddingTop: insets.top + Spacing.two }]}>
-        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-          <ArrowLeft size={22} color={C.onSurface} />
-        </TouchableOpacity>
+        <BackButton onPress={onBack} />
         <Text style={styles.headerTitle} numberOfLines={1}>{race.name}</Text>
-        <View style={{ width: 38 }} />
+        <View style={{ width: 34 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -249,7 +248,6 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: SC.high, paddingHorizontal: Spacing.two, paddingBottom: Spacing.two,
   },
-  backBtn:     { width: 38, height: 38, justifyContent: 'center', alignItems: 'center' },
   headerTitle: { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 16, flex: 1, textAlign: 'center' },
   scroll:      { padding: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.five },
 

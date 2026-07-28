@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, Pressable, Swit
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  ArrowLeft, Calendar, Target, CircleCheck, CircleX, Star, ChartBar,
+  Calendar, Target, CircleCheck, CircleX, Star, ChartBar,
   Clock, ChevronRight, LogOut, Lock, Info, X, Wallet, SunMoon, Bell,
 } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
@@ -11,6 +11,7 @@ import { router } from 'expo-router';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
+import { BackButton } from '@/components/back-button';
 import { ThemeModeSheet } from '@/components/theme-mode-sheet';
 import { useAuth } from '@/context/AuthContext';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
@@ -77,11 +78,7 @@ export function SpectatorProfile() {
         <LargeHeaderScrollView
           title="Hồ sơ"
           contentContainerStyle={styles.scroll}
-          leftAction={
-            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-              <ArrowLeft size={22} color={C.onSurface} />
-            </TouchableOpacity>
-          }>
+          leftAction={<BackButton />}>
 
           {/* Hero */}
           <Animated.View entering={FadeIn.duration(350)}>
@@ -227,10 +224,6 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   settingLabel:  { color: C.onSurface, fontFamily: FontFamily.regular, fontSize: 14, flex: 1 },
 
   // Back button
-  backBtn: {
-    width: 34, height: 34, borderRadius: Shape.full,
-    backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center',
-  },
 
   // Logout
   logoutBtn:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two, borderRadius: Shape.full, paddingVertical: 14, borderWidth: 1, borderColor: C.error, marginTop: Spacing.one },

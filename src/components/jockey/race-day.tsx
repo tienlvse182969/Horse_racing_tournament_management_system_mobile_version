@@ -6,9 +6,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSharedValue, useFrameCallback, runOnJS } from 'react-native-reanimated';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
-import { ChevronLeft, Ruler, Trophy, Leaf, MapPin, CalendarDays, CalendarPlus } from 'lucide-react-native';
+import { Ruler, Trophy, Leaf, MapPin, CalendarDays, CalendarPlus } from 'lucide-react-native';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { BackButton } from '@/components/back-button';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { formatNumber } from '@/mock-data';
 import { MedalIcon } from '@/components/ui/medal-icon';
@@ -60,9 +61,7 @@ export function RaceDay({ jockeyRace, fullRace, jockeyName }: Props) {
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
-            <ChevronLeft size={24} color={C.onSurface} />
-          </TouchableOpacity>
+          <BackButton />
           <Text style={styles.headerTitle} numberOfLines={1}>{jockeyRace.name}</Text>
           <View style={[styles.statusBadge, { backgroundColor: badgeColors[1] }]}>
             {jockeyRace.status === 'live' && <View style={styles.liveDot} />}
@@ -759,7 +758,6 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
 
   // Header
   header:         { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.two, paddingVertical: Spacing.two, backgroundColor: SC.high, gap: Spacing.two },
-  backBtn:        { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
   headerTitle:    { flex: 1, color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15 },
   statusBadge:    { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: Shape.full, paddingHorizontal: 10, paddingVertical: 4 },
   liveDot:        { width: 6, height: 6, borderRadius: 3, backgroundColor: C.error },

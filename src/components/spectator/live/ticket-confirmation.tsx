@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, BellRing, CalendarDays, CheckCircle, Share2 } from 'lucide-react-native';
+import { BellRing, CalendarDays, CheckCircle, Share2 } from 'lucide-react-native';
 
 import { FontFamily, Shape, Spacing, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { BackButton } from '@/components/back-button';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import type { Race } from '@/types/race';
 import { formatDate } from '@/utils/format';
@@ -40,11 +41,9 @@ export function TicketConfirmation({ race, onBack, onWatch }: Props) {
   return (
     <Animated.View entering={FadeIn.duration(200)} style={styles.root}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.two }]}>
-        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-          <ArrowLeft size={22} color={C.onSurface} />
-        </TouchableOpacity>
+        <BackButton onPress={onBack} />
         <Text style={styles.headerTitle}>Vé của bạn</Text>
-        <View style={{ width: 38 }} />
+        <View style={{ width: 34 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -163,7 +162,6 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: SC.high, paddingHorizontal: Spacing.two, paddingBottom: Spacing.two,
   },
-  backBtn:     { width: 38, height: 38, justifyContent: 'center', alignItems: 'center' },
   headerTitle: { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 16, flex: 1, textAlign: 'center' },
   scroll:      { padding: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.five },
 
