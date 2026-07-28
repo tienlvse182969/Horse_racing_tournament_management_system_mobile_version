@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { TextInput } from 'react-native-paper';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { Zap, Users, User, Mail, Phone, Lock, Eye, EyeOff, FileText, X } from 'lucide-react-native';
+import { ShieldCheck, Zap, Users, User, Mail, Phone, Lock, Eye, EyeOff, FileText, X } from 'lucide-react-native';
 import * as DocumentPicker from 'expo-document-picker';
 
 import { Shape, Spacing, FontFamily } from '@/constants/theme';
@@ -40,7 +40,8 @@ export function RegisterForm({
 }: Props) {
   const [pwVisible, setPwVisible] = useState(false);
 
-  const isJockey    = registerRole === 'jockey';
+  const isJockey = registerRole === 'jockey';
+  const isOwner = registerRole === 'horse_owner';
 
   async function handlePickDocument() {
     const result = await DocumentPicker.getDocumentAsync({ type: 'application/pdf' });
@@ -54,8 +55,8 @@ export function RegisterForm({
     onLicenseDocumentChange(asset);
   }
 
-  const accentColor = isJockey ? AuthColor.primary : AuthColor.tertiary;
-  const badgeFill    = withAlpha(isJockey ? AuthColor.primary : AuthColor.tertiary, '26');
+  const accentColor = isJockey || isOwner ? AuthColor.primary : AuthColor.tertiary;
+  const badgeFill = withAlpha(isJockey || isOwner ? AuthColor.primary : AuthColor.tertiary, '26');
   const inputTheme = {
     colors: {
       primary: accentColor,
@@ -74,9 +75,11 @@ export function RegisterForm({
           <View style={[styles.roleBadge, { backgroundColor: badgeFill }]}>
             {isJockey
               ? <Zap size={16} color={accentColor} />
+              : isOwner
+                ? <ShieldCheck size={16} color={accentColor} />
               : <Users size={16} color={accentColor} />}
             <Text style={[styles.roleBadgeLabel, { color: accentColor }]}>
-              {isJockey ? 'Kỵ sĩ' : 'Khán Giả'}
+              {isJockey ? 'Kỵ sĩ' : isOwner ? 'Chủ Ngựa' : 'Khán Giả'}
             </Text>
           </View>
           <TouchableOpacity onPress={onChangeRole} style={styles.changeRoleBtn}>
@@ -84,7 +87,7 @@ export function RegisterForm({
           </TouchableOpacity>
         </View>
 
-        {isJockey && (
+        {(isJockey || isOwner) && (
           <Text style={styles.notice}>
             Hồ sơ của bạn sẽ được ban tổ chức xét duyệt trước khi tài khoản được kích hoạt.
           </Text>
@@ -141,9 +144,11 @@ export function RegisterForm({
           textColor={AuthColor.text}
         />
 
-        {isJockey && (
+        {(isJockey || isOwner) && (
           <View>
-            <Text style={styles.fieldLabel}>Hồ sơ/chứng chỉ kỵ sĩ (PDF)</Text>
+            <Text style={styles.fieldLabel}>
+              {isJockey ? 'Hồ sơ/chứng chỉ kỵ sĩ (PDF)' : 'Hồ sơ Chủ ngựa (PDF)'}
+            </Text>
             {licenseDocument ? (
               <View style={styles.fileRow}>
                 <FileText size={18} color={accentColor} />

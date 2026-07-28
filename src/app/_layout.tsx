@@ -49,6 +49,10 @@ function ThemedApp() {
         router.push('/jockey/(tabs)/notifications' as never);
         return;
       }
+      if (user?.role === 'horse_owner') {
+        router.push('/owner/home' as never);
+        return;
+      }
       router.push('/(app)/notifications' as never);
     });
     return () => subscription.remove();

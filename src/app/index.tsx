@@ -18,6 +18,10 @@ export default function Index() {
     return <Redirect href={'/jockey/home' as never} />;
   }
 
+  if (user?.role === 'horse_owner') {
+    return <Redirect href={'/owner/home' as never} />;
+  }
+
   if (user?.role === 'spectator') {
     return <Redirect href={'/(app)/home' as never} />;
   }

@@ -33,11 +33,13 @@ export async function registerSpectator(email: string, password: string, fullNam
   return res;
 }
 
-export interface JockeyApplicationResponse {
+export interface AccountApplicationResponse {
   message: string;
   approvalRequired: true;
   applicationStatus: 'pending';
 }
+
+export type JockeyApplicationResponse = AccountApplicationResponse;
 
 export interface JockeyLicenseFile {
   uri: string;
@@ -50,19 +52,54 @@ export async function registerJockey(input: {
   fullName: string;
   phone: string;
   licenseDocument: JockeyLicenseFile;
-}): Promise<JockeyApplicationResponse> {
-  const file = new File(input.licenseDocument.uri);
+}): Promise<AccountApplicationResponse> {
+  return registerAccountApplication({
+    email: input.email,
+    password: input.password,
+    fullName: input.fullName,
+    phone: input.phone,
+    role: 'jockey',
+    document: input.licenseDocument,
+  });
+}
+
+export async function registerHorseOwner(input: {
+  email: string;
+  password: string;
+  fullName: string;
+  phone: string;
+  profileDocument: JockeyLicenseFile;
+}): Promise<AccountApplicationResponse> {
+  return registerAccountApplication({
+    email: input.email,
+    password: input.password,
+    fullName: input.fullName,
+    phone: input.phone,
+    role: 'horse_owner',
+    document: input.profileDocument,
+  });
+}
+
+async function registerAccountApplication(input: {
+  email: string;
+  password: string;
+  fullName: string;
+  phone: string;
+  role: 'jockey' | 'horse_owner';
+  document: JockeyLicenseFile;
+}): Promise<AccountApplicationResponse> {
+  const file = new File(input.document.uri);
   const result = await file.upload(`${API_BASE}/api/auth/register`, {
     httpMethod: 'POST',
     uploadType: UploadType.MULTIPART,
     fieldName: 'file',
-    mimeType: input.licenseDocument.mimeType ?? 'application/pdf',
+    mimeType: input.document.mimeType ?? 'application/pdf',
     parameters: {
       email: input.email,
       password: input.password,
       fullName: input.fullName,
       phone: input.phone,
-      role: 'jockey',
+      role: input.role,
     },
   });
 
@@ -70,7 +107,7 @@ export async function registerJockey(input: {
   if (result.status < 200 || result.status >= 300) {
     throw new ApiError(data.message ?? `Request failed (${result.status})`, result.status);
   }
-  return data as JockeyApplicationResponse;
+  return data as AccountApplicationResponse;
 }
 
 export async function getMe(): Promise<{ user: AuthUser }> {

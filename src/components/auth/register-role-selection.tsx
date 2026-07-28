@@ -32,6 +32,22 @@ export function RegisterRoleSelection({ onSelect }: Props) {
         </TouchableOpacity>
 
         <TouchableOpacity
+          style={[styles.card, { borderColor: withAlpha(AuthColor.primary, '40') }]}
+          onPress={() => onSelect('horse_owner')}
+          activeOpacity={0.8}>
+          <View style={[styles.cardIcon, { backgroundColor: withAlpha(AuthColor.primary, '26') }]}>
+            <MaterialCommunityIcons name="horse" size={26} color={AuthColor.primary} />
+          </View>
+          <View style={styles.cardText}>
+            <Text style={[styles.cardTitle, { color: AuthColor.primary }]}>Chủ Ngựa</Text>
+            <Text style={styles.cardDesc}>
+              Tự nộp hồ sơ, quản lý ngựa và đăng ký tham gia giải đấu
+            </Text>
+          </View>
+          <Text style={styles.cardChevron}>›</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
           style={[styles.card, { borderColor: withAlpha(AuthColor.tertiary, '40') }]}
           onPress={() => onSelect('spectator')}
           activeOpacity={0.8}>

@@ -32,6 +32,7 @@ import { APP_VERSION } from '@/constants/version';
 
 function redirectForRole(role: string) {
   if (role === 'jockey') router.replace('/jockey/home' as never);
+  else if (role === 'horse_owner') router.replace('/owner/home' as never);
   else if (role === 'spectator') router.replace('/(app)/home' as never);
   else router.replace('/(auth)/auth' as never);
 }
@@ -53,8 +54,11 @@ export default function AuthScreen() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const isJockey = registerRole === 'jockey';
-  const roleColor = (activeTab === 'login' || isJockey) ? AuthColor.primary : AuthColor.tertiary;
-  const onRoleColor = (activeTab === 'login' || isJockey) ? AuthColor.onPrimary : AuthColor.onTertiary;
+  const isOwner = registerRole === 'horse_owner';
+  const roleColor = (activeTab === 'login' || isJockey || isOwner)
+    ? AuthColor.primary
+    : AuthColor.tertiary;
+  const onRoleColor = (activeTab === 'login' || isJockey || isOwner) ? AuthColor.onPrimary : AuthColor.onTertiary;
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
@@ -102,8 +106,10 @@ export default function AuthScreen() {
         setError('Mật khẩu phải có chữ hoa, chữ thường và chữ số.');
         return;
       }
-      if (registerRole === 'jockey' && !licenseDocument) {
-        setError('Vui lòng đính kèm file PDF hồ sơ/chứng chỉ kỵ sĩ.');
+      if ((registerRole === 'jockey' || registerRole === 'horse_owner') && !licenseDocument) {
+        setError(registerRole === 'jockey'
+          ? 'Vui lòng đính kèm file PDF hồ sơ/chứng chỉ kỵ sĩ.'
+          : 'Vui lòng đính kèm file PDF hồ sơ Chủ ngựa.');
         return;
       }
     }
@@ -112,9 +118,9 @@ export default function AuthScreen() {
     try {
       if (activeTab === 'login') {
         const user = await login(email.trim(), password);
-        if (user.role !== 'spectator' && user.role !== 'jockey') {
+        if (user.role !== 'spectator' && user.role !== 'jockey' && user.role !== 'horse_owner') {
           await authApi.logout();
-          setError('Ứng dụng chỉ hỗ trợ khán giả và kỵ sĩ.');
+          setError('Ứng dụng chỉ hỗ trợ Khán giả, Kỵ sĩ và Chủ ngựa.');
           return;
         }
         redirectForRole(user.role);
@@ -131,6 +137,24 @@ export default function AuthScreen() {
           fullName: name.trim(),
           phone: normalizedPhone,
           licenseDocument: {
+            uri: licenseDocument.uri,
+            mimeType: licenseDocument.mimeType,
+          },
+        });
+        setSuccessMessage(result.message);
+        resetRegisterForm();
+        setActiveTab('login');
+        return;
+      }
+
+      if (registerRole === 'horse_owner') {
+        if (!licenseDocument) return;
+        const result = await authApi.registerHorseOwner({
+          email: regEmail.trim(),
+          password: regPassword,
+          fullName: name.trim(),
+          phone: normalizedPhone,
+          profileDocument: {
             uri: licenseDocument.uri,
             mimeType: licenseDocument.mimeType,
           },
@@ -235,9 +259,11 @@ export default function AuthScreen() {
                           <View style={styles.submitInner}>
                             {isJockey
                               ? <Zap size={16} color={onRoleColor} />
+                              : isOwner
+                                ? <Zap size={16} color={onRoleColor} />
                               : <Users size={16} color={onRoleColor} />}
                             <Text style={[styles.submitText, { color: onRoleColor }]}>
-                              {isJockey ? 'Đăng ký Kỵ sĩ' : 'Đăng ký Khán Giả'}
+                              {isJockey ? 'Đăng ký Kỵ sĩ' : isOwner ? 'Đăng ký Chủ Ngựa' : 'Đăng ký Khán Giả'}
                             </Text>
                           </View>
                         )}
