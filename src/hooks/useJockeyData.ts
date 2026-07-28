@@ -8,21 +8,18 @@ import { jockeyRaces } from '@/mock-data/jockey';
 import { races } from '@/mock-data/races';
 import type { Race } from '@/mock-data/races';
 import type { Notification } from '@/mock-data/notifications';
+import { createPolledResource, usePolledResource } from './polled-resource';
 
 const POLL_INTERVAL_MS = 8000;
 
-export function useJockeyInvitations() {
-  const [invitations, setInvitations] = useState<Invitation[]>([]);
-  const [loading, setLoading] = useState(true);
+const jockeyInvitationsResource = createPolledResource<Invitation[]>(
+  [],
+  () => jockeyApi.listInvitations().then((res) => res.invitations.map(mapInvitation)),
+  POLL_INTERVAL_MS,
+);
 
-  const reload = useCallback((showLoading = true) => {
-    if (showLoading) setLoading(true);
-    return jockeyApi
-      .listInvitations()
-      .then((res) => setInvitations(res.invitations.map(mapInvitation)))
-      .catch(() => {})
-      .finally(() => { if (showLoading) setLoading(false); });
-  }, []);
+export function useJockeyInvitations() {
+  const { data: invitations, loading, reload } = usePolledResource(jockeyInvitationsResource);
 
   const respond = useCallback(async (id: string, action: 'accept' | 'decline') => {
     try {
@@ -34,44 +31,29 @@ export function useJockeyInvitations() {
     }
   }, [reload]);
 
-  useEffect(() => {
-    reload();
-    const interval = setInterval(() => reload(false), POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, [reload]);
   return { invitations, loading, reload, respond };
 }
 
+const jockeyRacesResource = createPolledResource<JockeyRace[]>(
+  [],
+  () => jockeyApi.listRaces().then((res) => res.races.map(mapJockeyRace)),
+  POLL_INTERVAL_MS,
+);
+
 export function useJockeyRaces() {
-  const [races, setRaces] = useState<JockeyRace[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const reload = useCallback((showLoading = true) => {
-    if (showLoading) setLoading(true);
-    return jockeyApi
-      .listRaces()
-      .then((res) => setRaces(res.races.map(mapJockeyRace)))
-      .catch(() => {})
-      .finally(() => { if (showLoading) setLoading(false); });
-  }, []);
-
-  useEffect(() => {
-    reload();
-    const interval = setInterval(() => reload(false), POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, [reload]);
+  const { data: races, loading, reload } = usePolledResource(jockeyRacesResource);
   return { races, loading, reload };
 }
 
+const jockeyDashboardResource = createPolledResource(
+  { pendingInvitations: 0, upcomingRaces: 0, completedRaces: 0 },
+  () => jockeyApi.dashboard(),
+  POLL_INTERVAL_MS,
+);
+
 export function useJockeyDashboard() {
-  const [stats, setStats] = useState({ pendingInvitations: 0, upcomingRaces: 0, completedRaces: 0 });
-  useEffect(() => {
-    const load = () => jockeyApi.dashboard().then(setStats).catch(() => {});
-    load();
-    const interval = setInterval(load, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, []);
-  return stats;
+  const { data } = usePolledResource(jockeyDashboardResource);
+  return data;
 }
 
 export function useJockeyPenaltyDetail(): { penalty: PenaltyDetailDto | null; loading: boolean } {
@@ -88,42 +70,38 @@ export function useJockeyPenaltyDetail(): { penalty: PenaltyDetailDto | null; lo
   return { penalty, loading };
 }
 
+const jockeyPointsResource = createPolledResource(
+  { currentBalance: 0, totalPointsEarned: 0, totalPointsSpent: 0, transactions: [] as Awaited<ReturnType<typeof jockeyApi.getPoints>>['points']['transactions'] },
+  () => jockeyApi.getPoints().then((res) => res.points),
+);
+
 export function useJockeyPoints() {
-  const [balance, setBalance] = useState(0);
-  const [totalEarned, setTotalEarned] = useState(0);
-  const [totalSpent, setTotalSpent] = useState(0);
-  const [transactions, setTransactions] = useState<Awaited<ReturnType<typeof jockeyApi.getPoints>>['points']['transactions']>([]);
-  const reload = useCallback(() => {
-    jockeyApi.getPoints().then((res) => {
-      setBalance(res.points.currentBalance);
-      setTotalEarned(res.points.totalPointsEarned);
-      setTotalSpent(res.points.totalPointsSpent);
-      setTransactions(res.points.transactions.filter(tx => tx.points > 0).slice(0, 10));
-    }).catch(() => {});
-  }, []);
-  useEffect(() => { reload(); }, [reload]);
-  return { balance, totalEarned, totalSpent, transactions, reload };
+  const { data, reload } = usePolledResource(jockeyPointsResource);
+  return {
+    balance: data.currentBalance,
+    totalEarned: data.totalPointsEarned,
+    totalSpent: data.totalPointsSpent,
+    transactions: data.transactions.filter(tx => tx.points > 0).slice(0, 10),
+    reload,
+  };
 }
 
+const jockeyNotificationsResource = createPolledResource<Notification[]>(
+  [],
+  () => jockeyApi.listNotifications().then((res) => res.notifications.map((n) => ({
+    id: n.id,
+    type: 'system' as Notification['type'],
+    title: n.title,
+    body: n.message,
+    time: n.createdAt,
+    read: n.isRead,
+  }))),
+  POLL_INTERVAL_MS,
+);
+
 export function useJockeyNotifications() {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
-  const reload = useCallback(() => {
-    return jockeyApi.listNotifications().then((res) => {
-      setNotifications(
-        res.notifications.map((n) => ({
-          id: n.id,
-          type: 'system' as Notification['type'],
-          title: n.title,
-          body: n.message,
-          time: n.createdAt,
-          read: n.isRead,
-        })),
-      );
-    }).catch(() => {}).finally(() => setLoading(false));
-  }, []);
-  useEffect(() => { reload(); }, [reload]);
-  return { notifications, loading, setNotifications, reload };
+  const { data: notifications, loading, reload, mutate } = usePolledResource(jockeyNotificationsResource);
+  return { notifications, loading, setNotifications: mutate, reload };
 }
 
 export function useJockeyRaceDetail(id: string): { jockeyRace: JockeyRace | null; fullRace: Race | null } {
