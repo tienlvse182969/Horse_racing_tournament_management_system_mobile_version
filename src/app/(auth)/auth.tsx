@@ -45,10 +45,12 @@ export default function AuthScreen() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [regEmail, setRegEmail] = useState('');
+  const [regPhone, setRegPhone] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [licenseDocument, setLicenseDocument] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const isJockey = registerRole === 'jockey';
   const roleColor = (activeTab === 'login' || isJockey) ? AuthColor.primary : AuthColor.tertiary;
@@ -57,14 +59,25 @@ export default function AuthScreen() {
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
     setError(null);
+    setSuccessMessage(null);
     if (tab === 'login') {
       setRegisterRole(null);
       setLicenseDocument(null);
     }
   };
 
+  function resetRegisterForm() {
+    setRegisterRole(null);
+    setName('');
+    setRegEmail('');
+    setRegPhone('');
+    setRegPassword('');
+    setLicenseDocument(null);
+  }
+
   async function handleSubmit() {
     setError(null);
+    setSuccessMessage(null);
 
     if (activeTab === 'login') {
       if (password.length < 8) {
@@ -80,13 +93,17 @@ export default function AuthScreen() {
         setError('Vui lòng nhập email.');
         return;
       }
-      if (registerRole === 'jockey') {
-        if (!licenseDocument) {
-          setError('Vui lòng đính kèm file PDF hồ sơ/chứng chỉ kỵ sĩ.');
-          return;
-        }
-      } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(regPassword)) {
+      const normalizedPhone = regPhone.replace(/[\s.-]/g, '');
+      if (!normalizedPhone || !/^\+?\d{9,15}$/.test(normalizedPhone)) {
+        setError('Số điện thoại phải có từ 9 đến 15 chữ số.');
+        return;
+      }
+      if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(regPassword)) {
         setError('Mật khẩu phải có chữ hoa, chữ thường và chữ số.');
+        return;
+      }
+      if (registerRole === 'jockey' && !licenseDocument) {
+        setError('Vui lòng đính kèm file PDF hồ sơ/chứng chỉ kỵ sĩ.');
         return;
       }
     }
@@ -104,15 +121,36 @@ export default function AuthScreen() {
         return;
       }
 
+      const normalizedPhone = regPhone.replace(/[\s.-]/g, '');
+
       if (registerRole === 'jockey') {
-        setError('Đăng ký kỵ sĩ chưa hỗ trợ. Dùng tài khoản demo jockey1@demo.local');
+        if (!licenseDocument) return; // guarded above; narrows type for TS
+        const result = await authApi.registerJockey({
+          email: regEmail.trim(),
+          password: regPassword,
+          fullName: name.trim(),
+          phone: normalizedPhone,
+          licenseDocument: {
+            uri: licenseDocument.uri,
+            mimeType: licenseDocument.mimeType,
+          },
+        });
+        setSuccessMessage(result.message);
+        resetRegisterForm();
+        setActiveTab('login');
         return;
       }
 
-      const user = await registerSpectator(regEmail.trim(), regPassword, name.trim());
+      const user = await registerSpectator(regEmail.trim(), regPassword, name.trim(), normalizedPhone);
       redirectForRole(user.role);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Đã xảy ra lỗi');
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else if (err instanceof Error) {
+        setError(`Đã xảy ra lỗi: ${err.message}`);
+      } else {
+        setError('Đã xảy ra lỗi không xác định.');
+      }
     } finally {
       setLoading(false);
     }
@@ -149,6 +187,7 @@ export default function AuthScreen() {
                   <AuthTabSwitcher activeTab={activeTab} onTabChange={handleTabChange} />
 
                   {error && <Text style={styles.errorText}>{error}</Text>}
+                  {successMessage && <Text style={styles.successText}>{successMessage}</Text>}
 
                   {activeTab === 'login' && (
                     <LoginForm
@@ -170,10 +209,12 @@ export default function AuthScreen() {
                       onChangeRole={() => setRegisterRole(null)}
                       name={name}
                       email={regEmail}
+                      phone={regPhone}
                       password={regPassword}
                       licenseDocument={licenseDocument}
                       onNameChange={setName}
                       onEmailChange={setRegEmail}
+                      onPhoneChange={setRegPhone}
                       onPasswordChange={setRegPassword}
                       onLicenseDocumentChange={setLicenseDocument}
                     />
@@ -235,5 +276,6 @@ const styles = StyleSheet.create({
   submitInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   submitText:  { fontFamily: FontFamily.bold, fontSize: 16, letterSpacing: 0.5 },
   errorText:   { color: AuthColor.error, fontFamily: FontFamily.medium, fontSize: 13, marginBottom: Spacing.two },
+  successText: { color: AuthColor.tertiary, fontFamily: FontFamily.medium, fontSize: 13, marginBottom: Spacing.two },
   versionText: { color: AuthColor.textFaint, fontFamily: FontFamily.regular, fontSize: 12, textAlign: 'center', marginTop: Spacing.four },
 });

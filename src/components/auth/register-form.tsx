@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { TextInput } from 'react-native-paper';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { Zap, Users, User, Mail, Lock, Eye, EyeOff, FileText, X } from 'lucide-react-native';
+import { Zap, Users, User, Mail, Phone, Lock, Eye, EyeOff, FileText, X } from 'lucide-react-native';
 import * as DocumentPicker from 'expo-document-picker';
 
 import { Shape, Spacing, FontFamily } from '@/constants/theme';
@@ -14,10 +14,12 @@ type Props = {
   onChangeRole: () => void;
   name: string;
   email: string;
+  phone: string;
   password: string;
   licenseDocument: DocumentPicker.DocumentPickerAsset | null;
   onNameChange: (v: string) => void;
   onEmailChange: (v: string) => void;
+  onPhoneChange: (v: string) => void;
   onPasswordChange: (v: string) => void;
   onLicenseDocumentChange: (doc: DocumentPicker.DocumentPickerAsset | null) => void;
 };
@@ -27,10 +29,12 @@ export function RegisterForm({
   onChangeRole,
   name,
   email,
+  phone,
   password,
   licenseDocument,
   onNameChange,
   onEmailChange,
+  onPhoneChange,
   onPasswordChange,
   onLicenseDocumentChange,
 }: Props) {
@@ -82,7 +86,7 @@ export function RegisterForm({
 
         {isJockey && (
           <Text style={styles.notice}>
-            Đăng ký kỵ sĩ qua ứng dụng chưa hỗ trợ. Vui lòng liên hệ ban tổ chức hoặc dùng tài khoản demo.
+            Hồ sơ của bạn sẽ được ban tổ chức xét duyệt trước khi tài khoản được kích hoạt.
           </Text>
         )}
 
@@ -103,6 +107,16 @@ export function RegisterForm({
           keyboardType="email-address"
           autoCapitalize="none"
           left={<TextInput.Icon icon={({ size }) => <Mail color={AuthColor.textMuted} size={size} />} />}
+          theme={inputTheme}
+          textColor={AuthColor.text}
+        />
+        <TextInput
+          label="Số điện thoại"
+          value={phone}
+          onChangeText={onPhoneChange}
+          mode="outlined"
+          keyboardType="phone-pad"
+          left={<TextInput.Icon icon={({ size }) => <Phone color={AuthColor.textMuted} size={size} />} />}
           theme={inputTheme}
           textColor={AuthColor.text}
         />
