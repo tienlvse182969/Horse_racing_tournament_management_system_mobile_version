@@ -65,6 +65,32 @@ export default function AuthScreen() {
 
   async function handleSubmit() {
     setError(null);
+
+    if (activeTab === 'login') {
+      if (password.length < 8) {
+        setError('Mật khẩu phải có ít nhất 8 ký tự.');
+        return;
+      }
+    } else {
+      if (!name.trim()) {
+        setError('Vui lòng nhập họ và tên.');
+        return;
+      }
+      if (!regEmail.trim()) {
+        setError('Vui lòng nhập email.');
+        return;
+      }
+      if (registerRole === 'jockey') {
+        if (!licenseDocument) {
+          setError('Vui lòng đính kèm file PDF hồ sơ/chứng chỉ kỵ sĩ.');
+          return;
+        }
+      } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(regPassword)) {
+        setError('Mật khẩu phải có chữ hoa, chữ thường và chữ số.');
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       if (activeTab === 'login') {
