@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TextInput } from 'react-native-paper';
-import { ArrowLeft } from 'lucide-react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
+import { BackButton } from '@/components/back-button';
 import { ApiError } from '@/api/client';
 import { useAuth } from '@/context/AuthContext';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
@@ -47,11 +47,7 @@ export function EditProfile() {
         <LargeHeaderScrollView
           title="Chỉnh sửa hồ sơ"
           contentContainerStyle={styles.scroll}
-          leftAction={
-            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-              <ArrowLeft size={22} color={C.onSurface} />
-            </TouchableOpacity>
-          }>
+          leftAction={<BackButton />}>
 
           <Animated.View entering={FadeIn.duration(220)} style={styles.form}>
             {error && <Text style={styles.errorText}>{error}</Text>}
@@ -102,10 +98,5 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
 
     submitBtn:  { backgroundColor: C.primary, borderRadius: Shape.full, height: 52, justifyContent: 'center', alignItems: 'center', marginTop: Spacing.two },
     submitText: { color: C.onPrimary, fontFamily: FontFamily.bold, fontSize: 16, letterSpacing: 0.5 },
-
-    backBtn: {
-      width: 34, height: 34, borderRadius: Shape.full,
-      backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center',
-    },
   });
 }

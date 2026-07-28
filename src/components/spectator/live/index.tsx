@@ -1,11 +1,11 @@
 import { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
 import { HeaderActions } from '@/components/header-actions';
-import { useThemedStyles } from '@/hooks/use-theme';
+import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useSpectatorRaces } from '@/hooks/useSpectatorData';
 import type { Race, RaceStatus } from '@/types/race';
 import { RaceCard } from './race-card';
@@ -24,8 +24,9 @@ const STATUS_LABELS: Record<RaceStatus, string> = {
 };
 
 export function SpectatorLive() {
+  const { C } = useAppColors();
   const styles = useThemedStyles(createStyles);
-  const { races, reload } = useSpectatorRaces();
+  const { races, loading, reload } = useSpectatorRaces();
   const [tab, setTab]               = useState<MainTab>('races');
   const [filter, setFilter]         = useState<FilterStatus>('all');
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
@@ -64,6 +65,8 @@ export function SpectatorLive() {
           rightAction={<HeaderActions />}
           refreshing={refreshing}
           onRefresh={handleRefresh}>
+
+          {loading && <ActivityIndicator color={C.primary} style={{ marginVertical: Spacing.three }} />}
 
           {/* Tab switcher */}
           <View style={styles.tabSwitcher}>

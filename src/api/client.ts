@@ -15,18 +15,24 @@ export class ApiError extends Error {
   }
 }
 
+// Cached in memory so every apiRequest() call doesn't pay a SecureStore
+// Keychain/Keystore IPC round trip; only re-read on cold start, login, or logout.
+let cachedToken: string | null | undefined;
+
 export async function getStoredToken(): Promise<string | null> {
+  if (cachedToken !== undefined) return cachedToken;
   try {
-    if (isWeb) {
-      return localStorage.getItem(TOKEN_KEY);
-    }
-    return await SecureStore.getItemAsync(TOKEN_KEY);
+    cachedToken = isWeb
+      ? localStorage.getItem(TOKEN_KEY)
+      : await SecureStore.getItemAsync(TOKEN_KEY);
   } catch {
-    return null;
+    cachedToken = null;
   }
+  return cachedToken;
 }
 
 export async function setStoredToken(token: string | null): Promise<void> {
+  cachedToken = token;
   if (isWeb) {
     if (token) localStorage.setItem(TOKEN_KEY, token);
     else localStorage.removeItem(TOKEN_KEY);

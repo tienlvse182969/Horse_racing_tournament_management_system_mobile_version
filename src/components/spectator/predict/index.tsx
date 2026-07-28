@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Star, Gift } from 'lucide-react-native';
 
@@ -20,7 +20,7 @@ export function SpectatorPredict() {
   const [tab, setTab] = useState<Tab>('predict');
   const [refreshing, setRefreshing] = useState(false);
   const { balance, reload: reloadPoints } = useSpectatorPoints();
-  const { predictions, reload, cancelPrediction } = useSpectatorPredictions();
+  const { predictions, loading, reload, cancelPrediction } = useSpectatorPredictions();
 
   const totalPoints  = balance;
   const totalRewards = predictions.reduce((s, p) => s + (p.reward ?? 0), 0);
@@ -80,7 +80,8 @@ export function SpectatorPredict() {
           </View>
 
           {tab === 'predict' && <PredictForm onSubmitted={handleSubmitted} />}
-          {tab === 'history' && <PredictionHistory predictions={predictions} onCancel={cancelPrediction} />}
+          {tab === 'history' && loading && <ActivityIndicator color={C.primary} style={{ marginVertical: Spacing.three }} />}
+          {tab === 'history' && !loading && <PredictionHistory predictions={predictions} onCancel={cancelPrediction} />}
 
         </LargeHeaderScrollView>
       </SafeAreaView>

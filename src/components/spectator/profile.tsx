@@ -1,16 +1,17 @@
 import { useMemo, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, Pressable, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, Pressable, Switch, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  ArrowLeft, Calendar, Target, CircleCheck, CircleX, Star, ChartBar,
-  Clock, ChevronRight, LogOut, Lock, Info, X, Wallet, SunMoon, Bell,
+  Calendar, Target, CircleCheck, CircleX, Star, ChartBar,
+  Clock, ChevronRight, LogOut, Lock, Info, X, Wallet, SunMoon, Bell, User,
 } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
+import { BackButton } from '@/components/back-button';
 import { ThemeModeSheet } from '@/components/theme-mode-sheet';
 import { useAuth } from '@/context/AuthContext';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
@@ -26,7 +27,7 @@ export function SpectatorProfile() {
   const { C, SC } = useAppColors();
   const styles = useThemedStyles(createStyles);
   const { balance } = useSpectatorPoints();
-  const { predictions } = useSpectatorPredictions();
+  const { predictions, loading } = useSpectatorPredictions();
   const [aboutVisible, setAboutVisible] = useState(false);
   const [themeVisible, setThemeVisible] = useState(false);
   const notificationSetting = useNotificationSetting();
@@ -40,7 +41,6 @@ export function SpectatorProfile() {
   }), [C, SC]);
 
   const SETTINGS: SettingItem[] = [
-    { Icon: Wallet, label: 'Nạp điểm',     onPress: () => router.push('/top-up' as never) },
     { Icon: Lock, label: 'Đổi mật khẩu', onPress: () => router.push('/change-password' as never) },
     { Icon: SunMoon, label: 'Giao diện', onPress: () => setThemeVisible(true) },
     { Icon: Info, label: 'Về ứng dụng',   onPress: () => setAboutVisible(true) },
@@ -63,7 +63,6 @@ export function SpectatorProfile() {
 
   const recentPreds = predictions.slice(0, 4);
   const displayName = user?.fullName ?? 'Khán giả';
-  const initials = displayName.split(' ').map(w => w[0]).join('').slice(-2).toUpperCase();
 
   const handleLogout = () =>
     Alert.alert('Đăng xuất', 'Bạn có chắc muốn đăng xuất?', [
@@ -77,11 +76,7 @@ export function SpectatorProfile() {
         <LargeHeaderScrollView
           title="Hồ sơ"
           contentContainerStyle={styles.scroll}
-          leftAction={
-            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-              <ArrowLeft size={22} color={C.onSurface} />
-            </TouchableOpacity>
-          }>
+          leftAction={<BackButton />}>
 
           {/* Hero */}
           <Animated.View entering={FadeIn.duration(350)}>
@@ -91,7 +86,7 @@ export function SpectatorProfile() {
               end={{ x: 1, y: 1 }}
               style={styles.hero}>
               <View style={styles.heroAvatar}>
-                <Text style={styles.heroInitials}>{initials}</Text>
+                <User size={32} color={C.tertiary} />
               </View>
               <Text style={styles.heroName}>{displayName}</Text>
               <Text style={styles.heroPhone}>{user?.email ?? ''}</Text>
@@ -111,22 +106,7 @@ export function SpectatorProfile() {
             </View>
           </Animated.View>
 
-          {/* Prediction accuracy bar */}
-          <Animated.View entering={FadeInDown.delay(140).duration(320)} style={styles.section}>
-            <Text style={styles.sectionTitle}>Tỷ lệ đoán trúng & sai</Text>
-            <View style={styles.barRow}>
-              {won > 0 && (
-                <View style={[styles.barSeg, { flex: won, backgroundColor: C.tertiary }]} />
-              )}
-              {lost > 0 && (
-                <View style={[styles.barSeg, { flex: lost, backgroundColor: C.error }]} />
-              )}
-            </View>
-            <View style={styles.barLegend}>
-              <LegendItem color={C.tertiary} label={`Trúng (${won})`} />
-              <LegendItem color={C.error}    label={`Sai (${lost})`} />
-            </View>
-          </Animated.View>
+          {loading && <ActivityIndicator color={C.primary} style={{ marginVertical: Spacing.three }} />}
 
           {/* Recent predictions */}
           <Animated.View entering={FadeInDown.delay(200).duration(320)} style={styles.section}>
@@ -204,16 +184,6 @@ export function SpectatorProfile() {
   );
 }
 
-function LegendItem({ color, label }: { color: string; label: string }) {
-  const styles = useThemedStyles(createStyles);
-  return (
-    <View style={styles.legendItem}>
-      <View style={[styles.legendDot, { backgroundColor: color }]} />
-      <Text style={styles.legendText}>{label}</Text>
-    </View>
-  );
-}
-
 function createStyles(C: AppColors, SC: SurfaceColors) {
   return StyleSheet.create({
   root:    { flex: 1, backgroundColor: SC.lowest },
@@ -223,7 +193,6 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   // Hero
   hero:        { borderRadius: Shape.large, padding: Spacing.three, alignItems: 'center', gap: Spacing.two },
   heroAvatar:  { width: 72, height: 72, borderRadius: Shape.full, backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center', marginBottom: Spacing.one },
-  heroInitials:{ color: C.tertiary, fontFamily: FontFamily.bold, fontSize: 28 },
   heroName:    { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 22 },
   heroPhone:   { color: 'rgba(255,255,255,0.65)', fontFamily: FontFamily.regular, fontSize: 13 },
   heroChip:    { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(0,0,0,0.25)', borderRadius: Shape.full, paddingHorizontal: 12, paddingVertical: 5 },
@@ -235,15 +204,8 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   statValue:  { color: C.primary, fontFamily: FontFamily.bold, fontSize: 16 },
   statLabel:  { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 10, textAlign: 'center' },
 
-  // Win rate bar
   section:     { gap: Spacing.two },
   sectionTitle:{ color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15 },
-  barRow:      { flexDirection: 'row', height: 10, borderRadius: Shape.full, overflow: 'hidden', gap: 1 },
-  barSeg:      { borderRadius: Shape.full },
-  barLegend:   { flexDirection: 'row', gap: Spacing.three },
-  legendItem:  { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  legendDot:   { width: 8, height: 8, borderRadius: 4 },
-  legendText:  { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
 
   // Predictions
   predRow:      { flexDirection: 'row', alignItems: 'center', backgroundColor: SC.high, borderRadius: Shape.medium, padding: Spacing.two, gap: Spacing.two, marginBottom: Spacing.one },
@@ -259,10 +221,6 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   settingLabel:  { color: C.onSurface, fontFamily: FontFamily.regular, fontSize: 14, flex: 1 },
 
   // Back button
-  backBtn: {
-    width: 34, height: 34, borderRadius: Shape.full,
-    backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center',
-  },
 
   // Logout
   logoutBtn:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two, borderRadius: Shape.full, paddingVertical: 14, borderWidth: 1, borderColor: C.error, marginTop: Spacing.one },

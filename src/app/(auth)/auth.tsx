@@ -10,27 +10,25 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
-import { Image } from 'expo-image';
-import { BlurView, BlurTargetView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { Zap, Users } from 'lucide-react-native';
 import { Shape, Spacing, FontFamily } from '@/constants/theme';
 import { AuthColor } from '@/components/auth/auth-theme';
+import { AuthBackdrop } from '@/components/auth/auth-backdrop';
 import { AuthHeader } from '@/components/auth/auth-header';
 import { AuthTabSwitcher } from '@/components/auth/auth-tab-switcher';
 import { LoginForm } from '@/components/auth/login-form';
 import { RegisterRoleSelection } from '@/components/auth/register-role-selection';
 import { RegisterForm } from '@/components/auth/register-form';
+import type * as DocumentPicker from 'expo-document-picker';
 import type { Tab, RegisterRole } from '@/components/auth/types';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/api/client';
 import * as authApi from '@/api/auth.api';
 import { APP_VERSION } from '@/constants/version';
-
-const AUTH_BG = require('@/assets/images/authen.jpg');
 
 function redirectForRole(role: string) {
   if (role === 'jockey') router.replace('/jockey/home' as never);
@@ -48,6 +46,7 @@ export default function AuthScreen() {
   const [name, setName] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
+  const [licenseDocument, setLicenseDocument] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,7 +57,10 @@ export default function AuthScreen() {
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
     setError(null);
-    if (tab === 'login') setRegisterRole(null);
+    if (tab === 'login') {
+      setRegisterRole(null);
+      setLicenseDocument(null);
+    }
   };
 
   async function handleSubmit() {
@@ -92,14 +94,7 @@ export default function AuthScreen() {
 
   return (
     <View style={styles.root}>
-      <BlurTargetView ref={blurTargetRef} style={StyleSheet.absoluteFill}>
-        <Image source={AUTH_BG} style={StyleSheet.absoluteFill} contentFit="cover" />
-        <LinearGradient
-          colors={['rgba(8,6,3,0.55)', 'rgba(8,6,3,0.35)', 'rgba(8,6,3,0.8)']}
-          locations={[0, 0.45, 1]}
-          style={StyleSheet.absoluteFill}
-        />
-      </BlurTargetView>
+      <AuthBackdrop blurTargetRef={blurTargetRef} />
 
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
@@ -150,9 +145,11 @@ export default function AuthScreen() {
                       name={name}
                       email={regEmail}
                       password={regPassword}
+                      licenseDocument={licenseDocument}
                       onNameChange={setName}
                       onEmailChange={setRegEmail}
                       onPasswordChange={setRegPassword}
+                      onLicenseDocumentChange={setLicenseDocument}
                     />
                   )}
 

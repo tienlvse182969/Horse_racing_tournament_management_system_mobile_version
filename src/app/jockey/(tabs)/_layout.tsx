@@ -1,11 +1,9 @@
-import { useEffect, useState } from 'react';
 import { Tabs } from 'expo-router';
 import { Home, Mail, Flag, Bell, Trophy } from 'lucide-react-native';
 import type { ColorValue } from 'react-native';
 
 import { M3TabBar } from '@/components/m3-tab-bar';
-import { useAuth } from '@/context/AuthContext';
-import { jockeyApi } from '@/api/jockey.api';
+import { useJockeyDashboard, useJockeyInvitations, useJockeyNotifications } from '@/hooks/useJockeyData';
 
 function tabIcon(Icon: React.ComponentType<{ color?: string; size?: number }>) {
   return ({ color, size }: { color: ColorValue; size: number }) => (
@@ -14,24 +12,13 @@ function tabIcon(Icon: React.ComponentType<{ color?: string; size?: number }>) {
 }
 
 export default function JockeyTabsLayout() {
-  const { user } = useAuth();
-  const [pendingCount, setPendingCount] = useState(0);
-  const [upcomingRaceCount, setUpcomingRaceCount] = useState(0);
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  useEffect(() => {
-    if (user?.role === 'jockey') {
-      jockeyApi.listInvitations('pending').then((res) => {
-        setPendingCount(res.invitations.length);
-      }).catch(() => {});
-      jockeyApi.dashboard().then((res) => {
-        setUpcomingRaceCount(res.upcomingRaces);
-      }).catch(() => {});
-      jockeyApi.listNotifications().then((res) => {
-        setUnreadCount(res.notifications.filter((n) => !n.isRead).length);
-      }).catch(() => {});
-    }
-  }, [user]);
+  // These reuse the same polled resources as the tab screens themselves, so the
+  // layout doesn't run its own separate fetch/interval on top of theirs.
+  const { invitations } = useJockeyInvitations();
+  const { upcomingRaces: upcomingRaceCount } = useJockeyDashboard();
+  const { notifications } = useJockeyNotifications();
+  const pendingCount = invitations.filter((i) => i.status === 'pending').length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <Tabs

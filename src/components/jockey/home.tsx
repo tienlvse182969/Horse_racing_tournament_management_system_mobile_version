@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,6 +18,7 @@ import { useJockeyDashboard, useJockeyInvitations, useJockeyPoints, useJockeyRac
 import { formatCurrency, formatDate, formatNumber } from '@/mock-data';
 
 const HERO_BG = require('@/assets/images/Meisho-Tabaru-Takarazuka-Kinen-scaled.png');
+const JOCKEY_AVATAR = require('@/assets/images/jockey_avt.jpg');
 
 function RaceDayCountdown({ date, time }: { date: string; time: string }) {
   const styles = useThemedStyles(createStyles);
@@ -46,7 +47,7 @@ export function JockeyHome() {
   const styles = useThemedStyles(createStyles);
   const stats = useJockeyDashboard();
   const { invitations } = useJockeyInvitations();
-  const { races: jockeyRaces } = useJockeyRaces();
+  const { races: jockeyRaces, loading } = useJockeyRaces();
   const { balance: pointsBalance } = useJockeyPoints();
   const pendingCount = stats.pendingInvitations || invitations.filter(i => i.status === 'pending').length;
   const today = new Date().toISOString().slice(0, 10);
@@ -55,7 +56,6 @@ export function JockeyHome() {
     .filter(r => r.status === 'upcoming' && r.date !== today)
     .slice(0, 3);
   const displayName = user?.fullName ?? 'Kỵ sĩ';
-  const initials = displayName.split(' ').map(w => w[0]).join('').slice(-2).toUpperCase();
   const completedRaces = jockeyRaces.filter(r => r.status === 'completed' && r.myEntry.position);
   const completedCount = completedRaces.length;
   const wins = completedRaces.filter(r => r.myEntry.position === 1).length;
@@ -74,6 +74,8 @@ export function JockeyHome() {
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <LargeHeaderScrollView title="RaceTrack VN" bangers contentContainerStyle={styles.scroll} rightAction={<JockeyHeaderActions />}>
+
+          {loading && <ActivityIndicator color={C.primary} style={{ marginVertical: Spacing.three }} />}
 
           {/* Hero stats card */}
           <Animated.View entering={FadeIn.duration(380)}>
@@ -99,7 +101,7 @@ export function JockeyHome() {
                   </Text>
                 </View>
                 <View style={styles.heroAvatar}>
-                  <Text style={styles.heroInitials}>{initials}</Text>
+                  <Image source={JOCKEY_AVATAR} style={styles.heroAvatarImg} contentFit="cover" />
                 </View>
               </View>
 
@@ -262,8 +264,8 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   heroGreetingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   heroGreeting:  { color: 'rgba(255,217,180,0.7)', fontFamily: FontFamily.medium, fontSize: 12 },
   heroName:      { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 22, letterSpacing: -0.3 },
-  heroAvatar:    { width: 56, height: 56, borderRadius: Shape.medium, backgroundColor: 'rgba(255,217,180,0.15)', borderWidth: 1.5, borderColor: 'rgba(255,217,180,0.3)', justifyContent: 'center', alignItems: 'center' },
-  heroInitials:  { color: '#FFD9B4', fontFamily: FontFamily.bold, fontSize: 22 },
+  heroAvatar:    { width: 56, height: 56, borderRadius: Shape.medium, backgroundColor: 'rgba(255,217,180,0.15)', borderWidth: 1.5, borderColor: 'rgba(255,217,180,0.3)', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  heroAvatarImg: { width: '100%', height: '100%' },
   statsRow:      { flexDirection: 'row', gap: Spacing.two },
   statBox:       { flex: 1, backgroundColor: 'rgba(255,217,180,0.1)', borderRadius: Shape.large, padding: Spacing.two, alignItems: 'center', gap: 2, overflow: 'hidden' },
   statValue:     { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 18 },

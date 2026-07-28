@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { Redirect, Tabs } from 'expo-router';
 import { Home, Radio, Target, Bell, Trophy } from 'lucide-react-native';
 import type { ColorValue } from 'react-native';
@@ -6,7 +5,7 @@ import { ActivityIndicator, View } from 'react-native';
 
 import { M3TabBar } from '@/components/m3-tab-bar';
 import { useAuth } from '@/context/AuthContext';
-import { spectatorApi } from '@/api/spectator.api';
+import { useSpectatorNotifications } from '@/hooks/useSpectatorData';
 
 function tabIcon(Icon: React.ComponentType<{ color?: string; size?: number }>) {
   return ({ color, size }: { color: ColorValue; size: number }) => (
@@ -16,15 +15,10 @@ function tabIcon(Icon: React.ComponentType<{ color?: string; size?: number }>) {
 
 export default function AppLayout() {
   const { user, loading } = useAuth();
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  useEffect(() => {
-    if (user?.role === 'spectator') {
-      spectatorApi.listNotifications().then((res) => {
-        setUnreadCount(res.notifications.filter((n) => !n.isRead).length);
-      }).catch(() => {});
-    }
-  }, [user]);
+  // Reuses the same polled resource as the notifications tab screen, so the
+  // layout doesn't run its own separate fetch/interval on top of it.
+  const { notifications } = useSpectatorNotifications();
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   if (loading) {
     return (

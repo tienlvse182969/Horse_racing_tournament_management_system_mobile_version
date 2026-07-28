@@ -36,15 +36,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
-  // Poll for account status changes (e.g. an admin/referee publishing a suspension)
+  // Poll for account status changes (e.g. a referee publishing a suspension)
   // while logged in, so the suspension banner appears without needing to re-login.
+  // Jockey-only: this is the only role the app shows a suspension banner for.
   useEffect(() => {
-    if (!user) return;
+    if (!user || user.role !== 'jockey') return;
     const interval = setInterval(() => {
       authApi.getMe().then(({ user: me }) => setUser(me)).catch(() => {});
     }, PENALTY_POLL_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [user?.id]);
+  }, [user?.id, user?.role]);
 
   useEffect(() => {
     if (!user || (user.role !== 'spectator' && user.role !== 'jockey')) return;

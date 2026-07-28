@@ -1,10 +1,10 @@
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { ChevronLeft, ShieldAlert, Gavel, Flag, Calendar } from 'lucide-react-native';
+import { ShieldAlert, Gavel, Flag, Calendar } from 'lucide-react-native';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
+import { BackButton } from '@/components/back-button';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { formatBanDate } from './horse-ban-badge';
 import type { PenaltyDetailDto } from '@/api/jockey.api';
@@ -65,9 +65,7 @@ export function PenaltyDetail({ penalty, loading }: { penalty: PenaltyDetailDto 
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
-            <ChevronLeft size={24} color={C.onSurface} />
-          </TouchableOpacity>
+          <BackButton />
           <Text style={styles.headerTitle}>Chi tiết án phạt</Text>
         </View>
 
@@ -179,7 +177,6 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   safeArea: { flex: 1 },
 
   header:      { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.two, paddingVertical: Spacing.two, backgroundColor: SC.high, gap: Spacing.two },
-  backBtn:     { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
   headerTitle: { flex: 1, color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 15 },
 
   loading:     { flex: 1, justifyContent: 'center', alignItems: 'center', gap: Spacing.two },

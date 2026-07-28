@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { LargeHeaderScrollView } from '@/components/large-header-scroll-view';
+import { BackButton } from '@/components/back-button';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useSpectatorRaces, useSpectatorTournaments } from '@/hooks/useSpectatorData';
 import type { Race, RaceStatus } from '@/types/race';
@@ -48,12 +48,7 @@ export function TournamentRaces({ tournamentId }: Props) {
           title={tournament?.name ?? 'Trận đấu'}
           contentContainerStyle={styles.scroll}
           leftAction={
-            <TouchableOpacity
-              style={styles.backBtn}
-              onPress={() => router.push('/(app)/tournaments' as any)}
-              activeOpacity={0.7}>
-              <ChevronLeft size={24} color={C.onSurface} />
-            </TouchableOpacity>
+            <BackButton onPress={() => router.push('/(app)/tournaments' as any)} />
           }>
 
           {loading && <ActivityIndicator color={C.primary} style={{ marginVertical: Spacing.three }} />}
@@ -90,11 +85,6 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   root:    { flex: 1, backgroundColor: SC.lowest },
   safeArea:{ flex: 1 },
   scroll:  { paddingHorizontal: Spacing.three, paddingBottom: Spacing.five },
-
-  backBtn: {
-    width: 34, height: 34, borderRadius: Shape.full,
-    backgroundColor: SC.highest, justifyContent: 'center', alignItems: 'center',
-  },
 
   group:      { marginBottom: Spacing.three },
   groupLabel: { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 12, letterSpacing: 0.5, marginBottom: Spacing.two },

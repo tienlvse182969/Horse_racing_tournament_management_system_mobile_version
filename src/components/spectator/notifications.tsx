@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Gift, Flag, Target, Trophy, Bell } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -37,7 +37,7 @@ export function SpectatorNotifications() {
   const { C } = useAppColors();
   const styles = useThemedStyles(createStyles);
   const TYPE_CONFIG = typeConfig(C);
-  const { notifications: items, setNotifications } = useSpectatorNotifications();
+  const { notifications: items, loading, setNotifications } = useSpectatorNotifications();
   const unread = items.filter(n => !n.read).length;
 
   const markAllRead = () => {
@@ -54,10 +54,12 @@ export function SpectatorNotifications() {
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <LargeHeaderScrollView title="Thông báo" contentContainerStyle={styles.scroll} rightAction={<HeaderActions />}>
 
+          {loading && <ActivityIndicator color={C.primary} style={{ marginVertical: Spacing.three }} />}
+
           {/* Header row */}
           <View style={styles.listHeader}>
             <Text style={styles.listTitle}>
-              {unread > 0 ? `${unread} chưa đọc` : 'Tất cả đã đọc'}
+              {unread > 0 ? `${unread} chưa đọc` : 'Không có thông báo mới'}
             </Text>
             {unread > 0 && (
               <TouchableOpacity onPress={markAllRead}>
