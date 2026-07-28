@@ -135,6 +135,7 @@ export default function AuthScreen() {
                       password={password}
                       onEmailChange={setEmail}
                       onPasswordChange={setPassword}
+                      onForgotPress={() => router.push({ pathname: '/(auth)/forgot-password' as never, params: { email } } as never)}
                     />
                   )}
 
