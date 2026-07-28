@@ -48,12 +48,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user?.id, user?.role]);
 
   useEffect(() => {
-    if (!user || (user.role !== 'spectator' && user.role !== 'jockey')) return;
+    if (!user || (user.role !== 'spectator' && user.role !== 'jockey' && user.role !== 'horse_owner')) return;
     registerForPushNotificationsAsync()
       .then((token) => {
         if (token) return notificationsApi.registerDeviceToken(token);
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.warn('Không thể đăng ký thiết bị nhận thông báo:', err);
+      });
   }, [user?.id, user?.role]);
 
   const login = useCallback(async (email: string, password: string) => {
