@@ -13,21 +13,7 @@ import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import type { Race } from '@/types/race';
 import { formatCurrency, formatDate, formatNumber } from '@/utils/format';
 import { addRaceEventToCalendar } from '@/utils/calendar';
-
-const PENALTY_LABELS: Record<string, string> = {
-  warning: 'Cảnh cáo',
-  result_void: 'Hủy kết quả',
-  disqualify: 'Hủy kết quả',
-  disqualification: 'Hủy kết quả',
-  time_ban: 'Cấm thi đấu có thời hạn',
-  permanent_ban: 'Cấm thi đấu vô thời hạn',
-};
-
-const TARGET_LABELS: Record<'horse' | 'jockey' | 'both', string> = {
-  horse: 'Ngựa',
-  jockey: 'Nài',
-  both: 'Cả hai',
-};
+import { PENALTY_APPLIED_LABEL as PENALTY_LABELS, VIOLATION_TARGET_LABEL as TARGET_LABELS } from '@/utils/penalty-labels';
 
 type Props = { race: Race; onBack: () => void };
 

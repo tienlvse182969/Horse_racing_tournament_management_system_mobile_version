@@ -77,7 +77,13 @@ export function PredictionHistory({ predictions, onCancel }: Props) {
                 </Text>
               </View>
               {pred.contribution ? (
-                <Text style={styles.cardStake}>Điểm thưởng: {formatNumber(pred.contribution)} điểm</Text>
+                pred.status === 'lost' ? (
+                  <Text style={[styles.cardStake, styles.cardStakeLost]}>
+                    Điểm trừ: -{formatNumber(pred.contribution)} điểm
+                  </Text>
+                ) : (
+                  <Text style={styles.cardStake}>Điểm thưởng: {formatNumber(pred.contribution)} điểm</Text>
+                )
               ) : null}
               {pred.reward ? (
                 <Text style={styles.cardReward}>+{formatNumber(pred.reward)} điểm</Text>
@@ -123,6 +129,7 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   pickAvatar:  { width: 24, height: 24, borderRadius: Shape.full },
   cardPick:    { color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 13 },
   cardStake:   { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
+  cardStakeLost: { color: C.error, fontFamily: FontFamily.medium },
   cardReward:  { color: C.primary, fontFamily: FontFamily.bold, fontSize: 14 },
   cancelBtn:   { alignSelf: 'flex-start', borderRadius: Shape.full, borderWidth: 1, borderColor: C.error, paddingHorizontal: 12, paddingVertical: 6, marginTop: 2 },
   cancelText:  { color: C.error, fontFamily: FontFamily.medium, fontSize: 12 },

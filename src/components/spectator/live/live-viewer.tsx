@@ -12,9 +12,10 @@ import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import type { Race, RaceEntry } from '@/types/race';
 import { spectatorApi } from '@/api/spectator.api';
 import {
-  computeFrame, fmtClock, lengthsBehind, paceWeights,
+  computeFrame, fmtClock, paceWeights,
   type RaceFrame, type RaceSimHorse, type HorseFrame,
 } from '@/utils/raceSim';
+import { PENALTY_APPLIED_LABEL as PENALTY_LABELS, VIOLATION_TARGET_LABEL as TARGET_LABELS } from '@/utils/penalty-labels';
 
 // 'idle' is unused by this component but kept for jockey/race-day.tsx, which imports this
 // type and has its own separate 'idle' initial state for its own (unrelated) simulation view.
@@ -85,21 +86,6 @@ const DURATION_MS = 18000;
 const SPEEDS = [1, 2, 4] as const;
 const MEDAL_COLORS = ['#C9971C', '#C0C0C0', '#CD7F32'];
 const HORSE_AVATAR = require('@/assets/images/a-horse-with-long-hair-and-a-white-mane-free-photo.jpeg');
-
-const PENALTY_LABELS: Record<string, string> = {
-  warning: 'Cảnh cáo',
-  result_void: 'Hủy kết quả',
-  disqualify: 'Hủy kết quả',
-  disqualification: 'Hủy kết quả',
-  time_ban: 'Cấm thi đấu có thời hạn',
-  permanent_ban: 'Cấm thi đấu vô thời hạn',
-};
-
-const TARGET_LABELS: Record<'horse' | 'jockey' | 'both', string> = {
-  horse: 'Ngựa',
-  jockey: 'Nài',
-  both: 'Cả hai',
-};
 
 export function LiveViewer({ race, onClose }: Props) {
   const { C } = useAppColors();
@@ -323,64 +309,61 @@ export function LiveViewer({ race, onClose }: Props) {
           </View>
         )}
 
-        {/* Leaderboard */}
-        {frame && frame.ranking.length > 0 && (
-          <View style={styles.board}>
-            {!isOfficial && (
-              <View style={styles.boardTitleRow}>
-                <View style={styles.tempBadge}>
-                  <Text style={styles.tempBadgeText}>TẠM THỜI</Text>
+        {/* Leaderboard + stat panels */}
+        {frame && (
+          <View style={styles.boardSection}>
+            {frame.ranking.length > 0 && (
+              <View style={[styles.board, styles.boardFlex]}>
+                {!isOfficial && (
+                  <View style={styles.boardTitleRow}>
+                    <View style={styles.tempBadge}>
+                      <Text style={styles.tempBadgeText}>TẠM THỜI</Text>
+                    </View>
+                  </View>
+                )}
+                <View style={styles.boardHead}>
+                  <Text style={[styles.boardHeadText, { width: 28 }]}>HẠNG</Text>
+                  <Text style={[styles.boardHeadText, { flex: 1 }]}>NGỰA</Text>
                 </View>
+                {frame.ranking.map((hf, i) => (
+                  <View key={hf.horse.horseId} style={styles.boardRow}>
+                    <View style={[styles.posBadge, { backgroundColor: hf.color }]}>
+                      <Text style={styles.posBadgeText}>{i + 1}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.boardHorseName} numberOfLines={1}>{hf.horse.horseName}</Text>
+                      {!!hf.horse.jockeyName && (
+                        <Text style={styles.boardJockey} numberOfLines={1}>{hf.horse.jockeyName}</Text>
+                      )}
+                    </View>
+                  </View>
+                ))}
               </View>
             )}
-            <View style={styles.boardHead}>
-              <Text style={[styles.boardHeadText, { width: 28 }]}>HẠNG</Text>
-              <Text style={[styles.boardHeadText, { flex: 1 }]}>NGỰA</Text>
-              <Text style={[styles.boardHeadText, { width: 60, textAlign: 'right' }]}>K.CÁCH</Text>
-            </View>
-            {frame.ranking.map((hf, i) => (
-              <View key={hf.horse.horseId} style={styles.boardRow}>
-                <View style={[styles.posBadge, { backgroundColor: hf.color }]}>
-                  <Text style={styles.posBadgeText}>{i + 1}</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.boardHorseName} numberOfLines={1}>{hf.horse.horseName}</Text>
-                  {!!hf.horse.jockeyName && (
-                    <Text style={styles.boardJockey} numberOfLines={1}>{hf.horse.jockeyName}</Text>
-                  )}
-                </View>
-                <Text style={styles.boardDist}>
-                  {i === 0 ? '—' : `${lengthsBehind(frame.leaderProgress, hf.progress, race.distance).toFixed(1)}L`}
-                </Text>
-              </View>
-            ))}
-          </View>
-        )}
 
-        {/* Bottom stat panels */}
-        {frame && (
-          <View style={styles.statsRow}>
-            <View style={styles.statPanel}>
-              <Text style={styles.statLabel}>DẪN ĐẦU</Text>
-              {leader ? (
-                <View style={styles.leaderRow}>
-                  <View style={[styles.posBadge, { backgroundColor: leader.color }]}>
-                    <Text style={styles.posBadgeText}>{leader.horse.clothNumber}</Text>
+            <View style={styles.statsCol}>
+              <View style={styles.statPanel}>
+                <Text style={styles.statLabel}>DẪN ĐẦU</Text>
+                {leader ? (
+                  <View style={styles.leaderRow}>
+                    <View style={[styles.posBadge, { backgroundColor: leader.color }]}>
+                      <Text style={styles.posBadgeText}>{leader.horse.clothNumber}</Text>
+                    </View>
+                    <Text style={styles.leaderName} numberOfLines={1}>{leader.horse.horseName}</Text>
                   </View>
-                  <Text style={styles.leaderName} numberOfLines={1}>{leader.horse.horseName}</Text>
+                ) : <Text style={styles.statDash}>—</Text>}
+                <View style={styles.speedBarOuter}>
+                  <View style={[styles.speedBarInner, { width: `${speedPct}%` as `${number}%` }]} />
                 </View>
-              ) : <Text style={styles.statDash}>—</Text>}
-              <View style={styles.speedBarOuter}>
-                <View style={[styles.speedBarInner, { width: `${speedPct}%` as `${number}%` }]} />
               </View>
-            </View>
-            <View style={styles.statPanel}>
-              <Text style={styles.statLabel}>CÒN LẠI</Text>
-              <Text style={styles.statValue}>{distRemaining}m</Text>
-            </View>
-            <View style={styles.statPanel}>
-              <Text style={styles.statLabel}>MẶT SÂN</Text>
-              <Text style={styles.statCondition}>{race.surface}</Text>
+              <View style={styles.statPanel}>
+                <Text style={styles.statLabel}>CÒN LẠI</Text>
+                <Text style={styles.statValue}>{distRemaining}m</Text>
+              </View>
+              <View style={styles.statPanel}>
+                <Text style={styles.statLabel}>MẶT SÂN</Text>
+                <Text style={styles.statCondition}>{race.surface}</Text>
+              </View>
             </View>
           </View>
         )}
@@ -527,7 +510,9 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   waitingBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two, paddingVertical: Spacing.three },
   waitingText:{ color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 13 },
 
+  boardSection: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.two },
   board:     { backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, gap: 2 },
+  boardFlex: { flex: 3 },
   boardTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 4 },
   tempBadge:     { backgroundColor: `${C.tertiary}22`, borderRadius: Shape.full, paddingHorizontal: 8, paddingVertical: 2 },
   tempBadgeText: { color: C.tertiary, fontFamily: FontFamily.bold, fontSize: 9, letterSpacing: 0.5 },
@@ -536,15 +521,14 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   boardRow:  { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, paddingVertical: 5 },
   boardHorseName: { color: C.onSurface, fontFamily: FontFamily.bold, fontSize: 13 },
   boardJockey:    { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 11 },
-  boardDist: { width: 60, textAlign: 'right', color: C.onSurfaceVariant, fontFamily: FontFamily.medium, fontSize: 12 },
 
   posBadge: { minWidth: 24, height: 24, borderRadius: Shape.small, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4 },
   posBadgeText: { color: '#fff', fontFamily: FontFamily.bold, fontSize: 11 },
 
-  statsRow:   { flexDirection: 'row', gap: Spacing.two },
-  statPanel:  { flex: 1, backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, gap: 6 },
+  statsCol:   { flex: 2, gap: Spacing.two },
+  statPanel:  { backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, gap: 6 },
   statLabel:  { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 9, letterSpacing: 0.5 },
-  statValue:  { color: C.secondary, fontFamily: FontFamily.bold, fontSize: 18 },
+  statValue:  { color: C.secondary, fontFamily: FontFamily.bold, fontSize: 16 },
   statDash:   { color: C.onSurfaceVariant, fontSize: 13 },
   statCondition: { color: C.tertiary, fontFamily: FontFamily.bold, fontSize: 13 },
   leaderRow:  { flexDirection: 'row', alignItems: 'center', gap: 6 },

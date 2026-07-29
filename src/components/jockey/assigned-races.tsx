@@ -14,6 +14,7 @@ import { formatCurrency, formatDateFull, isBeforeBanEnd } from '@/mock-data';
 import type { JockeyRace } from '@/mock-data/jockey';
 import { JockeySuspensionBanner } from '@/components/jockey/jockey-suspension-banner';
 import { useAuth } from '@/context/AuthContext';
+import { PENALTY_APPLIED_LABEL } from '@/utils/penalty-labels';
 
 function statusConfig(C: AppColors) {
   return {
@@ -90,17 +91,43 @@ function RaceCard({ race, index }: { race: JockeyRace; index: number }) {
         {/* Result section */}
         {hasResult && race.myEntry.position !== undefined && (
           <View style={styles.resultRow}>
-            <View style={[styles.rankBadge, { backgroundColor: rankBg(race.myEntry.position, C) }]}>
-              <Text style={[styles.rankText, { color: rankColor(race.myEntry.position, C) }]}>
-                {rankLabel(race.myEntry.position)}
-              </Text>
-            </View>
-            {race.myEntry.finishTime && (
-              <Text style={styles.resultMeta}>⏱ {race.myEntry.finishTime}</Text>
+            {race.myEntry.isDisqualified ? (
+              <View style={[styles.rankBadge, styles.voidBadge]}>
+                <Text style={[styles.rankText, { color: C.error }]}>
+                  {race.myEntry.violations?.[0]?.penaltyApplied
+                    ? PENALTY_APPLIED_LABEL[race.myEntry.violations[0].penaltyApplied] ?? race.myEntry.violations[0].penaltyApplied
+                    : PENALTY_APPLIED_LABEL['result_void']}
+                </Text>
+              </View>
+            ) : (
+              <>
+                <View style={[styles.rankBadge, { backgroundColor: rankBg(race.myEntry.position, C) }]}>
+                  <Text style={[styles.rankText, { color: rankColor(race.myEntry.position, C) }]}>
+                    {rankLabel(race.myEntry.position)}
+                  </Text>
+                </View>
+                {!!race.myEntry.violations?.length && (
+                  <View style={styles.warningBadge}>
+                    <Text style={[styles.rankText, { color: C.secondary }]}>Cảnh cáo</Text>
+                  </View>
+                )}
+                {race.myEntry.finishTime && (
+                  <Text style={styles.resultMeta}>⏱ {race.myEntry.finishTime}</Text>
+                )}
+                {race.purse > 0 && (
+                  <Text style={styles.resultPrize}>Giải thưởng: {formatCurrency(race.purse)}</Text>
+                )}
+              </>
             )}
-            {race.purse > 0 && (
-              <Text style={styles.resultPrize}>Giải thưởng: {formatCurrency(race.purse)}</Text>
-            )}
+          </View>
+        )}
+
+        {!!race.myEntry.violations?.length && (
+          <View style={styles.violationPanel}>
+            <Text style={styles.violationPanelTitle}>Thông báo từ trọng tài</Text>
+            {race.myEntry.violations.map((v, idx) => (
+              <Text key={idx} style={styles.violationPanelText} numberOfLines={3}>{v.description}</Text>
+            ))}
           </View>
         )}
       </TouchableOpacity>
@@ -232,9 +259,16 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   // Result
   resultRow:  { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, paddingTop: Spacing.one, borderTopWidth: 1, borderTopColor: `${C.onSurfaceVariant}20` },
   rankBadge:  { borderRadius: Shape.full, paddingHorizontal: 10, paddingVertical: 3 },
+  voidBadge:  { backgroundColor: `${C.error}22` },
+  warningBadge: { backgroundColor: C.secondaryContainer, borderRadius: Shape.full, paddingHorizontal: 10, paddingVertical: 3 },
   rankText:   { fontFamily: FontFamily.bold, fontSize: 12 },
   resultMeta: { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
   resultPrize:{ color: C.primary, fontFamily: FontFamily.bold, fontSize: 12, marginLeft: 'auto' },
+
+  // Violation panel
+  violationPanel:      { marginTop: Spacing.one, padding: Spacing.two, borderRadius: Shape.medium, backgroundColor: `${C.error}12`, gap: 4 },
+  violationPanelTitle: { color: C.error, fontFamily: FontFamily.bold, fontSize: 12 },
+  violationPanelText:  { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12, lineHeight: 17 },
 
   // Empty state
   emptyWrap:    { alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.six },

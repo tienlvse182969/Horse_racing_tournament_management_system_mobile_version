@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Zap, Trophy, Award } from 'lucide-react-native';
+import { Zap, Trophy, Award, ShieldAlert } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
@@ -15,7 +15,9 @@ import { useHorseLeaderboard } from '@/hooks/useHorseLeaderboard';
 import { useRaceLeaderboard } from '@/hooks/useRaceLeaderboard';
 import { useAuth } from '@/context/AuthContext';
 import { formatDateFull, formatNumber } from '@/mock-data';
+import { buildPersonalResults } from '@/mock-data/jockey';
 import { MedalIcon } from '@/components/ui/medal-icon';
+import { PENALTY_APPLIED_LABEL } from '@/utils/penalty-labels';
 
 const HORSE_AVATAR = require('@/assets/images/a-horse-with-long-hair-and-a-white-mane-free-photo.jpeg');
 
@@ -73,17 +75,7 @@ function PersonalContent() {
   };
   const { user } = useAuth();
   const { races, loading } = useJockeyRaces();
-  const personalResults = races
-    .filter(r => r.status === 'completed' && r.myEntry.position)
-    .map(r => ({
-      raceId: r.id,
-      raceName: r.name,
-      date: r.date,
-      horse: r.myEntry.horse.name,
-      position: r.myEntry.position ?? 0,
-      time: r.myEntry.finishTime ?? '-',
-      earnings: r.purse,
-    }));
+  const personalResults = buildPersonalResults(races);
   const totalEarnings = personalResults.reduce((s, r) => s + r.earnings, 0);
   const wins    = personalResults.filter(r => r.position === 1).length;
   const podiums = personalResults.filter(r => r.position <= 3).length;
@@ -118,11 +110,14 @@ function PersonalContent() {
       {personalResults.map((r, i) => {
         const pc = POS_CONFIG[r.position] ?? { iconColor: null as string | null, bg: SC.high, color: C.onSurfaceVariant };
         const posLabel = POS_LABEL[r.position] ?? `#${r.position}`;
+        const warning = !r.isDisqualified && r.violations.length > 0;
         return (
           <Animated.View key={r.raceId} entering={FadeInDown.delay(i * 60).duration(280)}>
             <View style={styles.resultRow}>
-              <View style={[styles.posBadge, { backgroundColor: pc.bg }]}>
-                {pc.iconColor
+              <View style={[styles.posBadge, r.isDisqualified ? { backgroundColor: `${C.error}22` } : { backgroundColor: pc.bg }]}>
+                {r.isDisqualified
+                  ? <ShieldAlert size={22} color={C.error} />
+                  : pc.iconColor
                   ? <Trophy size={22} color={pc.iconColor} />
                   : <Text style={[styles.rankNum, { color: pc.color }]}>#{r.position}</Text>
                 }
@@ -138,11 +133,30 @@ function PersonalContent() {
                     <Zap size={10} color={C.onSurfaceVariant} />
                     <Text style={styles.resultMetaText}>{r.horse}</Text>
                   </View>
+                  {warning && (
+                    <>
+                      <Text style={styles.resultMetaDot}>·</Text>
+                      <Text style={[styles.resultMetaText, { color: C.secondary, fontFamily: FontFamily.bold }]}>Cảnh cáo</Text>
+                    </>
+                  )}
                 </View>
+                {!!r.violations[0]?.description && (
+                  <Text style={styles.resultViolationText} numberOfLines={2}>{r.violations[0].description}</Text>
+                )}
               </View>
               <View style={styles.resultRight}>
-                <Text style={[styles.resultPos, { color: pc.color }]}>{posLabel}</Text>
-                <Text style={styles.resultEarnings}>+{formatNumber(r.earnings)}</Text>
+                {r.isDisqualified ? (
+                  <Text style={[styles.resultPos, { color: C.error }]}>
+                    {r.violations[0]?.penaltyApplied
+                      ? PENALTY_APPLIED_LABEL[r.violations[0].penaltyApplied] ?? r.violations[0].penaltyApplied
+                      : PENALTY_APPLIED_LABEL['result_void']}
+                  </Text>
+                ) : (
+                  <>
+                    <Text style={[styles.resultPos, { color: pc.color }]}>{posLabel}</Text>
+                    <Text style={styles.resultEarnings}>+{formatNumber(r.earnings)}</Text>
+                  </>
+                )}
               </View>
             </View>
           </Animated.View>
@@ -356,6 +370,7 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   resultRight:    { alignItems: 'flex-end', gap: 2 },
   resultPos:      { fontFamily: FontFamily.bold, fontSize: 14 },
   resultEarnings: { color: C.secondary, fontFamily: FontFamily.bold, fontSize: 12 },
+  resultViolationText: { color: C.error, fontFamily: FontFamily.regular, fontSize: 11, marginTop: 2 },
 
   // Podium
   podiumRow:   { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: Spacing.two, marginBottom: Spacing.one },

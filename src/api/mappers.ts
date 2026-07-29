@@ -103,7 +103,10 @@ export function mapInvitation(dto: InvitationDto): Invitation {
 
 export function mapJockeyRace(dto: JockeyRaceDto): JockeyRace {
   const dt = new Date(dto.scheduledAt);
-  const myRank = dto.result?.rankings.find((r) => r.horse.name === dto.participant.horse.name);
+  const myRank = dto.result?.rankings.find((r) => r.horse.id === dto.participant.horse.id);
+  const myViolations = (dto.result?.violations ?? []).filter(
+    (v) => v.horseId === dto.participant.horse.id || v.jockeyId === myRank?.jockey.id,
+  );
   return {
     id: dto.id,
     name: dto.name,
@@ -134,6 +137,8 @@ export function mapJockeyRace(dto: JockeyRaceDto): JockeyRace {
       odds: 2.5,
       position: myRank?.rank,
       finishTime: myRank?.finishTime ? `${myRank.finishTime}s` : undefined,
+      isDisqualified: myRank?.isDisqualified ?? false,
+      violations: myViolations,
     },
   };
 }
