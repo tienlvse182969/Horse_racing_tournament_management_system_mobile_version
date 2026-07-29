@@ -164,9 +164,9 @@ export function RaceDetail({ race, onBack }: Props) {
               Trận đấu đã kết thúc. Đang chờ trọng tài kiểm tra VAR và xác nhận kết quả trước khi công bố...
             </Text>
           )}
-          {sortedEntries.map((entry, idx) => (
+          {sortedEntries.map((entry) => (
             <View key={entry.horse.id} style={[styles.entryRow, entry.isDisqualified && styles.entryRowDisqualified]}>
-              {!isUpcoming && (
+              {isCompleted && (
                 <View style={styles.entryRank}>
                   {entry.isDisqualified
                     ? <Text style={styles.entryTextDisqualified}>—</Text>
@@ -174,11 +174,7 @@ export function RaceDetail({ race, onBack }: Props) {
                     ? (entry.position <= 3
                       ? <><Trophy size={14} color={MEDAL_COLORS[entry.position - 1]} /><Text style={[styles.rankNum, { color: MEDAL_COLORS[entry.position - 1] }]}>{entry.position}</Text></>
                       : <Text style={styles.rankNum}>#{entry.position}</Text>)
-                    : isCompleted
-                    ? <Text style={styles.rankDash}>—</Text>
-                    : (idx < 3
-                      ? <><Trophy size={14} color={MEDAL_COLORS[idx]} /><Text style={[styles.rankNum, { color: MEDAL_COLORS[idx] }]}>{idx + 1}</Text></>
-                      : <Text style={styles.rankNum}>#{idx + 1}</Text>)}
+                    : <Text style={styles.rankDash}>—</Text>}
                 </View>
               )}
               <View style={[styles.horseAvatar, { borderColor: entry.horse.color }]}>

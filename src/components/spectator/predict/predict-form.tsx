@@ -155,7 +155,7 @@ export function PredictForm({ onSubmitted }: Props) {
                   </View>
                   <View style={styles.horseInfo}>
                     <Text style={[styles.horseName, isSelected && styles.horseNameSelected]}>
-                      #{entry.horse.number} - {entry.horse.name}
+                      {entry.horse.name}
                     </Text>
                     {!!entry.jockeyName && <Text style={styles.jockeyName}>{entry.jockeyName}</Text>}
                   </View>
