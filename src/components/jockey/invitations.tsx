@@ -43,12 +43,18 @@ export function JockeyInvitations() {
   const [filter, setFilter] = useState<FilterType>('all');
   const [expanded, setExpanded] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [acceptingId, setAcceptingId] = useState<string | null>(null);
 
   const filtered = filter === 'all' ? items : items.filter(i => i.status === filter);
 
   const handleRespond = async (id: string, status: 'accepted' | 'declined') => {
-    await respond(id, status === 'accepted' ? 'accept' : 'decline');
-    setExpanded(null);
+    if (status === 'accepted') setAcceptingId(id);
+    try {
+      await respond(id, status === 'accepted' ? 'accept' : 'decline');
+      setExpanded(null);
+    } finally {
+      if (status === 'accepted') setAcceptingId(null);
+    }
   };
 
   const handleRefresh = useCallback(async () => {
@@ -103,6 +109,7 @@ export function JockeyInvitations() {
                 <InvitationCard
                   invitation={inv}
                   isExpanded={expanded === inv.id}
+                  isAccepting={acceptingId === inv.id}
                   onToggle={() => setExpanded(expanded === inv.id ? null : inv.id)}
                   onAccept={() => handleRespond(inv.id, 'accepted')}
                   onDecline={() => handleRespond(inv.id, 'declined')}
@@ -120,12 +127,14 @@ export function JockeyInvitations() {
 function InvitationCard({
   invitation: inv,
   isExpanded,
+  isAccepting,
   onToggle,
   onAccept,
   onDecline,
 }: {
   invitation: Invitation;
   isExpanded: boolean;
+  isAccepting: boolean;
   onToggle: () => void;
   onAccept: () => void;
   onDecline: () => void;
@@ -196,13 +205,23 @@ function InvitationCard({
 
           {inv.status === 'pending' && (
             <View style={styles.actionRow}>
-              <TouchableOpacity style={styles.declineBtn} onPress={onDecline} activeOpacity={0.85}>
+              <TouchableOpacity style={styles.declineBtn} onPress={onDecline} activeOpacity={0.85} disabled={isAccepting}>
                 <X size={16} color={C.error} />
                 <Text style={styles.declineBtnText}>Từ chối</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.acceptBtn} onPress={onAccept} activeOpacity={0.85}>
-                <Check size={16} color={C.onTertiary} />
-                <Text style={styles.acceptBtnText}>Chấp nhận</Text>
+              <TouchableOpacity
+                style={[styles.acceptBtn, isAccepting && styles.acceptBtnLoading]}
+                onPress={onAccept}
+                activeOpacity={0.85}
+                disabled={isAccepting}>
+                {isAccepting ? (
+                  <ActivityIndicator size="small" color={C.onTertiary} />
+                ) : (
+                  <>
+                    <Check size={16} color={C.onTertiary} />
+                    <Text style={styles.acceptBtnText}>Chấp nhận</Text>
+                  </>
+                )}
               </TouchableOpacity>
             </View>
           )}
@@ -259,6 +278,7 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   declineBtn:  { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: C.errorContainer, borderRadius: Shape.large, paddingVertical: 13 },
   declineBtnText: { color: C.error, fontFamily: FontFamily.bold, fontSize: 14 },
   acceptBtn:   { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: C.tertiary, borderRadius: Shape.large, paddingVertical: 13 },
+  acceptBtnLoading: { opacity: 0.7 },
   acceptBtnText: { color: C.onTertiary, fontFamily: FontFamily.bold, fontSize: 14 },
   });
 }
