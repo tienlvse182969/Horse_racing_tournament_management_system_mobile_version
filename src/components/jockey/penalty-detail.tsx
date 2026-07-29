@@ -8,6 +8,7 @@ import { BackButton } from '@/components/back-button';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { formatBanDate } from './horse-ban-badge';
 import type { PenaltyDetailDto } from '@/api/jockey.api';
+import { PENALTY_APPLIED_LABEL, VIOLATION_TARGET_LABEL as TARGET_LABEL } from '@/utils/penalty-labels';
 
 const CATEGORY_LABEL: Record<string, string> = {
   race_conduct: 'Vi phạm luật đua',
@@ -31,21 +32,6 @@ function severityColor(C: AppColors): Record<string, string> {
     critical: C.error,
   };
 }
-
-const PENALTY_APPLIED_LABEL: Record<string, string> = {
-  warning: 'Cảnh cáo',
-  result_void: 'Hủy kết quả',
-  disqualify: 'Hủy kết quả',
-  disqualification: 'Hủy kết quả',
-  time_ban: 'Cấm thi đấu có thời hạn',
-  permanent_ban: 'Cấm thi đấu vô thời hạn',
-};
-
-const TARGET_LABEL: Record<string, string> = {
-  horse: 'Ngựa',
-  jockey: 'Kỵ sĩ',
-  both: 'Cả ngựa và kỵ sĩ',
-};
 
 function formatFullDate(iso: string): string {
   return new Date(iso).toLocaleDateString('vi-VN', {

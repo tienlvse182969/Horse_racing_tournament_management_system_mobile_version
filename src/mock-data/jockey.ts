@@ -1,3 +1,5 @@
+import type { RaceViolation } from '@/types/race';
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type InvitationStatus = 'pending' | 'accepted' | 'declined';
@@ -26,6 +28,8 @@ export type PersonalResult = {
   position: number;
   time: string;
   earnings: number;
+  isDisqualified: boolean;
+  violations: RaceViolation[];
 };
 
 export type AchievementType = 'gold' | 'silver' | 'bronze' | 'special';
@@ -71,6 +75,8 @@ export type JockeyRaceEntry = {
   odds: number;
   position?: number;
   finishTime?: string;
+  isDisqualified?: boolean;
+  violations?: RaceViolation[];
 };
 
 export type JockeyRaceStatus = 'live' | 'upcoming' | 'completed';
@@ -93,6 +99,23 @@ export type JockeyRace = {
   meetingName?: string;
   meetingDate?: string;
 };
+
+/** Builds the "Lịch sử thi đấu" list shared by the results tab and profile screen. */
+export function buildPersonalResults(races: JockeyRace[]): PersonalResult[] {
+  return races
+    .filter(r => r.status === 'completed' && r.myEntry.position)
+    .map(r => ({
+      raceId: r.id,
+      raceName: r.name,
+      date: r.date,
+      horse: r.myEntry.horse.name,
+      position: r.myEntry.position ?? 0,
+      time: r.myEntry.finishTime ?? '-',
+      earnings: r.myEntry.isDisqualified ? 0 : r.purse,
+      isDisqualified: !!r.myEntry.isDisqualified,
+      violations: r.myEntry.violations ?? [],
+    }));
+}
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -260,13 +283,5 @@ export const jockeyRaces: JockeyRace[] = [
     meetingDate: '2026-06-06',
     myEntry: { jockeyId: 'j1', horse: { name: 'Bão Lửa', number: 2, color: '#FF6B6B' }, odds: 2.1, position: 2 },
   },
-];
-
-export const personalResults: PersonalResult[] = [
-  { raceId: 'jr4', raceName: 'Giải Tranh Cúp Vàng',  date: '2026-05-24', horse: 'Hồng Phong',   position: 1, time: '1:18.4', earnings: 100_000_000 },
-  { raceId: 'pr2', raceName: 'Giải Tốc Độ Tháng 5',  date: '2026-05-18', horse: 'Thiên Mã Vàng', position: 2, time: '1:22.1', earnings: 50_000_000 },
-  { raceId: 'pr3', raceName: 'Cúp Khai Xuân',          date: '2026-05-10', horse: 'Thiên Mã Vàng', position: 1, time: '1:19.8', earnings: 120_000_000 },
-  { raceId: 'pr4', raceName: 'Giải Vô Địch Tỉnh',      date: '2026-05-03', horse: 'Phi Vũ',         position: 3, time: '1:21.5', earnings: 30_000_000 },
-  { raceId: 'pr5', raceName: 'Cúp Mùa Xuân 2026',      date: '2026-04-26', horse: 'Long Thần',      position: 1, time: '1:20.2', earnings: 90_000_000 },
 ];
 

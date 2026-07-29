@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSharedValue, useFrameCallback, runOnJS } from 'react-native-reanimated';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
-import { Ruler, Trophy, Leaf, MapPin, CalendarDays, CalendarPlus } from 'lucide-react-native';
+import { Ruler, Trophy, Leaf, MapPin, CalendarDays, CalendarPlus, Gavel, ShieldAlert } from 'lucide-react-native';
 
 import { Shape, Spacing, FontFamily, type AppColors, type SurfaceColors } from '@/constants/theme';
 import { BackButton } from '@/components/back-button';
@@ -21,6 +21,7 @@ import type { JockeyRace } from '@/mock-data/jockey';
 import type { Race, RaceEntry } from '@/mock-data/races';
 import { HorseBanBadge } from '@/components/jockey/horse-ban-badge';
 import { addRaceEventToCalendar } from '@/utils/calendar';
+import { PENALTY_APPLIED_LABEL, VIOLATION_TARGET_LABEL } from '@/utils/penalty-labels';
 
 // ─── Animation constants (same as LiveViewer) ─────────────────────────────────
 const SPEED_CONSTANT = 0.0000333;
@@ -545,9 +546,10 @@ function LiveRaceView({
 function PostRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRace: Race | null }) {
   const { C } = useAppColors();
   const styles = useThemedStyles(createStyles);
-  const { position, finishTime, horse } = jockeyRace.myEntry;
+  const { position, finishTime, horse, isDisqualified, violations } = jockeyRace.myEntry;
   const isTopThree = position !== undefined && position <= 3;
-  const prizeEstimate = position === 1 ? jockeyRace.purse * 0.5
+  const prizeEstimate = isDisqualified ? 0
+    : position === 1 ? jockeyRace.purse * 0.5
     : position === 2 ? jockeyRace.purse * 0.3
     : position === 3 ? jockeyRace.purse * 0.15
     : 0;
@@ -558,20 +560,49 @@ function PostRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRa
       {/* Rank banner */}
       <Animated.View entering={FadeIn.duration(400)}>
         <LinearGradient
-          colors={isTopThree ? ['#1A4D2E', '#2D6741'] : ['#2A2A2A', '#3A3A3A']}
+          colors={isDisqualified ? [`${C.error}CC`, `${C.error}99`] : isTopThree ? ['#1A4D2E', '#2D6741'] : ['#2A2A2A', '#3A3A3A']}
           style={styles.resultBanner}>
           <View style={styles.resultBannerInner}>
-            {position !== undefined && <MedalIcon position={position} size={48} />}
+            {isDisqualified
+              ? <ShieldAlert size={48} color="#FFFFFF" />
+              : position !== undefined && <MedalIcon position={position} size={48} />}
             <View style={{ gap: 4 }}>
               <Text style={styles.resultRankText}>
-                {position !== undefined ? `HẠNG ${position}` : 'KẾT THÚC'}
+                {isDisqualified ? 'KẾT QUẢ BỊ HỦY' : position !== undefined ? `HẠNG ${position}` : 'KẾT THÚC'}
               </Text>
               <Text style={styles.resultHorseName}>{horse.name}</Text>
-              {finishTime && <Text style={styles.resultTime}>⏱ {finishTime}</Text>}
+              {!isDisqualified && finishTime && <Text style={styles.resultTime}>⏱ {finishTime}</Text>}
             </View>
           </View>
         </LinearGradient>
       </Animated.View>
+
+      {/* Violations against me in this race */}
+      {!!violations?.length && (
+        <Animated.View entering={FadeInDown.delay(40).duration(360)}>
+          <View style={styles.card}>
+            <View style={styles.violationsTitleRow}>
+              <Gavel size={16} color={C.error} />
+              <Text style={styles.cardTitle}>Thông báo từ trọng tài</Text>
+            </View>
+            {violations.map((v, idx) => (
+              <View key={idx} style={styles.violationRow}>
+                <View style={styles.violationHeader}>
+                  <View style={styles.targetBadge}>
+                    <Text style={styles.targetBadgeText}>{VIOLATION_TARGET_LABEL[v.target]}</Text>
+                  </View>
+                  <View style={[styles.penaltyBadge, v.penaltyApplied === 'warning' ? styles.penaltyBadgeWarning : styles.penaltyBadgeVoid]}>
+                    <Text style={[styles.penaltyBadgeText, v.penaltyApplied === 'warning' ? styles.penaltyBadgeTextWarning : styles.penaltyBadgeTextVoid]}>
+                      {v.penaltyApplied ? PENALTY_APPLIED_LABEL[v.penaltyApplied] ?? v.penaltyApplied : ''}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.violationDesc}>{v.description}</Text>
+              </View>
+            ))}
+          </View>
+        </Animated.View>
+      )}
 
       {/* Location */}
       <Animated.View entering={FadeInDown.delay(80).duration(360)}>
@@ -677,7 +708,7 @@ function PostRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRa
       </Animated.View>
 
       {/* Earnings */}
-      {prizeEstimate > 0 && (
+      {!isDisqualified && prizeEstimate > 0 && (
         <Animated.View entering={FadeInDown.delay(260).duration(360)}>
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Thu nhập</Text>
@@ -860,5 +891,19 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   earningsNote:       { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
   returnBtn:          { backgroundColor: C.primaryContainer, borderRadius: Shape.full, paddingVertical: 14, alignItems: 'center' },
   returnBtnText:      { color: C.primary, fontFamily: FontFamily.bold, fontSize: 15 },
+
+  // Violations (post-race)
+  violationsTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  violationRow:        { backgroundColor: `${C.error}12`, borderRadius: Shape.medium, padding: Spacing.two, gap: 4 },
+  violationHeader:      { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  violationDesc:        { color: C.onSurfaceVariant, fontFamily: FontFamily.regular, fontSize: 12 },
+  targetBadge:          { backgroundColor: SC.highest, borderRadius: Shape.full, paddingHorizontal: 8, paddingVertical: 2 },
+  targetBadgeText:      { color: C.onSurfaceVariant, fontFamily: FontFamily.bold, fontSize: 10 },
+  penaltyBadge:          { borderRadius: Shape.full, paddingHorizontal: 8, paddingVertical: 2 },
+  penaltyBadgeWarning:   { backgroundColor: C.secondaryContainer },
+  penaltyBadgeVoid:      { backgroundColor: `${C.error}22` },
+  penaltyBadgeText:      { fontFamily: FontFamily.bold, fontSize: 10 },
+  penaltyBadgeTextWarning: { color: C.secondary },
+  penaltyBadgeTextVoid:    { color: C.error },
   });
 }

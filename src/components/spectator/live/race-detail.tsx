@@ -13,21 +13,7 @@ import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import type { Race } from '@/types/race';
 import { formatCurrency, formatDate, formatNumber } from '@/utils/format';
 import { addRaceEventToCalendar } from '@/utils/calendar';
-
-const PENALTY_LABELS: Record<string, string> = {
-  warning: 'Cảnh cáo',
-  result_void: 'Hủy kết quả',
-  disqualify: 'Hủy kết quả',
-  disqualification: 'Hủy kết quả',
-  time_ban: 'Cấm thi đấu có thời hạn',
-  permanent_ban: 'Cấm thi đấu vô thời hạn',
-};
-
-const TARGET_LABELS: Record<'horse' | 'jockey' | 'both', string> = {
-  horse: 'Ngựa',
-  jockey: 'Nài',
-  both: 'Cả hai',
-};
+import { PENALTY_APPLIED_LABEL as PENALTY_LABELS, VIOLATION_TARGET_LABEL as TARGET_LABELS } from '@/utils/penalty-labels';
 
 type Props = { race: Race; onBack: () => void };
 
@@ -164,9 +150,9 @@ export function RaceDetail({ race, onBack }: Props) {
               Trận đấu đã kết thúc. Đang chờ trọng tài kiểm tra VAR và xác nhận kết quả trước khi công bố...
             </Text>
           )}
-          {sortedEntries.map((entry, idx) => (
+          {sortedEntries.map((entry) => (
             <View key={entry.horse.id} style={[styles.entryRow, entry.isDisqualified && styles.entryRowDisqualified]}>
-              {!isUpcoming && (
+              {isCompleted && (
                 <View style={styles.entryRank}>
                   {entry.isDisqualified
                     ? <Text style={styles.entryTextDisqualified}>—</Text>
@@ -174,11 +160,7 @@ export function RaceDetail({ race, onBack }: Props) {
                     ? (entry.position <= 3
                       ? <><Trophy size={14} color={MEDAL_COLORS[entry.position - 1]} /><Text style={[styles.rankNum, { color: MEDAL_COLORS[entry.position - 1] }]}>{entry.position}</Text></>
                       : <Text style={styles.rankNum}>#{entry.position}</Text>)
-                    : isCompleted
-                    ? <Text style={styles.rankDash}>—</Text>
-                    : (idx < 3
-                      ? <><Trophy size={14} color={MEDAL_COLORS[idx]} /><Text style={[styles.rankNum, { color: MEDAL_COLORS[idx] }]}>{idx + 1}</Text></>
-                      : <Text style={styles.rankNum}>#{idx + 1}</Text>)}
+                    : <Text style={styles.rankDash}>—</Text>}
                 </View>
               )}
               <View style={[styles.horseAvatar, { borderColor: entry.horse.color }]}>

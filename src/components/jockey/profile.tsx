@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, Pressable, Swit
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
-import { Zap, Trophy, Award, ChartBar, ChevronRight, LogOut, UserPen, Lock, Info, X, SunMoon, Bell } from 'lucide-react-native';
+import { Zap, Trophy, Award, ChartBar, ChevronRight, LogOut, UserPen, Lock, Info, X, SunMoon, Bell, ShieldAlert } from 'lucide-react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { router } from 'expo-router';
 
@@ -15,6 +15,8 @@ import { useAuth } from '@/context/AuthContext';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useJockeyRaces } from '@/hooks/useJockeyData';
 import { formatDateFull, formatNumber } from '@/mock-data';
+import { buildPersonalResults } from '@/mock-data/jockey';
+import { PENALTY_APPLIED_LABEL } from '@/utils/penalty-labels';
 import { APP_VERSION } from '@/constants/version';
 import { useNotificationSetting } from '@/hooks/useNotificationSetting';
 
@@ -41,17 +43,7 @@ export function JockeyProfile() {
   }), [C]);
 
   const { races, loading } = useJockeyRaces();
-  const raceHistory = races
-    .filter(r => r.status === 'completed' && r.myEntry.position)
-    .map(r => ({
-      raceId: r.id,
-      raceName: r.name,
-      date: r.date,
-      horse: r.myEntry.horse.name,
-      position: r.myEntry.position ?? 0,
-      time: r.myEntry.finishTime ?? '-',
-      earnings: r.purse,
-    }));
+  const raceHistory = buildPersonalResults(races);
 
   const displayName = user?.fullName ?? 'Jockey';
 
@@ -147,11 +139,14 @@ export function JockeyProfile() {
             {raceHistory.map((r, i) => {
               const pc = POS_CONFIG[r.position] ?? { iconColor: null as string | null, bg: SC.high, color: C.onSurfaceVariant };
               const posLabel = POS_LABEL[r.position] ?? `#${r.position}`;
+              const warning = !r.isDisqualified && r.violations.length > 0;
               return (
                 <Animated.View key={r.raceId} entering={FadeInDown.delay(240 + i * 50).duration(260)}>
                   <View style={styles.historyRow}>
-                    <View style={[styles.historyBadge, { backgroundColor: pc.bg }]}>
-                      {pc.iconColor
+                    <View style={[styles.historyBadge, r.isDisqualified ? { backgroundColor: `${C.error}22` } : { backgroundColor: pc.bg }]}>
+                      {r.isDisqualified
+                        ? <ShieldAlert size={22} color={C.error} />
+                        : pc.iconColor
                         ? <Trophy size={22} color={pc.iconColor} />
                         : <Text style={[styles.historyRank, { color: pc.color }]}>#{r.position}</Text>}
                     </View>
@@ -163,11 +158,30 @@ export function JockeyProfile() {
                         </Text>
                         <Text style={styles.historyMetaDot}>·</Text>
                         <Text style={styles.historyMetaText}>{r.horse}</Text>
+                        {warning && (
+                          <>
+                            <Text style={styles.historyMetaDot}>·</Text>
+                            <Text style={[styles.historyMetaText, { color: C.secondary, fontFamily: FontFamily.bold }]}>Cảnh cáo</Text>
+                          </>
+                        )}
                       </View>
+                      {!!r.violations[0]?.description && (
+                        <Text style={styles.historyViolationText} numberOfLines={2}>{r.violations[0].description}</Text>
+                      )}
                     </View>
                     <View style={styles.historyRight}>
-                      <Text style={[styles.historyPos, { color: pc.color }]}>{posLabel}</Text>
-                      <Text style={styles.historyEarnings}>+{formatNumber(r.earnings)}</Text>
+                      {r.isDisqualified ? (
+                        <Text style={[styles.historyPos, { color: C.error }]}>
+                          {r.violations[0]?.penaltyApplied
+                            ? PENALTY_APPLIED_LABEL[r.violations[0].penaltyApplied] ?? r.violations[0].penaltyApplied
+                            : PENALTY_APPLIED_LABEL['result_void']}
+                        </Text>
+                      ) : (
+                        <>
+                          <Text style={[styles.historyPos, { color: pc.color }]}>{posLabel}</Text>
+                          <Text style={styles.historyEarnings}>+{formatNumber(r.earnings)}</Text>
+                        </>
+                      )}
                     </View>
                   </View>
                 </Animated.View>
@@ -272,6 +286,7 @@ function createStyles(C: AppColors, SC: SurfaceColors) {
   historyRight:   { alignItems: 'flex-end', gap: 2 },
   historyPos:     { fontFamily: FontFamily.bold, fontSize: 14 },
   historyEarnings:{ color: C.secondary, fontFamily: FontFamily.bold, fontSize: 12 },
+  historyViolationText: { color: C.error, fontFamily: FontFamily.regular, fontSize: 11, marginTop: 2 },
 
   // Settings
   settingRow:     { flexDirection: 'row', alignItems: 'center', backgroundColor: SC.high, borderRadius: Shape.large, padding: Spacing.two, gap: Spacing.two, marginBottom: Spacing.one },

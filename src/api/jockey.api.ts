@@ -1,4 +1,5 @@
 import { apiGet, apiPatch } from './client';
+import type { RaceViolation } from '@/types/race';
 
 export const jockeyApi = {
   dashboard: () =>
@@ -58,7 +59,15 @@ export interface JockeyRaceDto {
     confirmedAt?: string | null;
   };
   result?: {
-    rankings: Array<{ rank: number; horse: { name: string }; finishTime?: number; prize: number }>;
+    rankings: Array<{
+      rank: number;
+      horse: { id: string; name: string };
+      jockey: { id: string; fullName: string };
+      finishTime?: number;
+      prize: number;
+      isDisqualified?: boolean;
+    }>;
+    violations: RaceViolation[];
   } | null;
   track?: { name: string; location: string; surface: string } | null;
   meeting?: { name: string; date: string } | null;
