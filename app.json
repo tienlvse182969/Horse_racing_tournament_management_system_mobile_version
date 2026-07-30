@@ -20,7 +20,7 @@
         "foregroundImage": "./assets/images/RacetrackVN_logo.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.racetrackvn.app",
+      "package": "com.anonymous.horse_racing_tournament_management_system_mobile_version",
       "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.READ_CALENDAR",
