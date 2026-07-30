@@ -31,17 +31,24 @@ function rankLabel(rank: number): string {
   return `#${rank}`;
 }
 
+const GOLD = '#FFD700';
+const GOLD_TEXT = '#8A6A00';
+const SILVER = '#C0C0C0';
+const SILVER_TEXT = '#5F6368';
+const BRONZE = '#CD7F32';
+const BRONZE_TEXT = '#8B4513';
+
 function rankColor(rank: number, C: AppColors): string {
-  if (rank === 1) return C.tertiary;
-  if (rank === 2) return C.secondary;
-  if (rank === 3) return C.primary;
+  if (rank === 1) return GOLD_TEXT;
+  if (rank === 2) return SILVER_TEXT;
+  if (rank === 3) return BRONZE_TEXT;
   return C.onSurfaceVariant;
 }
 
 function rankBg(rank: number, C: AppColors): string {
-  if (rank === 1) return C.tertiaryContainer;
-  if (rank === 2) return C.secondaryContainer;
-  if (rank === 3) return C.primaryContainer;
+  if (rank === 1) return `${GOLD}33`;
+  if (rank === 2) return `${SILVER}33`;
+  if (rank === 3) return `${BRONZE}33`;
   return `${C.onSurfaceVariant}22`;
 }
 
@@ -114,9 +121,9 @@ function RaceCard({ race, index }: { race: JockeyRace; index: number }) {
                 {race.myEntry.finishTime && (
                   <Text style={styles.resultMeta}>⏱ {race.myEntry.finishTime}</Text>
                 )}
-                {race.purse > 0 && (
+                {/* {race.purse > 0 && (
                   <Text style={styles.resultPrize}>Giải thưởng: {formatCurrency(race.purse)}</Text>
-                )}
+                )} */}
               </>
             )}
           </View>

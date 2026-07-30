@@ -110,7 +110,7 @@ export function RaceDetail({ race, onBack }: Props) {
               <InfoCell label="Ngày" value={formatDate(race.date)} light />
               <InfoCell label="Giờ" value={race.time} light />
               <InfoCell label="Giải thưởng" value={formatNumber(race.purse)} light />
-              <InfoCell label="Kỵ sĩ" value={`${race.entries.length}`} light />
+              <InfoCell label="Nài ngựa" value={`${race.entries.length}`} light />
             </View>
             {race.status === 'upcoming' && (
               <TouchableOpacity

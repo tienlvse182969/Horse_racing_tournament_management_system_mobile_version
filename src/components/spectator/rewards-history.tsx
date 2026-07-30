@@ -184,7 +184,7 @@ export function SpectatorRewardsHistory() {
               <X size={20} color={C.onSurfaceVariant} />
             </Pressable>
             <Text style={styles.topUpTitle}>Nạp thêm điểm thưởng</Text>
-            <Text style={styles.topUpSub}>1000 VND = 100000 điểm · tối thiểu 100 điểm</Text>
+            <Text style={styles.topUpSub}>1000 VND = 100.000 điểm · Nhập tối thiểu 100.000 điểm</Text>
             <TextInput
               style={styles.topUpInput}
               keyboardType="number-pad"
@@ -195,9 +195,9 @@ export function SpectatorRewardsHistory() {
               placeholderTextColor={C.onSurfaceVariant}
             />
             <View style={styles.topUpActions}>
-              <Pressable style={styles.topUpBtn} disabled={submitting} onPress={submitMockTopUp}>
+              {/* <Pressable style={styles.topUpBtn} disabled={submitting} onPress={submitMockTopUp}>
                 <Text style={styles.topUpBtnText}>{submitting ? 'Đang xử lý...' : 'Top up demo'}</Text>
-              </Pressable>
+              </Pressable> */}
               <Pressable style={[styles.topUpBtn, styles.topUpBtnGhost]} disabled={submitting} onPress={submitPayosTopUp}>
                 <Text style={styles.topUpBtnText}>Nạp điểm thưởng</Text>
               </Pressable>

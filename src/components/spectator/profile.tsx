@@ -53,11 +53,11 @@ export function SpectatorProfile() {
 
   type StatItem = { label: string; value: string | number; Icon: React.ComponentType<{ size?: number; color?: string }> };
   const STATS: StatItem[] = [
-    { label: 'Dự đoán',     value: total,                           Icon: Target      },
+    { label: 'Dự đoán ngựa thắng',     value: total,                           Icon: Target      },
     { label: 'Đoán đúng',   value: won,                             Icon: CircleCheck },
     { label: 'Đoán sai',    value: lost,                            Icon: CircleX     },
     { label: 'Điểm thưởng', value: formatNumber(  balance),            Icon: Star     },
-    { label: 'Tỷ lệ đúng',  value: `${winPct}%`,                   Icon: ChartBar    },
+    { label: 'Tỷ lệ đoán đúng',  value: `${winPct}%`,                   Icon: ChartBar    },
     { label: 'Đang chờ',    value: pending,                         Icon: Clock       },
   ];
 

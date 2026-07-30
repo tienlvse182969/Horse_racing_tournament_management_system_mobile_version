@@ -7,6 +7,12 @@ export const leaderboardApi = {
     ),
   getRaceLeaderboard: (raceId: string) =>
     apiGet<{ leaderboard: RaceLeaderboardDto }>(`/api/leaderboards/${raceId}`),
+  // Nài ngựa dẫn đầu chỉ có trên overview/sidebar (chưa có endpoint riêng như /leaderboards/horses).
+  // BE giới hạn limit trong khoảng 1-5.
+  getJockeyLeaderboard: (limit?: number) =>
+    apiGet<{ leaderboard: { jockeys: JockeyLeaderboardEntryDto[] } }>(
+      `/api/overview/sidebar${limit ? `?limit=${limit}` : ''}`,
+    ),
 };
 
 export interface HorseLeaderboardEntryDto {
@@ -15,6 +21,17 @@ export interface HorseLeaderboardEntryDto {
   horseName: string;
   ownerId: string | null;
   ownerName: string | null;
+  firstPlaceWins: number;
+  totalPublishedRaces: number;
+  winRate: number;
+  latestWinAt: string | null;
+  latestRaceName: string | null;
+}
+
+export interface JockeyLeaderboardEntryDto {
+  rank: number;
+  jockeyId: string;
+  jockeyName: string;
   firstPlaceWins: number;
   totalPublishedRaces: number;
   winRate: number;

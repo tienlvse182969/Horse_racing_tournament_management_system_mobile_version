@@ -73,7 +73,7 @@ export function PredictionHistory({ predictions, onCancel }: Props) {
                 <Text style={styles.cardPick}>Ngựa đã chọn: </Text>
                 <Image source={HORSE_AVATAR} style={styles.pickAvatar} contentFit="cover" />
                 <Text style={styles.cardPick}>
-                  #{pred.predictedHorseNumber} {pred.predictedHorseName}
+                  {pred.predictedHorseName}
                 </Text>
               </View>
               {pred.contribution ? (

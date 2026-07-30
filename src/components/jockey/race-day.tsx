@@ -196,7 +196,7 @@ function PreRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRac
             </View>
             <View style={styles.horseInfo}>
               <Text style={styles.horseName}>{horse.name}</Text>
-              <Text style={styles.horseMeta}>Số #{horse.number}</Text>
+              {/* <Text style={styles.horseMeta}>Số #{horse.number}</Text> */}
             </View>
           </View>
           <HorseBanBadge penaltyStatus={horse.penaltyStatus} style={{ marginTop: Spacing.one }} />
@@ -463,7 +463,7 @@ function LiveRaceView({
     commentaryTriggersRef.current = new Set();
     raceFinishedRef.current = false;
     prevRanksRef.current = {};
-    setCommentary([`🚩 Cờ xuất phát! ${entriesRef.current.length} kỵ sĩ bắt đầu tranh tài!`]);
+    setCommentary([`🚩 Cờ xuất phát! ${entriesRef.current.length} nài ngựa bắt đầu tranh tài!`]);
     setLapProgress(0);
     setRaceState('racing');
     isRacingSv.value = true;
@@ -547,7 +547,6 @@ function PostRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRa
   const { C } = useAppColors();
   const styles = useThemedStyles(createStyles);
   const { position, finishTime, horse, isDisqualified, violations } = jockeyRace.myEntry;
-  const isTopThree = position !== undefined && position <= 3;
   const prizeEstimate = isDisqualified ? 0
     : position === 1 ? jockeyRace.purse * 0.5
     : position === 2 ? jockeyRace.purse * 0.3
@@ -560,7 +559,7 @@ function PostRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRa
       {/* Rank banner */}
       <Animated.View entering={FadeIn.duration(400)}>
         <LinearGradient
-          colors={isDisqualified ? [`${C.error}CC`, `${C.error}99`] : isTopThree ? ['#1A4D2E', '#2D6741'] : ['#2A2A2A', '#3A3A3A']}
+          colors={getRankBannerColors(position, isDisqualified, C)}
           style={styles.resultBanner}>
           <View style={styles.resultBannerInner}>
             {isDisqualified
@@ -654,7 +653,7 @@ function PostRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRa
             </View>
             <View style={styles.horseInfo}>
               <Text style={styles.horseName}>{horse.name}</Text>
-              <Text style={styles.horseMeta}>Số #{horse.number}</Text>
+              {/* <Text style={styles.horseMeta}>Số #{horse.number}</Text> */}
             </View>
           </View>
           <HorseBanBadge penaltyStatus={horse.penaltyStatus} style={{ marginTop: Spacing.one }} />
@@ -753,6 +752,14 @@ function PostRaceView({ jockeyRace, fullRace }: { jockeyRace: JockeyRace; fullRa
 }
 
 // ─── Small helpers ─────────────────────────────────────────────────────────────
+function getRankBannerColors(position: number | undefined, isDisqualified: boolean | undefined, C: AppColors): [string, string] {
+  if (isDisqualified) return [`${C.error}CC`, `${C.error}99`];
+  if (position === 1) return ['#97832C', '#D2B556']; // Vàng
+  if (position === 2) return ['#7A7D81', '#B5B9BD']; // Bạc
+  if (position === 3) return ['#976C45', '#D28D49']; // Đồng
+  return ['#2A2A2A', '#3A3A3A'];
+}
+
 function ConditionCell({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   const styles = useThemedStyles(createStyles);
   return (
