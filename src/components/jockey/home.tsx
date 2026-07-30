@@ -55,7 +55,7 @@ export function JockeyHome() {
   const upcomingRaces = jockeyRaces
     .filter(r => r.status === 'upcoming' && r.date !== today)
     .slice(0, 3);
-  const displayName = user?.fullName ?? 'Kỵ sĩ';
+  const displayName = user?.fullName ?? 'Nài ngựa';
   const completedRaces = jockeyRaces.filter(r => r.status === 'completed' && r.myEntry.position);
   const completedCount = completedRaces.length;
   const wins = completedRaces.filter(r => r.myEntry.position === 1).length;

@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import { Zap, Trophy, Award, ShieldAlert } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
@@ -12,6 +13,7 @@ import { JockeyHeaderActions } from '@/components/jockey-header-actions';
 import { useAppColors, useThemedStyles } from '@/hooks/use-theme';
 import { useJockeyRaces } from '@/hooks/useJockeyData';
 import { useHorseLeaderboard } from '@/hooks/useHorseLeaderboard';
+import { useJockeyLeaderboard } from '@/hooks/useJockeyLeaderboard';
 import { useRaceLeaderboard } from '@/hooks/useRaceLeaderboard';
 import { useAuth } from '@/context/AuthContext';
 import { formatDateFull, formatNumber } from '@/mock-data';
@@ -20,6 +22,7 @@ import { MedalIcon } from '@/components/ui/medal-icon';
 import { PENALTY_APPLIED_LABEL } from '@/utils/penalty-labels';
 
 const HORSE_AVATAR = require('@/assets/images/a-horse-with-long-hair-and-a-white-mane-free-photo.jpeg');
+const JOCKEY_AVATAR = require('@/assets/images/jockey_avt.jpg');
 
 type Tab = 'personal' | 'leaderboard';
 
@@ -27,8 +30,8 @@ const POS_LABEL: Record<number, string> = { 1: 'Giải Nhất', 2: 'Giải Nhì'
 
 type TabDef = { key: Tab; Icon: React.ComponentType<{ size?: number; color?: string }>; label: string };
 const TABS: TabDef[] = [
-  { key: 'personal',    Icon: Zap,    label: 'Cá nhân' },
-  { key: 'leaderboard', Icon: Trophy, label: 'Bảng XH' },
+  { key: 'personal',    Icon: Zap,    label: 'Kết quả thi đấu' },
+  { key: 'leaderboard', Icon: Trophy, label: 'Bảng xếp hạng' },
 ];
 
 export function JockeyResults() {
@@ -39,7 +42,7 @@ export function JockeyResults() {
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <LargeHeaderScrollView title="Kết quả & XH" contentContainerStyle={styles.scroll} rightAction={<JockeyHeaderActions />}>
+        <LargeHeaderScrollView title="Kết quả & Xếp hạng" contentContainerStyle={styles.scroll} rightAction={<JockeyHeaderActions />}>
 
           {/* Tab switcher */}
           <View style={styles.tabPill}>
@@ -113,7 +116,10 @@ function PersonalContent() {
         const warning = !r.isDisqualified && r.violations.length > 0;
         return (
           <Animated.View key={r.raceId} entering={FadeInDown.delay(i * 60).duration(280)}>
-            <View style={styles.resultRow}>
+            <TouchableOpacity
+              style={styles.resultRow}
+              activeOpacity={0.7}
+              onPress={() => router.push(`/jockey/race/${r.raceId}` as any)}>
               <View style={[styles.posBadge, r.isDisqualified ? { backgroundColor: `${C.error}22` } : { backgroundColor: pc.bg }]}>
                 {r.isDisqualified
                   ? <ShieldAlert size={22} color={C.error} />
@@ -158,7 +164,7 @@ function PersonalContent() {
                   </>
                 )}
               </View>
-            </View>
+            </TouchableOpacity>
           </Animated.View>
         );
       })}
@@ -274,13 +280,65 @@ function LeaderboardContent() {
   const { C } = useAppColors();
   const styles = useThemedStyles(createStyles);
   const { entries, loading } = useHorseLeaderboard(20);
+  const { entries: jockeyEntries, loading: jockeyLoading } = useJockeyLeaderboard(5);
   const PODIUM_COLORS = [C.secondary, C.onSurfaceVariant, C.primary];
   const PODIUM_BG     = [C.secondaryContainer, `${C.onSurfaceVariant}25`, C.primaryContainer];
   const top3 = entries.slice(0, 3);
+  const jockeyTop3 = jockeyEntries.slice(0, 3);
 
   return (
     <>
-      <Text style={styles.historyTitle}>Bảng xếp hạng ngựa</Text>
+      <Text style={styles.historyTitle}>Nài ngựa dẫn đầu</Text>
+
+      {jockeyLoading && <ActivityIndicator color={C.primary} style={{ marginVertical: Spacing.three }} />}
+
+      {!jockeyLoading && jockeyEntries.length === 0 && (
+        <Text style={styles.emptyText}>Chưa có dữ liệu xếp hạng</Text>
+      )}
+
+      {jockeyTop3.length > 0 && (
+        <Animated.View entering={FadeInDown.duration(340)} style={styles.podiumRow}>
+          {[1, 0, 2].map(i => jockeyTop3[i] ? (
+            <View key={i} style={styles.podiumItem}>
+              <View style={[styles.podiumAvatar, { backgroundColor: PODIUM_BG[i] }]}>
+                <Text style={[styles.podiumRank, { color: PODIUM_COLORS[i] }]}>{i + 1}</Text>
+              </View>
+              <Text style={styles.podiumName} numberOfLines={1}>{jockeyTop3[i].jockeyName}</Text>
+              <Text style={styles.podiumWins}>{jockeyTop3[i].firstPlaceWins} thắng</Text>
+              <View style={[styles.podiumBase, { height: i === 0 ? 72 : i === 1 ? 56 : 40, backgroundColor: PODIUM_BG[i] }]} />
+            </View>
+          ) : <View key={i} style={styles.podiumItem} />)}
+        </Animated.View>
+      )}
+
+      {jockeyEntries.map((jockey, i) => {
+        return (
+          <Animated.View key={jockey.jockeyId} entering={FadeInDown.delay(i * 50).duration(260)}>
+            <View style={styles.rankRow}>
+              <View style={styles.rankIcon}>
+                {jockey.rank <= 3 ? (
+                  <MedalIcon position={jockey.rank} size={22} />
+                ) : (
+                  <Text style={styles.rankNum}>{jockey.rank}</Text>
+                )}
+              </View>
+              <Image source={JOCKEY_AVATAR} style={styles.rankAvatar} contentFit="cover" />
+              <View style={styles.rankInfo}>
+                <Text style={styles.rankName}>{jockey.jockeyName}</Text>
+                <Text style={styles.rankStats}>
+                  {jockey.firstPlaceWins} thắng / {jockey.totalPublishedRaces} trận đấu
+                </Text>
+              </View>
+              <View style={styles.rankRight}>
+                <Text style={styles.rankWinRate}>Tỷ lệ thắng: {jockey.winRate.toFixed(0)}%</Text>
+              </View>
+            </View>
+          </Animated.View>
+        );
+      })}
+
+      {/* Bảng xếp hạng ngựa */}
+      <Text style={[styles.historyTitle, { marginTop: Spacing.two }]}>Bảng xếp hạng ngựa</Text>
 
       {loading && <ActivityIndicator color={C.primary} style={{ marginVertical: Spacing.three }} />}
 

@@ -142,7 +142,10 @@ export function JockeyProfile() {
               const warning = !r.isDisqualified && r.violations.length > 0;
               return (
                 <Animated.View key={r.raceId} entering={FadeInDown.delay(240 + i * 50).duration(260)}>
-                  <View style={styles.historyRow}>
+                  <TouchableOpacity
+                    style={styles.historyRow}
+                    activeOpacity={0.7}
+                    onPress={() => router.push(`/jockey/race/${r.raceId}` as any)}>
                     <View style={[styles.historyBadge, r.isDisqualified ? { backgroundColor: `${C.error}22` } : { backgroundColor: pc.bg }]}>
                       {r.isDisqualified
                         ? <ShieldAlert size={22} color={C.error} />
@@ -183,7 +186,7 @@ export function JockeyProfile() {
                         </>
                       )}
                     </View>
-                  </View>
+                  </TouchableOpacity>
                 </Animated.View>
               );
             })}

@@ -108,7 +108,7 @@ export default function AuthScreen() {
       }
       if ((registerRole === 'jockey' || registerRole === 'horse_owner') && !licenseDocument) {
         setError(registerRole === 'jockey'
-          ? 'Vui lòng đính kèm file PDF hồ sơ/chứng chỉ kỵ sĩ.'
+          ? 'Vui lòng đính kèm file PDF hồ sơ/chứng chỉ nài ngựa.'
           : 'Vui lòng đính kèm file PDF hồ sơ Chủ ngựa.');
         return;
       }
@@ -120,7 +120,7 @@ export default function AuthScreen() {
         const user = await login(email.trim(), password);
         if (user.role !== 'spectator' && user.role !== 'jockey' && user.role !== 'horse_owner') {
           await authApi.logout();
-          setError('Ứng dụng chỉ hỗ trợ Khán giả, Kỵ sĩ và Chủ ngựa.');
+          setError('Ứng dụng chỉ hỗ trợ Khán giả, Nài ngựa và Chủ ngựa.');
           return;
         }
         redirectForRole(user.role);
@@ -263,7 +263,7 @@ export default function AuthScreen() {
                                 ? <Zap size={16} color={onRoleColor} />
                               : <Users size={16} color={onRoleColor} />}
                             <Text style={[styles.submitText, { color: onRoleColor }]}>
-                              {isJockey ? 'Đăng ký Kỵ sĩ' : isOwner ? 'Đăng ký Chủ Ngựa' : 'Đăng ký Khán Giả'}
+                              {isJockey ? 'Đăng ký Nài ngựa' : isOwner ? 'Đăng ký Chủ Ngựa' : 'Đăng ký Khán Giả'}
                             </Text>
                           </View>
                         )}

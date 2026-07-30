@@ -80,7 +80,7 @@ export function SpectatorLive() {
               style={[styles.tabBtn, tab === 'leaderboard' && styles.tabBtnActive]}
               onPress={() => setTab('leaderboard')}
               activeOpacity={0.8}>
-              <Text style={[styles.tabBtnText, tab === 'leaderboard' && styles.tabBtnTextActive]}>Bảng XH</Text>
+              <Text style={[styles.tabBtnText, tab === 'leaderboard' && styles.tabBtnTextActive]}>Bảng Xếp hạng ngựa</Text>
             </TouchableOpacity>
           </View>
 

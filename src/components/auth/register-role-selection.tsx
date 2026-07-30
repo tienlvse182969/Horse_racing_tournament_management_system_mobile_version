@@ -23,7 +23,7 @@ export function RegisterRoleSelection({ onSelect }: Props) {
             <MaterialCommunityIcons name="horse-human" size={26} color={AuthColor.primary} />
           </View>
           <View style={styles.cardText}>
-            <Text style={[styles.cardTitle, { color: AuthColor.primary }]}>Kỵ sĩ</Text>
+            <Text style={[styles.cardTitle, { color: AuthColor.primary }]}>Nài ngựa</Text>
             <Text style={styles.cardDesc}>
               Tham gia giải đua, quản lý lịch thi đấu và nhận lời mời
             </Text>

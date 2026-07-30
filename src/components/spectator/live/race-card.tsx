@@ -40,7 +40,7 @@ export function RaceCard({ race, onPress }: Props) {
               <Text style={styles.liveInfoValue}>{formatNumber(race.purse)} đ</Text>
             </View>
             <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Kỵ sĩ</Text>
+              <Text style={styles.infoLabel}>Nài ngựa</Text>
               <Text style={styles.liveInfoValue}>{race.entries.length}</Text>
             </View>
             {leader && (
@@ -72,7 +72,7 @@ export function RaceCard({ race, onPress }: Props) {
           <MetaChip Icon={MapPin}  text={race.location} />
           <MetaChip Icon={Route}   text={`${race.distance}m`} />
           <MetaChip Icon={Trophy}  text={formatCurrency(race.purse)} />
-          <MetaChip Icon={User}    text={`${race.entries.length} kỵ sĩ`} />
+          <MetaChip Icon={User}    text={`${race.entries.length} nài ngựa`} />
         </View>
       </TouchableOpacity>
     );

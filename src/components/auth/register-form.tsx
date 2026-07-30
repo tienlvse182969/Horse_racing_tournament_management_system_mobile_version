@@ -79,7 +79,7 @@ export function RegisterForm({
                 ? <ShieldCheck size={16} color={accentColor} />
               : <Users size={16} color={accentColor} />}
             <Text style={[styles.roleBadgeLabel, { color: accentColor }]}>
-              {isJockey ? 'Kỵ sĩ' : isOwner ? 'Chủ Ngựa' : 'Khán Giả'}
+              {isJockey ? 'Nài ngựa' : isOwner ? 'Chủ Ngựa' : 'Khán Giả'}
             </Text>
           </View>
           <TouchableOpacity onPress={onChangeRole} style={styles.changeRoleBtn}>
@@ -147,7 +147,7 @@ export function RegisterForm({
         {(isJockey || isOwner) && (
           <View>
             <Text style={styles.fieldLabel}>
-              {isJockey ? 'Hồ sơ/chứng chỉ kỵ sĩ (PDF)' : 'Hồ sơ Chủ ngựa (PDF)'}
+              {isJockey ? 'Hồ sơ/chứng chỉ nài ngựa (PDF)' : 'Hồ sơ Chủ ngựa (PDF)'}
             </Text>
             {licenseDocument ? (
               <View style={styles.fileRow}>
